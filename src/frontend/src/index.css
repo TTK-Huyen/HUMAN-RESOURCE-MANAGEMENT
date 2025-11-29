@@ -1,0 +1,80 @@
+:root{--bg:#0f172a;--card:#ffffff;--muted:#64748b;--primary:#2563eb;--ok:#16a34a;--warn:#f59e0b;--danger:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans","Apple Color Emoji","Segoe UI Emoji"}
+.app{min-height:100vh;background:#f1f5f9;display:flex;flex-direction:column}
+.container{max-width:1100px;margin:0 auto;padding:24px}
+
+
+/* Header */
+.header{background:var(--bg);color:#fff}
+.header .container{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#60a5fa,#34d399)}
+.nav{display:flex;gap:12px}
+.nav a{color:#cbd5e1;text-decoration:none;padding:8px 12px;border-radius:8px}
+.nav a.active,.nav a:hover{background:rgba(255,255,255,.12);color:#fff}
+.userbox{display:flex;align-items:center;gap:10px;color:#e2e8f0}
+.userbox .avatar{width:28px;height:28px;border-radius:9999px;background:#94a3b8}
+
+/* Footer */
+footer{margin-top:auto;background:#0b1220;color:#cbd5e1}
+footer .container{display:flex;align-items:center;justify-content:space-between;gap:12px}
+footer a{color:#cbd5e1}
+
+/* --- Employee Home facelift --- */
+.emp-header { background: var(--bg); color: #fff; }
+.emp-header .bar { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.tabs { display:flex; gap:10px; }
+.tab { padding:10px 14px; border-radius:10px; background:rgba(255,255,255,.10); color:#e2e8f0; font-weight:600; cursor:pointer; text-decoration:none; }
+.tab.active, .tab:hover { background:#fff; color:#0f172a; }
+
+.create-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding-top: 12px;
+}
+
+.create-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.create-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  max-width: 800px;      /* khung vừa vừa ở giữa */
+  margin: 0 auto;
+}
+
+@media (max-width: 992px) { .grid-3 { max-width: 100%; } }
+@media (max-width: 640px) { .grid-3 { grid-template-columns: 1fr; } }
+
+.tile-card { background:var(--card); border:1px solid #e5e7eb; border-radius:16px; padding:18px; box-shadow:0 8px 30px rgba(2,8,20,.06); transition:transform .12s ease, box-shadow .12s ease; display:block; text-decoration:none; color:inherit; }
+.tile-card:hover { transform:translateY(-3px); box-shadow:0 12px 34px rgba(2,8,20,.10); }
+.tile-head { display:flex; align-items:center; gap:10px; font-weight:700; font-size:16px; margin-bottom:6px; }
+.tile-emoji { font-size:22px; line-height:1; }
+.tile-desc { color:#64748b; margin:0; }
+
+/* ==== Wide form layout for employee pages ==== */
+.form-card { width: 100%; padding: 24px; }               /* thẻ lớn chiếm toàn bộ bề ngang container */
+.form-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
+.form-grid .full { grid-column: 1 / -1; }                 /* hàng nào cần trải ngang toàn form */
+
+/* Responsive: xuống 2 cột và 1 cột khi màn nhỏ */
+@media (max-width: 992px) {
+  .form-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+@media (max-width: 640px) {
+  .form-grid { grid-template-columns: 1fr; }
+}
