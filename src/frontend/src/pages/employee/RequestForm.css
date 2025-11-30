@@ -1,0 +1,147 @@
+/* Card bao quanh form */
+.card {
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(2, 8, 20, 0.08);
+  padding: 18px;
+}
+
+/* Form chính */
+.form-card { width: 100%; padding: 24px; } 
+
+/* Lưới 3 cột */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+/* Hàng full width (ô Reason…) */
+.form-grid .full {
+  grid-column: 1 / -1;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Inputs */
+.input,
+.select,
+.textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+}
+
+/* Buttons */
+.btn {
+  appearance: none;
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.btn.primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn.ghost {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Hstack: nhóm nút Cancel + Create */
+.hstack {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Banner lỗi (Validation) */
+.violation-banner {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  grid-column: 1 / -1;
+  color: #b45309;
+}
+
+/* Animation xuất hiện */
+.fade-in-up {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Card hover */
+.hover-lift {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.18);
+}
+
+/* Violation banner */
+.violation-banner {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  margin-bottom: 12px;
+}
+.banner-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.banner-icon {
+  font-size: 18px;
+}
+.banner-list {
+  margin: 6px 0 0 18px;
+}
+
+/* Status badges */
+.badge.status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+.badge.status-approved {
+  background: #dcfce7;
+  color: #166534;
+}
+.badge.status-rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+}

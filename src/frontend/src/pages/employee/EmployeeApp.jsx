@@ -1,7 +1,7 @@
 import { Routes, Route, NavLink, Navigate, useLocation } from "react-router-dom";
 
-/*import LeaveRequestPage from "./LeaveRequestPage";
-import OTRequestPage from "./OTRequestPage";
+import LeaveRequestPage from "./LeaveRequestPage";
+/*import OTRequestPage from "./OTRequestPage";
 import ResignationRequestPage from "./ResignationRequestPage";
 import RequestStatusPage from "./RequestStatusPage";
 */
@@ -87,6 +87,7 @@ export default function EmployeeApp() {
         <Routes>
           <Route path="/" element={<CreateGrid />} />
           <Route path="/create" element={<CreateGrid />} />
+          <Route path="/create/leave" element={<LeaveRequestPage />} />
 
           <Route path="*" element={<Navigate to="/employee" replace />} />
         </Routes>

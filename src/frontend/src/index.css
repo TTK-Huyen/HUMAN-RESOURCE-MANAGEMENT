@@ -4,7 +4,6 @@ body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helveti
 .app{min-height:100vh;background:#f1f5f9;display:flex;flex-direction:column}
 .container{max-width:1100px;margin:0 auto;padding:24px}
 
-
 /* Header */
 .header{background:var(--bg);color:#fff}
 .header .container{display:flex;align-items:center;justify-content:space-between;gap:16px}
@@ -66,15 +65,21 @@ footer a{color:#cbd5e1}
 .tile-emoji { font-size:22px; line-height:1; }
 .tile-desc { color:#64748b; margin:0; }
 
-/* ==== Wide form layout for employee pages ==== */
-.form-card { width: 100%; padding: 24px; }               /* thẻ lớn chiếm toàn bộ bề ngang container */
-.form-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
-.form-grid .full { grid-column: 1 / -1; }                 /* hàng nào cần trải ngang toàn form */
-
-/* Responsive: xuống 2 cột và 1 cột khi màn nhỏ */
-@media (max-width: 992px) {
-  .form-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+/* Animation helpers */
+.fade-in-up {
+  animation: fadeInUp 0.4s ease-out;
 }
-@media (max-width: 640px) {
-  .form-grid { grid-template-columns: 1fr; }
+.fade-in-down {
+  animation: fadeInDown 0.4s ease-out;
+}
+.fade-in-up-delayed {
+  animation: fadeInUp 0.5s ease-out 0.1s both;
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
