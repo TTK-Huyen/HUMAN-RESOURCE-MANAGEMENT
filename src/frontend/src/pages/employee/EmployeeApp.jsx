@@ -3,7 +3,7 @@ import { Routes, Route, NavLink, Navigate, useLocation } from "react-router-dom"
 import LeaveRequestPage from "./LeaveRequestPage";
 import OTRequestPage from "./OTRequestPage";
 import ResignationRequestPage from "./ResignationRequestPage";
-//import RequestStatusPage from "./RequestStatusPage";
+import RequestStatusPage from "./RequestStatusPage";
 
 import "../../index.css";
 
@@ -90,7 +90,7 @@ export default function EmployeeApp() {
           <Route path="/create/leave" element={<LeaveRequestPage />} />
           <Route path="/create/ot" element={<OTRequestPage />} />
           <Route path="/create/resignation" element={<ResignationRequestPage />} />
-
+          <Route path="/status" element={<RequestStatusPage />} />
           <Route path="*" element={<Navigate to="/employee" replace />} />
         </Routes>
       </main>
