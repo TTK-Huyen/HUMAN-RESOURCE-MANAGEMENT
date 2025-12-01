@@ -1,67 +1,79 @@
-namespace HrSystem.Controllers;
+using HrSystem.Dtos;
+using HrSystem.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
-[ApiController]
-[Route("api/v1/hr/profile-update-requests")]
-public class HrProfileUpdateRequestController : ControllerBase
+namespace HrSystem.Controllers
 {
-    private readonly IProfileUpdateRequestService _service;
-     public HrProfileUpdateRequestController(IProfileUpdateRequestService service)
+    [ApiController]
+    [Route("api/v1/hr/profile-update-requests")]
+    [Authorize(Roles = "HR")]
+    public class HrProfileUpdateRequestController : ControllerBase
     {
-        _service = service;
-    }
+        private readonly IProfileUpdateRequestService _service;
 
-    // GET /api/v1/hr/profile-update-requests?status=pending&employeeCode=E001
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<RequestListItemDto>>> GetRequests(
-        [FromQuery] string? status,
-        [FromQuery] string? employeeCode)
-    {
-        var filter = new RequestFilterDto
+        public HrProfileUpdateRequestController(IProfileUpdateRequestService service)
         {
-            Status = status,
-            EmployeeCode = employeeCode
-        };
-
-        var result = await _service.SearchAsync(filter);
-        return Ok(result); // 200, body là JSON array như spec
-    }
-
-    // GET /api/v1/hr/profile-update-requests/{requestId}
-    [HttpGet("{requestId:long}")]
-    public async Task<ActionResult<RequestDetailDto>> GetRequestDetail(long requestId)
-    {
-        try
-        {
-            var dto = await _service.GetDetailAsync(requestId);
-            return Ok(dto); // 200, JSON object detail
+            _service = service;
         }
-        catch (KeyNotFoundException)
-        {
-            return NotFound(new { error_message = "Request not found" });
-        }
-    }
 
-    // PATCH /api/v1/hr/profile-update-requests/{requestId}/status
-    [HttpPatch("{requestId:long}/status")]
-    public async Task<ActionResult<RequestStatusResponseDto>> UpdateStatus(
-        long requestId,
-        [FromBody] RequestStatusUpdateDto body)
-    {
-        try
+        // ========= API #1: GET LIST =========
+        // GET /api/v1/hr/profile-update-requests?status=pending&employeeCode=E001
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<RequestListItemDto>>> GetRequests(
+            [FromQuery] string? status,
+            [FromQuery] string? employeeCode)
         {
-            // lấy hrId từ token, giả sử claim name "sub"
-            var hrId = int.Parse(User.FindFirst("sub")!.Value);
+            var filter = new RequestFilterDto
+            {
+                Status = status,
+                EmployeeCode = employeeCode
+            };
 
-            var result = await _service.ChangeStatusAsync(hrId, requestId, body);
-            return Ok(result); 
+            var result = await _service.SearchAsync(filter);
+            return Ok(result); // 200, JSON array
         }
-        catch (ArgumentException ex)
+
+        // ========= API #2: GET DETAIL =========
+        // GET /api/v1/hr/profile-update-requests/{requestId}
+        [HttpGet("{requestId:long}")]
+        public async Task<ActionResult<RequestDetailDto>> GetRequestDetail(long requestId)
         {
-            return BadRequest(new { error_message = ex.Message }); // 400
+            try
+            {
+                var dto = await _service.GetDetailAsync(requestId);
+                return Ok(dto); // 200
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { error_message = "Request not found" }); // 404
+            }
         }
-        catch (KeyNotFoundException)
+
+        // ========= API #3: PATCH STATUS =========
+        // PATCH /api/v1/hr/profile-update-requests/{requestId}/status
+        [HttpPatch("{requestId:long}/status")]
+        public async Task<ActionResult<RequestStatusResponseDto>> UpdateStatus(
+            long requestId,
+            [FromBody] RequestStatusUpdateDto body)
         {
-            return NotFound(new { error_message = "Request not found" }); // 404
+            try
+            {
+                // ví dụ lấy hrId từ claim "sub"; tùy hệ thống auth của bạn
+                var hrIdClaim = User.FindFirst("sub")?.Value ?? "0";
+                var hrId = int.Parse(hrIdClaim);
+
+                var result = await _service.ChangeStatusAsync(hrId, requestId, body);
+                return Ok(result); // 200
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error_message = ex.Message }); // 400
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { error_message = "Request not found" }); // 404
+            }
         }
     }
 }
