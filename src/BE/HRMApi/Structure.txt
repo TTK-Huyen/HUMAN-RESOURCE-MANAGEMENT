@@ -1,6 +1,9 @@
-Controllers/,"Chứa các endpoint API cho Profile, Requests, Activities, Rewards, v.v."
-Models/,"Chứa các Entity như Employee (hoặc Profile), LeaveRequest, Activity, RewardPoint."
-Data/,Chứa AppDbContext và cấu hình EF Core.
-Repositories/,"Chứa các interface và triển khai truy cập dữ liệu cho từng Entity (ví dụ: IProfileRepository, IRequestRepository)."
-Services/,"Chứa logic nghiệp vụ phức tạp (ví dụ: logic phê duyệt yêu cầu nghỉ phép, logic tính toán điểm thưởng)."
-Dtos/,"Chứa các đối tượng dùng để truyền dữ liệu qua API (ví dụ: CreateProfileDto, LeaveRequestDto)."
+HrmApi/
+ ├── Controllers/      // Web API layer (HTTP)
+ ├── Dtos/             // Data Transfer Objects
+ ├── Models/           // Domain entities (Employee, Requests,…)
+ ├── Data/             // DbContext (EF Core)
+ ├── Repositories/     // Interface + implementation truy cập DB
+ ├── Services/         // Business logic theo use case
+ ├── appsettings.json
+ └── Program.cs
