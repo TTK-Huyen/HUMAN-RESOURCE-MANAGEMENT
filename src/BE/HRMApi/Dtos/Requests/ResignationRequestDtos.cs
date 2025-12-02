@@ -1,12 +1,30 @@
 namespace HrmApi.Dtos.Requests
 {
-    // Body dùng cho API tạo đơn thôi việc
+    // POST body /resignation
     public class CreateResignationRequestDto
     {
-        public DateTime ResignationDate { get; set; }       // Ngày chính thức nghỉ
-        public string Reason { get; set; } = default!;      // Lý do thôi việc
+        public DateTime ResignationDate { get; set; }   // resignation_date
+        public string Reason { get; set; } = default!;
+        public int? HandoverToHr { get; set; }          // handover_to_hr (optional)
+    }
 
-        // Người/HR phụ trách bàn giao, có thể null
-        public int? HandoverToHrEmployeeId { get; set; }
+    public class ResignationRequestCreatedDto
+    {
+        public int RequestId { get; set; }
+        public string Status { get; set; } = default!;  // "Pending"
+    }
+
+    // GET detail /resignation/{requestId}
+    public class ResignationRequestDetailDto
+    {
+        public int RequestId { get; set; }
+        public string EmployeeCode { get; set; } = default!;
+
+        public DateTime ResignationDate { get; set; }
+        public string Reason { get; set; } = default!;
+        public int? HandoverToHr { get; set; }
+
+        public string Status { get; set; } = default!;
+        public DateTime CreatedAt { get; set; }
     }
 }

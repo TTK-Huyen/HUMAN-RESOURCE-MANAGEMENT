@@ -1,17 +1,39 @@
 namespace HrmApi.Dtos.Requests
 {
-    // Body dùng cho API tạo đơn nghỉ phép
+    // POST body /leave
     public class CreateLeaveRequestDto
     {
-        public string LeaveType { get; set; } = default!;   // "Annual", "Sick", ...
-        public DateTime StartDate { get; set; }             // Ngày bắt đầu nghỉ
-        public DateTime EndDate { get; set; }               // Ngày kết thúc nghỉ
-        public string Reason { get; set; } = default!;      // Lý do nghỉ
+        public string LeaveType { get; set; } = default!;   // leave_type
+        public DateTime StartDate { get; set; }             // start_date
+        public DateTime EndDate { get; set; }               // end_date
+        public string Reason { get; set; } = default!;      // reason
 
-        // Ai sẽ nhận bàn giao công việc, làm đơn giản là Id của nhân viên khác
-        public int HandoverEmployeeId { get; set; }
+        public int HandoverPersonId { get; set; }           // handover_person_id
+        public string? AttachmentsBase64 { get; set; }      // attachments (optional)
+    }
 
-        // Để sẵn cho future: file đính kèm (optional)
-        public string? AttachmentBase64 { get; set; }
+    // Response 201
+    public class LeaveRequestCreatedDto
+    {
+        public int RequestId { get; set; }                  // request_id
+        public string Status { get; set; } = default!;      // "Pending"
+    }
+
+    // GET detail /leave/{requestId}
+    public class LeaveRequestDetailDto
+    {
+        public int RequestId { get; set; }
+        public string EmployeeCode { get; set; } = default!;
+
+        public string LeaveType { get; set; } = default!;
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+
+        public string Reason { get; set; } = default!;
+        public int HandoverPersonId { get; set; }
+        public string? HandoverPersonName { get; set; }
+
+        public string Status { get; set; } = default!;
+        public DateTime CreatedAt { get; set; }
     }
 }

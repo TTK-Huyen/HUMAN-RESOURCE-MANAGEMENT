@@ -1,11 +1,1 @@
-{
-  "Version": 1,
-  "Hash": "Nd/1BBFjba73pc+IkJc/z0OkG3Y/++v6LfJ+moIEN6s=",
-  "Source": "HRMApi",
-  "BasePath": "_content/HRMApi",
-  "Mode": "Default",
-  "ManifestType": "Build",
-  "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [],
-  "Assets": []
-}
+{"Version":1,"Hash":"Zj85qSpiWFfSHpXMXVw5iCr785qN4MpQQJxhXY8nIWI=","Source":"HRMApi","BasePath":"/","Mode":"Root","ManifestType":"Build","ReferencedProjectsConfiguration":[],"DiscoveryPatterns":[],"Assets":[],"Endpoints":[]}

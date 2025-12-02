@@ -2,8 +2,9 @@ namespace HrmApi.Models
 {
     public enum RequestStatus
     {
-        Pending = 1,
-        Approved = 2,
-        Rejected = 3
+        Pending = 0,
+        Approved = 1,
+        Rejected = 2,
+        Cancelled = 3
     }
 }

@@ -3,6 +3,7 @@ using System;
 using HrmApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -16,8 +17,10 @@ namespace HRMApi.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.0")
+                .HasAnnotation("ProductVersion", "9.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
+
+            MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
             modelBuilder.Entity("HrmApi.Models.Employee", b =>
                 {
@@ -25,34 +28,9 @@ namespace HRMApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<string>("CompanyEmail")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("DateOfBirth")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Department")
-                        .IsRequired()
-                        .HasColumnType("longtext");
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("EmployeeCode")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("JobTitle")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("PersonalEmail")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("longtext");
 
@@ -67,6 +45,11 @@ namespace HRMApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AttachmentsBase64")
+                        .HasColumnType("longtext");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
@@ -76,8 +59,12 @@ namespace HRMApi.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("LeaveType")
+                    b.Property<int>("HandoverPersonId")
                         .HasColumnType("int");
+
+                    b.Property<string>("LeaveType")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Reason")
                         .IsRequired()
@@ -93,6 +80,8 @@ namespace HRMApi.Migrations
 
                     b.HasIndex("EmployeeId");
 
+                    b.HasIndex("HandoverPersonId");
+
                     b.ToTable("LeaveRequests");
                 });
 
@@ -102,21 +91,29 @@ namespace HRMApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("Date")
                         .HasColumnType("datetime(6)");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
 
-                    b.Property<double>("Hours")
-                        .HasColumnType("double");
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("time(6)");
 
-                    b.Property<DateTime>("OvertimeDate")
-                        .HasColumnType("datetime(6)");
+                    b.Property<int?>("ProjectId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Reason")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time(6)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -134,17 +131,22 @@ namespace HRMApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("HandoverToHr")
+                        .HasColumnType("int");
+
                     b.Property<string>("Reason")
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<DateTime>("ResignDate")
+                    b.Property<DateTime>("ResignationDate")
                         .HasColumnType("datetime(6)");
 
                     b.Property<int>("Status")
@@ -160,18 +162,26 @@ namespace HRMApi.Migrations
             modelBuilder.Entity("HrmApi.Models.LeaveRequest", b =>
                 {
                     b.HasOne("HrmApi.Models.Employee", "Employee")
-                        .WithMany("LeaveRequests")
+                        .WithMany()
                         .HasForeignKey("EmployeeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("HrmApi.Models.Employee", "HandoverPerson")
+                        .WithMany()
+                        .HasForeignKey("HandoverPersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Employee");
+
+                    b.Navigation("HandoverPerson");
                 });
 
             modelBuilder.Entity("HrmApi.Models.OvertimeRequest", b =>
                 {
                     b.HasOne("HrmApi.Models.Employee", "Employee")
-                        .WithMany("OvertimeRequests")
+                        .WithMany()
                         .HasForeignKey("EmployeeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -182,21 +192,12 @@ namespace HRMApi.Migrations
             modelBuilder.Entity("HrmApi.Models.ResignationRequest", b =>
                 {
                     b.HasOne("HrmApi.Models.Employee", "Employee")
-                        .WithMany("ResignationRequests")
+                        .WithMany()
                         .HasForeignKey("EmployeeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Employee");
-                });
-
-            modelBuilder.Entity("HrmApi.Models.Employee", b =>
-                {
-                    b.Navigation("LeaveRequests");
-
-                    b.Navigation("OvertimeRequests");
-
-                    b.Navigation("ResignationRequests");
                 });
 #pragma warning restore 612, 618
         }

@@ -99,8 +99,11 @@ F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\n
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net8.0\HRMApi.pdb
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net8.0\HRMApi.genruntimeconfig.cache
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net8.0\ref\HRMApi.dll
-F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net8.0\staticwebassets\msbuild.HRMApi.Microsoft.AspNetCore.StaticWebAssets.props
-F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net8.0\staticwebassets\msbuild.build.HRMApi.props
-F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net8.0\staticwebassets\msbuild.buildMultiTargeting.HRMApi.props
-F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net8.0\staticwebassets\msbuild.buildTransitive.HRMApi.props
-F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net8.0\staticwebassets.pack.json
+F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\net8.0\HRMApi.staticwebassets.endpoints.json
+F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net8.0\rpswa.dswa.cache.json
+F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net8.0\rjimswa.dswa.cache.json
+F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
+F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
+F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net8.0\staticwebassets.build.json.cache
+F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net8.0\staticwebassets.build.endpoints.json
+F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net8.0\swae.build.ex.cache
