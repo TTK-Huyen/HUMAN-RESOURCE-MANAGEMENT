@@ -1,0 +1,253 @@
+/* Container chung cho trang status */
+.status-page {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+/* Card chính */
+.status-card {
+  padding: 24px 24px 20px;
+}
+
+/* Header */
+.status-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.status-header h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.status-subtitle {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* Counter bên phải */
+.status-counter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.status-count {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.status-count-label {
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* Bộ lọc */
+.status-filters {
+  margin-bottom: 12px;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.filter-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+}
+
+.filter-item label {
+  font-size: 13px;
+  color: #475569;
+}
+
+.filter-item--keyword {
+  flex: 1;
+  min-width: 220px;
+}
+
+/* Bảng */
+.status-table-wrapper {
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.status-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.status-table thead {
+  background: #e2e8f0;
+}
+
+.status-table th,
+.status-table td {
+  padding: 10px 14px;
+  text-align: left;
+}
+
+.status-table th {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.status-table tbody tr:nth-child(odd) {
+  background: #ffffff;
+}
+
+.status-table tbody tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+.status-row {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.status-row:hover {
+  background: #e0f2fe;
+}
+
+/* Empty / loading */
+.status-empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* Pagination */
+.status-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.status-page-indicator {
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* Backdrop + modal chi tiết */
+.status-detail-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+}
+
+.status-detail {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 24px 28px 20px;
+  max-width: 720px;
+  width: 100%;
+  max-height: 80vh;
+  overflow: auto;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.35);
+}
+
+/* Header modal */
+.status-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.status-detail-header h3 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.status-detail-sub {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+/* Grid chi tiết */
+.status-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 24px;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.status-detail-grid--2cols {
+  margin-top: 8px;
+}
+
+.status-detail-grid dt {
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 2px;
+}
+
+.status-detail-grid dd {
+  margin: 0;
+  color: #0f172a;
+}
+
+.status-detail-grid .full-row {
+  grid-column: 1 / -1;
+}
+
+/* Lý do reject */
+.reject-reason {
+  white-space: pre-wrap;
+  background: #fef2f2;
+  border-radius: 10px;
+  padding: 8px 10px;
+  border: 1px solid #fecaca;
+}
+
+/* Section type-specific */
+.status-detail-section {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.status-detail-section h4 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+/* Note cuối */
+.status-detail-note {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .status-detail {
+    margin: 16px;
+    padding: 18px 16px;
+  }
+
+  .status-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
