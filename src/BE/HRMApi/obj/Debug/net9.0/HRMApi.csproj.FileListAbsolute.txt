@@ -31,8 +31,18 @@ D:\KHTN\NAM4\PTUDHTTTHD\SourceCode\HUMAN-RESOURCE-MANAGEMENT\BE\HRMApi\obj\Debug
 D:\KHTN\NAM4\PTUDHTTTHD\SourceCode\HUMAN-RESOURCE-MANAGEMENT\BE\HRMApi\obj\Debug\net9.0\HRMApi.pdb
 D:\KHTN\NAM4\PTUDHTTTHD\SourceCode\HUMAN-RESOURCE-MANAGEMENT\BE\HRMApi\obj\Debug\net9.0\HRMApi.genruntimeconfig.cache
 D:\KHTN\NAM4\PTUDHTTTHD\SourceCode\HUMAN-RESOURCE-MANAGEMENT\BE\HRMApi\obj\Debug\net9.0\ref\HRMApi.dll
+F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\HRMApi.csproj.AssemblyReference.cache
+F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\rpswa.dswa.cache.json
+F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\HRMApi.GeneratedMSBuildEditorConfig.editorconfig
+F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\HRMApi.AssemblyInfoInputs.cache
+F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\HRMApi.AssemblyInfo.cs
+F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\HRMApi.csproj.CoreCompileInputs.cache
+F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\HRMApi.MvcApplicationPartsAssemblyInfo.cs
+F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\HRMApi.MvcApplicationPartsAssemblyInfo.cache
+F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\HRMApi.sourcelink.json
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\net9.0\appsettings.Development.json
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\net9.0\appsettings.json
+F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\net9.0\global.json
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\net9.0\HRMApi.staticwebassets.endpoints.json
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\net9.0\HRMApi.exe
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\net9.0\HRMApi.deps.json
@@ -58,9 +68,6 @@ F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\n
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\net9.0\Mono.TextTemplating.dll
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\net9.0\MySqlConnector.dll
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\net9.0\Pomelo.EntityFrameworkCore.MySql.dll
-F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\net9.0\Swashbuckle.AspNetCore.Swagger.dll
-F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
-F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\net9.0\System.CodeDom.dll
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\net9.0\System.Composition.AttributedModel.dll
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\net9.0\System.Composition.Convention.dll
@@ -132,15 +139,6 @@ F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\n
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\net9.0\tr\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\net9.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\net9.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
-F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\HRMApi.csproj.AssemblyReference.cache
-F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\rpswa.dswa.cache.json
-F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\HRMApi.GeneratedMSBuildEditorConfig.editorconfig
-F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\HRMApi.AssemblyInfoInputs.cache
-F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\HRMApi.AssemblyInfo.cs
-F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\HRMApi.csproj.CoreCompileInputs.cache
-F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\HRMApi.MvcApplicationPartsAssemblyInfo.cs
-F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\HRMApi.MvcApplicationPartsAssemblyInfo.cache
-F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\HRMApi.sourcelink.json
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\rjimswa.dswa.cache.json
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\rjsmrazor.dswa.cache.json
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\rjsmcshtml.dswa.cache.json
@@ -149,10 +147,12 @@ F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\n
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\staticwebassets.build.json.cache
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\staticwebassets.development.json
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\staticwebassets.build.endpoints.json
-F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\swae.build.ex.cache
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\HRMApi.csproj.Up2Date
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\HRMApi.dll
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\refint\HRMApi.dll
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\HRMApi.pdb
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\HRMApi.genruntimeconfig.cache
 F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\obj\Debug\net9.0\ref\HRMApi.dll
+F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\net9.0\Swashbuckle.AspNetCore.Swagger.dll
+F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll

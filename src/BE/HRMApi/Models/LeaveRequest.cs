@@ -1,29 +1,23 @@
-using System;
-
 namespace HrmApi.Models
 {
     public class LeaveRequest
     {
-        public int Id { get; set; }                               // PK
-        public int EmployeeId { get; set; }                       // FK
+        public int Id { get; set; }
 
-        public LeaveType LeaveType { get; set; }
-        public DateTime StartDate { get; set; }  
-        public DateTime EndDate { get; set; }
-        public string Reason { get; set; } = default!;
-        public RequestStatus Status { get; set; } = RequestStatus.Pending;
-
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        // Navigation
+        public int EmployeeId { get; set; }
         public Employee Employee { get; set; } = default!;
-    }
 
-    public enum LeaveType
-    {
-        Annual = 1,
-        Sick = 2,
-        Unpaid = 3,
-        Other = 4
+        public string LeaveType { get; set; } = default!;   // leave_type
+        public DateTime StartDate { get; set; }             // start_date
+        public DateTime EndDate { get; set; }               // end_date
+        public string Reason { get; set; } = default!;      // reason
+
+        public int HandoverPersonId { get; set; }           // handover_person_id
+        public Employee? HandoverPerson { get; set; }       // navigation optional
+
+        public string? AttachmentsBase64 { get; set; }      // attachments (Optional)
+
+        public RequestStatus Status { get; set; } = RequestStatus.Pending;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }
