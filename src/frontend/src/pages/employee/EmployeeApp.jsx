@@ -85,13 +85,13 @@ export default function EmployeeApp() {
       <HeaderTabs />
       <main className="container" style={{ marginTop: 24, marginBottom: 32 }}>
         <Routes>
-          <Route path="/" element={<CreateGrid />} />
-          <Route path="/create" element={<CreateGrid />} />
-          <Route path="/create/leave" element={<LeaveRequestPage />} />
-          <Route path="/create/ot" element={<OTRequestPage />} />
-          <Route path="/create/resignation" element={<ResignationRequestPage />} />
-          <Route path="/status" element={<RequestStatusPage />} />
-          <Route path="*" element={<Navigate to="/employee" replace />} />
+          <Route index element={<Navigate to="create" replace />} />
+          <Route path="create" element={<CreateGrid />} />
+          <Route path="create/leave" element={<LeaveRequestPage />} />
+          <Route path="create/ot" element={<OTRequestPage />} />
+          <Route path="create/resignation" element={<ResignationRequestPage />} />
+          <Route path="status" element={<RequestStatusPage />} />
+          <Route path="*" element={<Navigate to="create" replace />} />
         </Routes>
       </main>
 
