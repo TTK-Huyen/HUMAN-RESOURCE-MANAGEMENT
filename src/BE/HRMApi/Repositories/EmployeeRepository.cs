@@ -21,5 +21,20 @@ namespace HrmApi.Repositories
                 .FirstOrDefaultAsync(e => e.EmployeeCode == employeeCode);
                 // .FirstOrDefaultAsync(e => e.EmployeeCode.ToLower() == employeeCode.ToLower());
         }
+
+        public async Task<Employee?> GetProfileByCodeAsync(string employeeCode)
+        {
+            return await _context.Employees
+                .AsNoTracking()
+                .Include(e => e.Department)
+                .Include(e => e.JobTitle)
+                .Include(e => e.DirectManager)
+                .Include(e => e.PhoneNumbers)
+                .Include(e => e.BankAccounts)
+                .Include(e => e.Education)
+                .Include(e => e.ProfileUpdateHistory)
+                .ThenInclude(h => h.Details)
+                .FirstOrDefaultAsync(e => e.EmployeeCode == employeeCode);
+        }
     }
 }
