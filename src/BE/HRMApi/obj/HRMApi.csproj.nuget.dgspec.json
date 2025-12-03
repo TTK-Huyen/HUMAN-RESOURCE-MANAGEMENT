@@ -1,20 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "D:\\KHTN\\NAM4\\PTUDHTTTHD\\SourceCode\\HUMAN-RESOURCE-MANAGEMENT\\BE\\HRMApi\\HRMApi.csproj": {}
+    "C:\\Users\\Dell\\Documents\\22127479_nam4\\HTTT hien dai\\HUMAN-RESOURCE-MANAGEMENT\\src\\BE\\HRMApi\\HRMApi.csproj": {}
   },
   "projects": {
-    "D:\\KHTN\\NAM4\\PTUDHTTTHD\\SourceCode\\HUMAN-RESOURCE-MANAGEMENT\\BE\\HRMApi\\HRMApi.csproj": {
+    "C:\\Users\\Dell\\Documents\\22127479_nam4\\HTTT hien dai\\HUMAN-RESOURCE-MANAGEMENT\\src\\BE\\HRMApi\\HRMApi.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\KHTN\\NAM4\\PTUDHTTTHD\\SourceCode\\HUMAN-RESOURCE-MANAGEMENT\\BE\\HRMApi\\HRMApi.csproj",
+        "projectUniqueName": "C:\\Users\\Dell\\Documents\\22127479_nam4\\HTTT hien dai\\HUMAN-RESOURCE-MANAGEMENT\\src\\BE\\HRMApi\\HRMApi.csproj",
         "projectName": "HRMApi",
-        "projectPath": "D:\\KHTN\\NAM4\\PTUDHTTTHD\\SourceCode\\HUMAN-RESOURCE-MANAGEMENT\\BE\\HRMApi\\HRMApi.csproj",
-        "packagesPath": "C:\\Users\\ASUS\\.nuget\\packages\\",
-        "outputPath": "D:\\KHTN\\NAM4\\PTUDHTTTHD\\SourceCode\\HUMAN-RESOURCE-MANAGEMENT\\BE\\HRMApi\\obj\\",
+        "projectPath": "C:\\Users\\Dell\\Documents\\22127479_nam4\\HTTT hien dai\\HUMAN-RESOURCE-MANAGEMENT\\src\\BE\\HRMApi\\HRMApi.csproj",
+        "packagesPath": "C:\\Users\\Dell\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Dell\\Documents\\22127479_nam4\\HTTT hien dai\\HUMAN-RESOURCE-MANAGEMENT\\src\\BE\\HRMApi\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\ASUS\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\Dell\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
@@ -38,19 +42,25 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
-            "Microsoft.AspNetCore.OpenApi": {
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
               "target": "Package",
-              "version": "[9.0.10, )"
+              "version": "[9.0.0, )"
             },
             "Pomelo.EntityFrameworkCore.MySql": {
               "target": "Package",
               "version": "[9.0.0, )"
+            },
+            "Swashbuckle.AspNetCore": {
+              "target": "Package",
+              "version": "[10.0.1, )"
             }
           },
           "imports": [
@@ -72,7 +82,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.100/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

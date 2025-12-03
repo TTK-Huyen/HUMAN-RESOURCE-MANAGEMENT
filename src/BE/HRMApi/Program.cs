@@ -1,18 +1,41 @@
+using HrSystem.Data;
+using Microsoft.EntityFrameworkCore;
+using HrSystem.Repositories;
+using HrSystem.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(); 
+
+//Khúc này đê kết nối docker
+// Connection string chung cho mọi môi trường
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? builder.Configuration["ConnectionStrings:DefaultConnection"]
+    ?? throw new InvalidOperationException("DefaultConnection not found.");
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+
+// Đăng ký Repo + Service...
+builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+builder.Services.AddScoped<IProfileUpdateRequestRepository, ProfileUpdateRequestRepository>();
+builder.Services.AddScoped<IProfileUpdateRequestService, ProfileUpdateRequestService>();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
 
 var summaries = new[]
 {

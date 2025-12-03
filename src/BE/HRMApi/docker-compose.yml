@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: hr_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456        # nhớ đổi nếu đưa lên môi trường thật
+      MYSQL_DATABASE: hr_db              # trùng với CreateDbInit.sql
+    ports:
+      - "3307:3306"                      # bên ngoài 3307, trong container 3306
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hr_api
+    restart: always
+    depends_on:
+      - mysql
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      # connection string dùng biến env, EF sẽ đọc qua Configuration
+      ConnectionStrings__DefaultConnection: "Server=mysql;Port=3306;Database=hr_db;User=root;Password=123456;"
+    ports:
+      - "8080:8080"                      # Swagger sẽ truy cập qua http://localhost:8080/swagger
+    # nếu sau này có auth bằng HTTPS thì map thêm cert, giờ để đơn giản
+
+volumes:
+  mysql-data:
