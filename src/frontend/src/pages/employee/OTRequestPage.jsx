@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { create } from "../../services/requestApi";
+import { createOvertimeRequest  } from "../../services/requestApi";
 import ViolationBanner from "../../components/ViolationBanner";
 import { FormRow } from "../../components/FormRow";
 import "./RequestForm.css";
+
 
 const INITIAL_FORM = {
   date: "",
@@ -10,13 +11,15 @@ const INITIAL_FORM = {
   end: "",
   reason: "",
   projectId: "",
-  approverId: "",
 };
 
 export default function OTRequestPage() {
   const [f, setF] = useState(INITIAL_FORM);
   const [errs, setErrs] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+
+  // ⚠️ Tạm thời dùng cứng — sau này sẽ lấy từ login
+  const employeeCode = "EMP001";
 
   function onChange(e) {
     const { name, value } = e.target;
@@ -37,7 +40,6 @@ export default function OTRequestPage() {
     const diff = f.start && f.end ? timeDiffHours(f.start, f.end) : 0;
     if (diff > 4) m.push("Overtime cannot exceed 4 hours/day.");
     if (!f.reason) m.push("Reason is required.");
-    if (!f.approverId) m.push("Approver is required.");
     return { messages: m, hours: diff };
   }
 
@@ -51,10 +53,24 @@ export default function OTRequestPage() {
 
     setSubmitting(true);
     try {
-      await create("ot", { ...f, hours });
+      const payload = {
+        date: f.date,
+        startTime: f.start,
+        endTime: f.end,
+        hours,
+        reason: f.reason,
+        projectId: f.projectId || null,
+      };
+
+      console.log("Sending payload:", payload);
+
+      await createOvertimeRequest(employeeCode, payload);  // ✅ CALL API REAL
+
+      alert("Overtime request created successfully!");
       setErrs([]);
-      alert("Overtime request submitted. Status = Pending.");
       setF(INITIAL_FORM);
+    } catch (err) {
+      setErrs([err.message || "Failed to create overtime request"]);
     } finally {
       setSubmitting(false);
     }
@@ -105,15 +121,6 @@ export default function OTRequestPage() {
             className="input"
             name="projectId"
             value={f.projectId}
-            onChange={onChange}
-          />
-        </FormRow>
-
-        <FormRow label="Approver ID" required>
-          <input
-            className="input"
-            name="approverId"
-            value={f.approverId}
             onChange={onChange}
           />
         </FormRow>

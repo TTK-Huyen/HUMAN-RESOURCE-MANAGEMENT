@@ -71,9 +71,14 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();     // mặc định là /swagger/index.html
+}
 
 // 6. (Tuỳ chọn) Https redirection – nếu gây phiền thì comment lại
-// app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 app.UseCors(MyAllowSpecificOrigins); // Kết nối FE
 app.UseAuthorization();
 

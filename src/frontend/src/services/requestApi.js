@@ -75,3 +75,38 @@ export async function createLeaveRequest(employeeCode, payload) {
   if (res.status === 204) return null;
   return res.json();
 }
+
+// ====== GỌI API THẬT CHO OVERTIME REQUEST ======
+export async function createOvertimeRequest(employeeCode, payload) {
+  const url = `${API_BASE_URL}/api/v1/employees/${encodeURIComponent(
+    employeeCode
+  )}/requests/overtime`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    let errorDetail = null;
+    try {
+      errorDetail = await res.json();
+    } catch {
+      // ignore parse error
+    }
+
+    const message =
+      errorDetail?.title ||
+      errorDetail?.message ||
+      errorDetail?.error ||
+      `Failed with status ${res.status}`;
+
+    throw new Error(message);
+  }
+
+  if (res.status === 204) return null;
+  return res.json(); // { requestId, status: "Pending", ... } nếu BE có trả
+}
