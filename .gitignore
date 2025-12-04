@@ -3,3 +3,5 @@ src/BE/HRMApi/Migrations/20251204154931_InitialCreate.Designer.cs
 src/BE/HRMApi/Migrations/AppDbContextModelSnapshot.cs
 src/BE/HRMApi/obj/project.nuget.cache
 /src/BE/HRMApi/obj
+src/BE/HRMApi/obj/project.nuget.cache
+/src/frontend/node_modules

@@ -27,24 +27,10 @@ namespace HrmApi.Controllers
 
             var result = await _service.CreateAsync(employeeCode, dto);
 
-            return CreatedAtAction(
-                nameof(GetOvertimeRequestDetail),
-                new { employeeCode, requestId = result.RequestId },
-                result);
+            // Không còn GetOvertimeRequestDetail → dùng Created() đơn giản
+            return Created(string.Empty, result);   // 201 Created + body
         }
 
-        [HttpGet("{requestId:int}")]
-        [ProducesResponseType(typeof(OvertimeRequestDetailDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<OvertimeRequestDetailDto>> GetOvertimeRequestDetail(
-            string employeeCode,
-            int requestId)
-        {
-            var result = await _service.GetDetailAsync(employeeCode, requestId);
-            if (result == null)
-                return NotFound(new { message = "Overtime request not found for this employee." });
 
-            return Ok(result);
-        }
     }
 }

@@ -7,7 +7,7 @@ namespace HrmApi.Services
     public class LeaveRequestService : ILeaveRequestService
     {
         private readonly ILeaveRequestRepository _repository;
-        private readonly IEmployeeRepository _employeeRepository; // nếu có
+        private readonly IEmployeeRepository _employeeRepository;
 
         public LeaveRequestService(
             ILeaveRequestRepository repository,
@@ -17,49 +17,37 @@ namespace HrmApi.Services
             _employeeRepository = employeeRepository;
         }
 
-        public async Task<LeaveRequestCreatedDto> CreateAsync(string employeeCode, CreateLeaveRequestDto dto)
+        public async Task<LeaveRequestCreatedDto> CreateAsync(
+            string employeeCode,
+            CreateLeaveRequestDto dto)
         {
-            // Tìm employee theo code
+            // 1. Tìm employee theo employee_code
             var employee = await _employeeRepository.GetByCodeAsync(employeeCode)
                            ?? throw new InvalidOperationException("Employee not found");
 
+            // 2. Map DTO -> Entity
             var entity = new LeaveRequest
             {
-                EmployeeId = employee.Id,
-                LeaveType = dto.LeaveType,
-                StartDate = dto.StartDate,
-                EndDate = dto.EndDate,
-                Reason = dto.Reason,
-                HandoverPersonId = dto.HandoverPersonId,   // chỗ gây lỗi FK
+                EmployeeId        = employee.Id,          // FK đúng theo ERD
+                LeaveType         = dto.LeaveType,
+                StartDate         = dto.StartDate,
+                EndDate           = dto.EndDate,
+                Reason            = dto.Reason,
+                HandoverEmployeeId = dto.HandoverPersonId,
                 AttachmentsBase64 = dto.AttachmentsBase64,
-                Status = RequestStatus.Pending
+                Status            = RequestStatus.Pending,
+                CreatedAt         = DateTime.UtcNow
             };
-            Console.WriteLine($"[DEBUG] Entity.HandoverPersonId = {entity.HandoverPersonId}");
+
+            // 3. Lưu DB
             await _repository.AddAsync(entity);
             await _repository.SaveChangesAsync();
 
+            // 4. Trả DTO
             return new LeaveRequestCreatedDto
             {
                 RequestId = entity.Id,
-                Status = entity.Status.ToString()
-            };
-        }
-
-        public async Task<LeaveRequestDetailDto?> GetDetailAsync(string employeeCode, int requestId)
-        {
-            var entity = await _repository.GetByIdForEmployeeAsync(employeeCode, requestId);
-            if (entity == null) return null;
-
-            return new LeaveRequestDetailDto
-            {
-                RequestId = entity.Id,
-                EmployeeCode = entity.Employee.EmployeeCode,
-                LeaveType = entity.LeaveType,
-                StartDate = entity.StartDate,
-                EndDate = entity.EndDate,
-                Reason = entity.Reason,
-                Status = entity.Status.ToString(),
-                CreatedAt = entity.CreatedAt
+                Status    = entity.Status.ToString()
             };
         }
     }

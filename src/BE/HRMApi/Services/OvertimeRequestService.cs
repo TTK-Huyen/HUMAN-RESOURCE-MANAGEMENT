@@ -17,52 +17,39 @@ namespace HrmApi.Services
             _employeeRepository = employeeRepository;
         }
 
-        public async Task<OvertimeRequestCreatedDto> CreateAsync(string employeeCode, CreateOvertimeRequestDto dto)
+        public async Task<OvertimeRequestCreatedDto> CreateAsync(
+            string employeeCode,
+            CreateOvertimeRequestDto dto)
         {
+            // 1. Tìm employee theo mã
             var employee = await _employeeRepository.GetByCodeAsync(employeeCode)
                            ?? throw new InvalidOperationException("Employee not found");
 
-            // ❌ SAI: bạn viết entity.StartTime ... bên trong {...} → lỗi CS0747
-            // ✔ ĐÚNG:
+            // 2. Map DTO -> Entity
+            var totalHours = (dto.EndTime - dto.StartTime).TotalHours;
+
             var entity = new OvertimeRequest
             {
-                EmployeeId = employee.Id,
-                Date = dto.Date,
-                StartTime = dto.StartTime,
-                EndTime = dto.EndTime,
-                Reason = dto.Reason,
-                ProjectId = dto.ProjectId,
-                Status = RequestStatus.Pending
+                EmployeeId = employee.Id,      // FK theo ERD
+                Date       = dto.Date,
+                StartTime  = dto.StartTime,
+                EndTime    = dto.EndTime,
+                TotalHours = totalHours,
+                Reason     = dto.Reason,
+                ProjectId  = dto.ProjectId,
+                Status     = RequestStatus.Pending,
+                CreatedAt  = DateTime.UtcNow
             };
 
+            // 3. Lưu DB
             await _repository.AddAsync(entity);
             await _repository.SaveChangesAsync();
 
+            // 4. Trả DTO
             return new OvertimeRequestCreatedDto
             {
                 RequestId = entity.Id,
-                Status = entity.Status.ToString()
-            };
-        }
-
-        public async Task<OvertimeRequestDetailDto?> GetDetailAsync(string employeeCode, int requestId)
-        {
-            var entity = await _repository.GetByIdForEmployeeAsync(employeeCode, requestId);
-            if (entity == null) return null;
-
-            return new OvertimeRequestDetailDto
-            {
-                RequestId = entity.Id,
-                EmployeeCode = entity.Employee.EmployeeCode,
-
-                Date = entity.Date,
-                StartTime = entity.StartTime,
-                EndTime = entity.EndTime,
-                Reason = entity.Reason,
-                ProjectId = entity.ProjectId,
-
-                Status = entity.Status.ToString(),
-                CreatedAt = entity.CreatedAt
+                Status    = entity.Status.ToString()
             };
         }
     }

@@ -7,6 +7,7 @@ namespace HrmApi.Models
     public class Employee
     {
         public int Id { get; set; }
+
         // Employee Code đã có
         public string EmployeeCode { get; set; } = default!; 
 
@@ -21,6 +22,11 @@ namespace HrmApi.Models
         public string? PersonalEmail { get; set; }
         public string MaritalStatus { get; set; } = default!; // Single / Married / Other
         public bool HasChildren { get; set; } // Yes/No
+       
+
+        public ICollection<LeaveRequest> LeaveRequests { get; set; } = new List<LeaveRequest>();
+    public ICollection<OvertimeRequest> OvertimeRequests { get; set; } = new List<OvertimeRequest>();
+    public ICollection<ResignationRequest> ResignationRequests { get; set; } = new List<ResignationRequest>();
         
         // Định danh
         public string? CitizenIdNumber { get; set; }

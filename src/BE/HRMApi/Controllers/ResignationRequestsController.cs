@@ -27,24 +27,10 @@ namespace HrmApi.Controllers
 
             var result = await _service.CreateAsync(employeeCode, dto);
 
-            return CreatedAtAction(
-                nameof(GetResignationRequestDetail),
-                new { employeeCode, requestId = result.RequestId },
-                result);
+            // Không còn GetResignationRequestDetail → dùng Created()
+            return Created(string.Empty, result);
         }
 
-        [HttpGet("{requestId:int}")]
-        [ProducesResponseType(typeof(ResignationRequestDetailDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ResignationRequestDetailDto>> GetResignationRequestDetail(
-            string employeeCode,
-            int requestId)
-        {
-            var result = await _service.GetDetailAsync(employeeCode, requestId);
-            if (result == null)
-                return NotFound(new { message = "Resignation request not found for this employee." });
-
-            return Ok(result);
-        }
+        
     }
 }
