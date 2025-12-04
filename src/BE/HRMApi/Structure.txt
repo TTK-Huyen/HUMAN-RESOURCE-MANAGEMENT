@@ -1,0 +1,9 @@
+HrmApi/
+ ├── Controllers/      // Web API layer (HTTP)
+ ├── Dtos/             // Data Transfer Objects
+ ├── Models/           // Domain entities (Employee, Requests,…)
+ ├── Data/             // DbContext (EF Core)
+ ├── Repositories/     // Interface + implementation truy cập DB
+ ├── Services/         // Business logic theo use case
+ ├── appsettings.json
+ └── Program.cs
