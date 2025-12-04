@@ -1,9 +1,26 @@
+// Add services to the container.
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
 using HrmApi.Data;
 using HrmApi.Repositories;
 using HrmApi.Services;
 using Microsoft.EntityFrameworkCore;
 using HrmApi.Models;
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+        policy =>
+        {
+            policy
+                .WithOrigins("http://localhost:3000") // React app
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
+
 
 // 1. Đăng ký DbContext (MySQL)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -54,20 +71,19 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// 5. ALWAYS bật Swagger (cho đồ án cho khoẻ)
-app.UseSwagger();
-app.UseSwaggerUI(c =>
+if (app.Environment.IsDevelopment())
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "HRM API v1");
-    // c.RoutePrefix = string.Empty; // nếu muốn Swagger ở root "/"
-});
+    app.UseSwagger();
+    app.UseSwaggerUI();     // mặc định là /swagger/index.html
+}
 
 // 6. (Tuỳ chọn) Https redirection – nếu gây phiền thì comment lại
-// app.UseHttpsRedirection();
-
+app.UseHttpsRedirection();
+app.UseCors(MyAllowSpecificOrigins); // Kết nối FE
 app.UseAuthorization();
 
 // 7. Map controller routes
 app.MapControllers();
+
 
 app.Run();

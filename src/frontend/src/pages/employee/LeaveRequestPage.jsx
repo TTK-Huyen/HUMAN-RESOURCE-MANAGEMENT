@@ -1,7 +1,7 @@
 import { useState } from "react";
 import ViolationBanner from "../../components/ViolationBanner";
 import { FormRow } from "../../components/FormRow";
-import { create } from "../../services/requestApi";
+import { createLeaveRequest } from "../../services/requestApi";
 import "./RequestForm.css";
 
 const LEAVE_TYPES = [
@@ -14,7 +14,7 @@ const LEAVE_TYPES = [
 
 const INITIAL_FORM = {
   employeeName: "Alice",
-  employeeCode: "E001",
+  employeeCode: "EMP001",
   department: "Engineering",
   leaveType: "",
   startDate: "",
@@ -77,25 +77,54 @@ export default function LeaveRequestPage() {
 
   async function submit(e) {
     e.preventDefault();
+
     const m = validate();
     if (m.length) {
       setErrs(m);
       return;
     }
+
     setSubmitting(true);
+
     try {
-      await create("leave", {
-        ...f,
-        startDateISO: new Date(f.startDate).toISOString(),
-        endDateISO: new Date(f.endDate).toISOString(),
-      });
-      setErrs([]);
-      alert("Leave request submitted. Status = Pending.");
+      // Convert file -> base64 nếu có
+      let attachmentBase64 = null;
+
+      if (f.attachment) {
+        const file = f.attachment;
+        attachmentBase64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result.split(",")[1]); // chỉ lấy base64
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+
+      // Build payload đúng theo API backend
+      const payload = {
+        leaveType: f.leaveType,
+        startDate: new Date(f.startDate).toISOString(),
+        endDate: new Date(f.endDate).toISOString(),
+        reason: f.reason,
+        handoverPersonId: Number(f.handoverPerson), // backend yêu cầu số
+        attachmentsBase64: attachmentBase64
+      };
+
+      // Gọi API thực
+      await createLeaveRequest(f.employeeCode, payload);
+
+      alert("Leave request submitted successfully!");
       setF(INITIAL_FORM);
+      setErrs([]);
+
+    } catch (err) {
+      setErrs(["Failed to create leave request"]);
     } finally {
       setSubmitting(false);
     }
   }
+
+
 
   function resetForm() {
     setF(INITIAL_FORM);
