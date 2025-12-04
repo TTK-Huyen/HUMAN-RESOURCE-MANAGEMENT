@@ -1,18 +1,28 @@
-namespace HrmApi.Models
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace HrSystem.Models
 {
+    [Table("resignation_requests")]
     public class ResignationRequest
     {
-        public int Id { get; set; }
+        [Key]
+        [Column("request_id")]
+        public int RequestId { get; set; }
 
-        public int EmployeeId { get; set; }
-        public Employee Employee { get; set; } = default!;
+        [Column("proposed_last_working_date")]
+        public DateTime ProposedLastWorkingDate { get; set; }
 
-        public DateTime ResignationDate { get; set; }       // resignation_date
-        public string Reason { get; set; } = default!;      // reason
+        [Column("resign_reason")]
+        public string? ResignReason { get; set; }
 
-        public int? HandoverToHr { get; set; }              // handover_to_hr (optional)
+        [Column("has_completed_handover")]
+        public bool HasCompletedHandover { get; set; }
 
-        public RequestStatus Status { get; set; } = RequestStatus.Pending;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        [Column("hr_note")]
+        public string? HrNote { get; set; }
+
+        [ForeignKey(nameof(RequestId))]
+        public Request Request { get; set; } = null!;
     }
 }

@@ -1,8 +1,8 @@
-using HrmApi.Data;
-using HrmApi.Models;
+using HrSystem.Data;
+using HrSystem.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace HrmApi.Repositories
+namespace HrSystem.Repositories
 {
     public class EmployeeRepository : IEmployeeRepository
     {
@@ -13,13 +13,16 @@ namespace HrmApi.Repositories
             _context = context;
         }
 
-        public async Task<Employee?> GetByCodeAsync(string employeeCode)
+        public async Task<Employee?> FindByIdAsync(int id)
         {
-            // So sánh theo mã nhân viên, bỏ qua hoa thường nếu muốn
             return await _context.Employees
-                .AsNoTracking()
-                .FirstOrDefaultAsync(e => e.EmployeeCode == employeeCode);
-                // .FirstOrDefaultAsync(e => e.EmployeeCode.ToLower() == employeeCode.ToLower());
+                .FirstOrDefaultAsync(e => e.EmployeeId == id);
+        }
+
+        public async Task SaveAsync(Employee employee)
+        {
+            _context.Employees.Update(employee);
+            await _context.SaveChangesAsync();
         }
     }
 }
