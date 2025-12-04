@@ -7,7 +7,7 @@ namespace HrSystem.Controllers
 {
     [ApiController]
     [Route("api/v1/hr/profile-update-requests")]
-    [Authorize(Roles = "HR")]
+    // [Authorize(Roles = "HR")]
     public class HrProfileUpdateRequestController : ControllerBase
     {
         private readonly IProfileUpdateRequestService _service;
@@ -59,9 +59,8 @@ namespace HrSystem.Controllers
         {
             try
             {
-                // ví dụ lấy hrId từ claim "sub"; tùy hệ thống auth của bạn
-                var hrIdClaim = User.FindFirst("sub")?.Value ?? "0";
-                var hrId = int.Parse(hrIdClaim);
+                // LẤY HR ID TỪ BODY DTO (Swagger gửi lên)
+                var hrId = body.HrId;
 
                 var result = await _service.ChangeStatusAsync(hrId, requestId, body);
                 return Ok(result); // 200

@@ -1,19 +1,38 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace HrSystem.Models
 {
+    [Table("profile_update_requests")]
     public class ProfileUpdateRequest
     {
-        public int UpdateRequestId { get; set; }      // update_request_id
-        public int EmployeeId { get; set; }           // employee_id (người gửi)
-        public DateTime RequestDate { get; set; }     // request_date
-        public string Status { get; set; } = "PENDING"; // PENDING/APPROVED/REJECTED
+        [Key]
+        [Column("update_request_id")]
+        public int UpdateRequestId { get; set; }
 
-        public int? ReviewedBy { get; set; }          // reviewed_by (HR)
-        public DateTime? ReviewedAt { get; set; }     // reviewed_at
-        public string? RejectReason { get; set; }     // reject_reason
-        public string? Comment { get; set; }          // comment
+        [Column("employee_id")]
+        public int EmployeeId { get; set; }
 
+        [Column("request_date")]
+        public DateTime RequestDate { get; set; }
+
+        [Column("status")]
+        public string Status { get; set; } = "PENDING";
+
+        [Column("reviewed_by")]
+        public int? ReviewedBy { get; set; }
+
+        [Column("reviewed_at")]
+        public DateTime? ReviewedAt { get; set; }
+
+        [Column("reject_reason")]
+        public string? RejectReason { get; set; }
+
+        [Column("comment")]
+        public string? Comment { get; set; }
+
+        [ForeignKey("EmployeeId")]
         public Employee Employee { get; set; } = null!;
-        public Employee? Reviewer { get; set; }
 
         public ICollection<ProfileUpdateRequestDetail> Details { get; set; }
             = new List<ProfileUpdateRequestDetail>();

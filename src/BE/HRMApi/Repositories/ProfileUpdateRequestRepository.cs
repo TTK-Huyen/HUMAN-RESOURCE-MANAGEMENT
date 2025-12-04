@@ -44,20 +44,26 @@ namespace HrSystem.Repositories
                 .FirstOrDefaultAsync(r => r.UpdateRequestId == id);
         }
 
-        public async Task UpdateStatusAsync(long id, string newStatus, string? reason, int hrId)
+        public async Task UpdateStatusAsync(int id, string newStatus, string? reason, int hrId)
         {
-            var request = await _context.ProfileUpdateRequests
-                .FirstOrDefaultAsync(r => r.UpdateRequestId == id);
+            var hrExists = await _context.Employees
+                .AnyAsync(e => e.EmployeeId == hrId);
 
-            if (request == null)
+            if (!hrExists)
             {
-                throw new KeyNotFoundException("Request not found");
+                throw new Exception($"HrId {hrId} not found in employees table");
             }
 
-            request.Status = newStatus;       // "APPROVED" | "REJECTED"
-            request.RejectReason = reason;
-            request.ReviewedBy = hrId;
-            request.ReviewedAt = DateTime.UtcNow;
+            var entity = await _context.ProfileUpdateRequests.FindAsync(id);
+            if (entity == null)
+            {
+                throw new Exception($"ProfileUpdateRequest {id} not found");
+            }
+
+            entity.Status       = newStatus;
+            entity.RejectReason = reason;
+            entity.ReviewedBy   = hrId;
+            entity.ReviewedAt   = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
         }

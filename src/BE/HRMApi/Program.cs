@@ -1,7 +1,8 @@
 using HrSystem.Data;
-using Microsoft.EntityFrameworkCore;
 using HrSystem.Repositories;
 using HrSystem.Services;
+using Microsoft.EntityFrameworkCore;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,17 +10,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(); 
+builder.Services.AddAuthorization();
 
-//Khúc này đê kết nối docker
-// Connection string chung cho mọi môi trường
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? builder.Configuration["ConnectionStrings:DefaultConnection"]
     ?? throw new InvalidOperationException("DefaultConnection not found.");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+{
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+});
 
-// Đăng ký Repo + Service...
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IProfileUpdateRequestRepository, ProfileUpdateRequestRepository>();
 builder.Services.AddScoped<IProfileUpdateRequestService, ProfileUpdateRequestService>();
@@ -34,7 +35,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseAuthorization();
+// app.UseAuthorization();
 app.MapControllers();
 
 var summaries = new[]

@@ -7,6 +7,6 @@ namespace HrSystem.Repositories
     {
         Task<List<ProfileUpdateRequest>> SearchAsync(RequestFilterDto filter);
         Task<ProfileUpdateRequest?> FindByIdWithDetailsAsync(long id);
-        Task UpdateStatusAsync(long id, string newStatus, string? reason, int hrId);
+        Task UpdateStatusAsync(int id, string newStatus, string? reason, int hrId);
     }
 }

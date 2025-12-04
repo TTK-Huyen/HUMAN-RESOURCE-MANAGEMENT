@@ -1,13 +1,28 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace HrSystem.Models
 {
+    [Table("profile_update_request_details")]
     public class ProfileUpdateRequestDetail
     {
-        public int DetailId { get; set; }            // detail_id
-        public int UpdateRequestId { get; set; }     // update_request_id
-        public string FieldName { get; set; } = null!; // field_name (ADDRESS, BANK_ACCOUNT,...)
-        public string? OldValue { get; set; }        // old_value
-        public string NewValue { get; set; } = null!; // new_value
+        [Key]
+        [Column("detail_id")]
+        public int DetailId { get; set; }
 
+        [Column("update_request_id")]
+        public int UpdateRequestId { get; set; }
+
+        [Column("field_name")]
+        public string FieldName { get; set; } = null!;
+
+        [Column("old_value")]
+        public string? OldValue { get; set; }
+
+        [Column("new_value")]
+        public string NewValue { get; set; } = null!;
+
+        [ForeignKey("UpdateRequestId")]
         public ProfileUpdateRequest UpdateRequest { get; set; } = null!;
     }
 }

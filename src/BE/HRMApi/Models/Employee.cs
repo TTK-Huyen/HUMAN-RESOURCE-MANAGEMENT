@@ -1,46 +1,81 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace HrSystem.Models
 {
+    [Table("employees")]
     public class Employee
     {
-        public int EmployeeId { get; set; }             // employee_id
-        public string EmployeeCode { get; set; } = null!; // employee_code
-        public string FullName { get; set; } = null!;   // full_name
+        [Key]
+        [Column("employee_id")]
+        public int EmployeeId { get; set; }
 
-        public DateTime? DateOfBirth { get; set; }      // date_of_birth
-        public string? Gender { get; set; }             // MALE/FEMALE/OTHER
+        [Column("employee_code")]
+        public string EmployeeCode { get; set; } = null!;
 
-        public string? PhoneNumber { get; set; }        // phone_number
-        public string? PersonalEmail { get; set; }      // personal_email
-        public string? CompanyEmail { get; set; }       // company_email
+        [Column("full_name")]
+        public string FullName { get; set; } = null!;
+        [Column("date_of_birth")]
+        public DateTime? DateOfBirth { get; set; }
 
-        public string? CurrentAddress { get; set; }     // current_address
-        public string? CitizenId { get; set; }          // citizen_id
-        public string? PersonalTaxCode { get; set; }    // personal_tax_code
-        public string? SocialInsuranceNo { get; set; }  // social_insurance_no
+        [Column("gender")]
+        public string? Gender { get; set; }
 
-        public string? MaritalStatus { get; set; }      // SINGLE/MARRIED/...
-        public bool HasChildren { get; set; }           // has_children
+        [Column("phone_number")]
+        public string? PhoneNumber { get; set; }
 
-        public int? DepartmentId { get; set; }          // department_id
-        public int? PositionId { get; set; }            // position_id
+        [Column("personal_email")]
+        public string? PersonalEmail { get; set; }
 
-        public string? EmploymentType { get; set; }     // FULLTIME/PARTTIME/INTERN
+        [Column("company_email")]
+        public string? CompanyEmail { get; set; }
 
-        public DateTime? ContractStartDate { get; set; } // contract_start_date
-        public DateTime? ContractEndDate { get; set; }   // contract_end_date
+        [Column("current_address")]
+        public string? CurrentAddress { get; set; }
 
-        public string Status { get; set; } = "ACTIVE";   // ACTIVE/INACTIVE/RESIGNED
-        public int? ManagerId { get; set; }              // manager_id
+        [Column("citizen_id")]
+        public string? CitizenId { get; set; }
+
+        [Column("personal_tax_code")]
+        public string? PersonalTaxCode { get; set; }
+
+        [Column("social_insurance_no")]
+        public string? SocialInsuranceNo { get; set; }
+
+        [Column("marital_status")]
+        public string? MaritalStatus { get; set; }
+
+        [Column("has_children")]
+        public bool HasChildren { get; set; }
+
+        [Column("department_id")]
+        public int? DepartmentId { get; set; }
+
+        [Column("position_id")]
+        public int? PositionId { get; set; }
+
+        [Column("employment_type")]
+        public string? EmploymentType { get; set; }
+
+        [Column("contract_start_date")]
+        public DateTime? ContractStartDate { get; set; }
+
+        [Column("contract_end_date")]
+        public DateTime? ContractEndDate { get; set; }
+
+        [Column("status")]
+        public string Status { get; set; } = "ACTIVE";
+
+        [Column("manager_id")]
+        public int? ManagerId { get; set; }
 
         // Navigation
-        public Department? Department { get; set; }
-        public Position? Position { get; set; }
-        public Employee? Manager { get; set; }
+        // Navigation cho requests NHÂN VIÊN TỰ GỬI 
+        [InverseProperty(nameof(Request.Employee))]
+        public ICollection<Request> Requests { get; set; } = new List<Request>();
 
-        public ICollection<Employee> Subordinates { get; set; }
-            = new List<Employee>();
-
-        public ICollection<ProfileUpdateRequest> ProfileUpdateRequests { get; set; }
-            = new List<ProfileUpdateRequest>();
+        // Navigation cho requests NHÂN VIÊN LÀ NGƯỜI DUYỆT (Approver) 
+        [InverseProperty(nameof(Request.Approver))]
+        public ICollection<Request> ApprovedRequests { get; set; } = new List<Request>();
     }
 }

@@ -16,20 +16,23 @@ namespace HrSystem.Services
             _employeeRepo = employeeRepo;
         }
 
-        public async Task<List<RequestListItemDto>> SearchAsync(RequestFilterDto filter)
+        // ========= API #1: GET LIST =========
+        // ⚠️ INTERFACE yêu cầu: Task<IEnumerable<RequestListItemDto>>
+        public async Task<IEnumerable<RequestListItemDto>> SearchAsync(RequestFilterDto filter)
         {
             var requests = await _requestRepo.SearchAsync(filter);
 
             return requests.Select(r => new RequestListItemDto
             {
-                RequestId = r.UpdateRequestId,
+                RequestId    = r.UpdateRequestId,
                 EmployeeCode = r.Employee.EmployeeCode,
-                FullName = r.Employee.FullName,
-                CreatedAt = r.RequestDate,
-                Status = r.Status
+                FullName     = r.Employee.FullName,
+                CreatedAt    = r.RequestDate,
+                Status       = r.Status
             }).ToList();
         }
 
+        // ========= API #2: GET DETAIL =========
         public async Task<RequestDetailDto> GetDetailAsync(long requestId)
         {
             var request = await _requestRepo.FindByIdWithDetailsAsync(requestId);
@@ -40,24 +43,25 @@ namespace HrSystem.Services
 
             return new RequestDetailDto
             {
-                RequestId = request.UpdateRequestId,
+                RequestId  = request.UpdateRequestId,
                 EmployeeId = request.EmployeeId,
-                Status = request.Status,
-                Details = request.Details.Select(d => new RequestDetailItemDto
+                Status     = request.Status,
+                Details    = request.Details.Select(d => new RequestDetailItemDto
                 {
                     FieldName = d.FieldName,
-                    OldValue = d.OldValue,
-                    NewValue = d.NewValue
+                    OldValue  = d.OldValue,
+                    NewValue  = d.NewValue
                 }).ToList()
             };
         }
 
+        // ========= API #3: PATCH STATUS =========
         public async Task<RequestStatusResponseDto> ChangeStatusAsync(
             int hrId,
             long requestId,
             RequestStatusUpdateDto dto)
         {
-            var normalizedStatus = dto.NewStatus.ToUpper(); // APPROVED/REJECTED
+            var normalizedStatus = dto.NewStatus.ToUpper(); // APPROVED / REJECTED
 
             if (normalizedStatus != "APPROVED" && normalizedStatus != "REJECTED")
             {
@@ -76,7 +80,7 @@ namespace HrSystem.Services
                 throw new KeyNotFoundException("Request not found");
             }
 
-            // Nếu Approved thì apply thay đổi vào Employee
+            // ✅ Nếu APPROVED thì apply thay đổi vào Employee
             if (normalizedStatus == "APPROVED")
             {
                 var employee = await _employeeRepo.FindByIdAsync(request.EmployeeId)
@@ -90,7 +94,7 @@ namespace HrSystem.Services
                             employee.FullName = d.NewValue;
                             break;
 
-                        // TODO: thêm từng field khác theo design
+                        // TODO: thêm từng field khác theo design của bạn
                         default:
                             break;
                     }
@@ -99,11 +103,18 @@ namespace HrSystem.Services
                 await _employeeRepo.SaveAsync(employee);
             }
 
-            await _requestRepo.UpdateStatusAsync(requestId, normalizedStatus, dto.RejectReason, hrId);
+            // ✅ Update status + reviewed_by + reviewed_at + reject_reason
+            var intId = checked((int)requestId);
+            await _requestRepo.UpdateStatusAsync(
+                intId,
+                normalizedStatus,
+                dto.RejectReason,
+                hrId
+            );
 
             return new RequestStatusResponseDto
             {
-                RequestId = requestId,
+                RequestId     = requestId,
                 RequestStatus = normalizedStatus
             };
         }
