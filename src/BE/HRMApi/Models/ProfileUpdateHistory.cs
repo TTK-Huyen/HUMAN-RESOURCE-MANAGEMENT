@@ -17,6 +17,9 @@ namespace HrmApi.Models
         // status (PENDING, APPROVED, REJECTED)
         public string Status { get; set; } = default!; 
 
+        // Lý do gửi yêu cầu cập nhật
+        public string Reason { get; set; } = string.Empty;
+
         // reviewed_by (ID của HR xử lý, có thể null)
         public int? ReviewedById { get; set; }
         // Navigation Property: Người xử lý

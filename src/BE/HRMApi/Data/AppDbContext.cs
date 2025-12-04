@@ -22,5 +22,22 @@ namespace HrmApi.Data
         public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
         public DbSet<OvertimeRequest> OvertimeRequests => Set<OvertimeRequest>();
         public DbSet<ResignationRequest> ResignationRequests => Set<ResignationRequest>();
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Employee>()
+                .HasMany(e => e.ProfileUpdateHistory)
+                .WithOne(h => h.Employee)
+                .HasForeignKey(h => h.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ProfileUpdateHistory>()
+                .HasMany(h => h.Details)
+                .WithOne(d => d.UpdateRequest)
+                .HasForeignKey(d => d.UpdateRequestId)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
     }
 }

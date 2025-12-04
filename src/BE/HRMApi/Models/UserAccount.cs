@@ -1,9 +1,12 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace HrmApi.Models;
 
 public enum AccountStatus { ACTIVE, LOCKED }
 
 public class UserAccount
 {
+    [Key]
     // user_id
     public int UserId { get; set; }
     
