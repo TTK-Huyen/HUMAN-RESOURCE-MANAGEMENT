@@ -16,36 +16,17 @@ namespace HrmApi.Controllers
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(LeaveRequestCreatedDto), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<LeaveRequestCreatedDto>> CreateLeaveRequest(
             string employeeCode,
             [FromBody] CreateLeaveRequestDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var result = await _service.CreateAsync(employeeCode, dto);
 
-            // Location header: /api/v1/employees/{code}/requests/leave/{id}
-            return CreatedAtAction(
-                nameof(GetLeaveRequestDetail),
-                new { employeeCode, requestId = result.RequestId },
-                result);
+            // Không còn GetDetail nữa, nên trả Created + body đơn giản
+            // Có thể dùng Created(...) hoặc Ok(...)
+            return Created(string.Empty, result);
+            // hoặc: return Ok(result);
         }
 
-        [HttpGet("{requestId:int}")]
-        [ProducesResponseType(typeof(LeaveRequestDetailDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<LeaveRequestDetailDto>> GetLeaveRequestDetail(
-            string employeeCode,
-            int requestId)
-        {
-            var result = await _service.GetDetailAsync(employeeCode, requestId);
-            if (result == null)
-                return NotFound(new { message = "Leave request not found for this employee." });
-
-            return Ok(result);
-        }
     }
 }

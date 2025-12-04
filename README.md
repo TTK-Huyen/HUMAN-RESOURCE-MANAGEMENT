@@ -49,3 +49,15 @@ The system aims to digitalize HR processes, reduce manual work, and improve tran
 
 ## 📅 Development Timeline
 > _To be added later._
+
+
+
+
+### Frontend
+
+1. Cài đặt các gói cần thiết từ `package.json` 
+   Di chuyển vào thư mục frontend và chạy:  
+   `npm install`  
+
+2. Chạy frontend
+   `npm start`  

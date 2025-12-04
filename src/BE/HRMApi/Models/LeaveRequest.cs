@@ -21,12 +21,21 @@ namespace HrmApi.Models
 
         [Column("half_day")]
         public string? HalfDay { get; set; }           // MORNING/AFTERNOON/null
+        // leave_requests.request_id
+        public int Id { get; set; }
 
-        [Column("reason")]
-        public string? Reason { get; set; }
+        // FK → employees.employee_id
+        public int EmployeeId { get; set; }
+        public Employee Employee { get; set; } = default!;
 
-        [Column("handover_employee_id")]
+
+        public string Reason { get; set; } = default!;
+
+        // handover_employee_id trong ERD (optional)
         public int? HandoverEmployeeId { get; set; }
+
+        // Bạn đang dùng base64 thay vì attachment_path → ok cho đồ án
+        public string? AttachmentsBase64 { get; set; }
 
         [Column("attachment_path")]
         public string? AttachmentPath { get; set; }

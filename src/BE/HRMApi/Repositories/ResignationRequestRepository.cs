@@ -13,14 +13,6 @@ namespace HrmApi.Repositories
             _context = context;
         }
 
-        public async Task<ResignationRequest?> GetByIdForEmployeeAsync(string employeeCode, int requestId)
-        {
-            return await _context.ResignationRequests
-                .Include(r => r.Employee)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(r =>
-                    r.Id == requestId && r.Employee.EmployeeCode == employeeCode);
-        }
 
         public async Task AddAsync(ResignationRequest request)
         {

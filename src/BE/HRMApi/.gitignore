@@ -43,7 +43,7 @@ appsettings.Local.json
 secrets.json
 
 # Environment files
-.env
+env
 
 # Optional: ignore publish output
 # publish/
@@ -52,3 +52,5 @@ secrets.json
 **/obj/
 Migration/
 
+
+frontend

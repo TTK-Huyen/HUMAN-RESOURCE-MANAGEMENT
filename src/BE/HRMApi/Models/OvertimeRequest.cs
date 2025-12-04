@@ -18,9 +18,24 @@ namespace HrmApi.Models
 
         [Column("end_time")]
         public TimeSpan EndTime { get; set; }
+        // overtime_requests.request_id
+        public int Id { get; set; }
 
-        [Column("total_hours")]
-        public decimal TotalHours { get; set; }
+        // FK → employees.employee_id
+        public int EmployeeId { get; set; }
+        public Employee Employee { get; set; } = default!;
+
+        // Ngày OT
+        public DateTime Date { get; set; }
+
+        // Tổng giờ OT (có thể tự tính)
+        public double TotalHours { get; set; }
+
+        public string Reason { get; set; } = default!;
+
+        // project_name / project_id (theo user story)
+        public string? ProjectId { get; set; }
+
 
         [Column("ot_reason")]
         public string? OtReason { get; set; }
