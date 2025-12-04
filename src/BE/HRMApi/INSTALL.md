@@ -24,7 +24,7 @@ $env:PATH = "$env:USERPROFILE\.dotnet;$env:PATH"
 4) Cài `dotnet-ef` phù hợp
 ```powershell
 dotnet tool uninstall --global dotnet-ef || true
-dotnet tool install --global dotnet-ef --version 8.0.0
+dotnet tool install --global dotnet-ef --version 9.0.0
 dotnet-ef --version
 ```
 
@@ -34,6 +34,21 @@ Ví dụ ngắn:
 "ConnectionStrings": { "DefaultConnection": "Server=localhost;Port=3306;Database=HrmDb;User=root;Password=123456;" }
 ```
 
+```docker
+Tạo server: 
+docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=123456 -e MYSQL_DATABASE=HrmDb -p 3306:3306 mysql:8.0
+
+Kiểm tra sau khi chạy: 
+docker ps
+```
+```json
+"ConnectionStrings": {
+  "DefaultConnection": "Server=mysql;Port=3306;Database=HrmDb;User=root;Password=123456;"
+}
+
+```
+
+
 6) Lệnh chạy (thư mục chứa `HRMApi.csproj`)
 ```powershell
 cd "F:\HCMUS_KH\Nam4\PTTK HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi"
@@ -41,6 +56,8 @@ dotnet restore
 dotnet build
 # (Nếu cần tạo migration mới)
 dotnet ef migrations add InitialCreate
+dotnet ef database drop -f // Xóa db hiện tại - localhost
+docker rm -f mysql // Xóa db hiện tại - docker
 dotnet ef database update
 dotnet run
 ```

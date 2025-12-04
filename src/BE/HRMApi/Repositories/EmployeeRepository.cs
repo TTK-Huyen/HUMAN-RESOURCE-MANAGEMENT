@@ -13,13 +13,56 @@ namespace HrmApi.Repositories
             _context = context;
         }
 
-        public async Task<Employee?> GetByCodeAsync(string employeeCode)
+        public async Task<Employee?> FindByIdAsync(int id)
         {
-            // So sánh theo mã nhân viên, bỏ qua hoa thường nếu muốn
+            return await _context.Employees
+                .FirstOrDefaultAsync(e => e.EmployeeId == id);
+        }
+
+        public async Task SaveAsync(Employee employee)
+        {
+            _context.Employees.Update(employee);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<Employee?> GetProfileByCodeAsync(string employeeCode)
+        {
             return await _context.Employees
                 .AsNoTracking()
+                .Include(e => e.Department)
+                .Include(e => e.JobTitle)
+                .Include(e => e.DirectManager)
+                .Include(e => e.PhoneNumbers)
+                .Include(e => e.BankAccounts)
+                .Include(e => e.Education)
+                .Include(e => e.ProfileUpdateHistory)
+                .ThenInclude(h => h.Details)
                 .FirstOrDefaultAsync(e => e.EmployeeCode == employeeCode);
-                // .FirstOrDefaultAsync(e => e.EmployeeCode.ToLower() == employeeCode.ToLower());
+        }
+
+        public async Task<Employee?> GetProfileByIdAsync(int id)
+        {
+            return await _context.Employees
+                .AsNoTracking()
+                .Include(e => e.Department)
+                .Include(e => e.JobTitle)
+                .Include(e => e.DirectManager)
+                .Include(e => e.PhoneNumbers)
+                .Include(e => e.BankAccounts)
+                .Include(e => e.Education)
+                .Include(e => e.ProfileUpdateHistory)
+                .ThenInclude(h => h.Details)
+                .FirstOrDefaultAsync(e => e.Id == id);
+        }
+
+        public void AddProfileUpdateRequest(ProfileUpdateHistory request)
+        {
+            _context.ProfileUpdateHistories.Add(request);
+        }
+
+        public async Task<int> SaveChangesAsync()
+        {
+            return await _context.SaveChangesAsync();
         }
     }
 }
