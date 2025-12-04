@@ -50,3 +50,5 @@ secrets.json
 
 # MSBuild / .NET Core Build Artifacts
 **/obj/
+Migration/
+
