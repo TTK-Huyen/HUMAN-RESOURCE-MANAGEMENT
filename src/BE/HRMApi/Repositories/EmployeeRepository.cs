@@ -24,5 +24,45 @@ namespace HrSystem.Repositories
             _context.Employees.Update(employee);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<Employee?> GetProfileByCodeAsync(string employeeCode)
+        {
+            return await _context.Employees
+                .AsNoTracking()
+                .Include(e => e.Department)
+                .Include(e => e.JobTitle)
+                .Include(e => e.DirectManager)
+                .Include(e => e.PhoneNumbers)
+                .Include(e => e.BankAccounts)
+                .Include(e => e.Education)
+                .Include(e => e.ProfileUpdateHistory)
+                .ThenInclude(h => h.Details)
+                .FirstOrDefaultAsync(e => e.EmployeeCode == employeeCode);
+        }
+
+        public async Task<Employee?> GetProfileByIdAsync(int id)
+        {
+            return await _context.Employees
+                .AsNoTracking()
+                .Include(e => e.Department)
+                .Include(e => e.JobTitle)
+                .Include(e => e.DirectManager)
+                .Include(e => e.PhoneNumbers)
+                .Include(e => e.BankAccounts)
+                .Include(e => e.Education)
+                .Include(e => e.ProfileUpdateHistory)
+                .ThenInclude(h => h.Details)
+                .FirstOrDefaultAsync(e => e.Id == id);
+        }
+
+        public void AddProfileUpdateRequest(ProfileUpdateHistory request)
+        {
+            _context.ProfileUpdateHistories.Add(request);
+        }
+
+        public async Task<int> SaveChangesAsync()
+        {
+            return await _context.SaveChangesAsync();
+        }
     }
 }

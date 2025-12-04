@@ -6,76 +6,57 @@ namespace HrSystem.Models
     [Table("employees")]
     public class Employee
     {
-        [Key]
-        [Column("employee_id")]
-        public int EmployeeId { get; set; }
+        public int Id { get; set; }
+        // Employee Code đã có
+        public string EmployeeCode { get; set; } = default!; 
 
-        [Column("employee_code")]
-        public string EmployeeCode { get; set; } = null!;
+        // Các thuộc tính cơ bản
+        public string EmployeeName { get; set; } = default!;
+        public DateTime DateOfBirth { get; set; } // Format dd/mm/yyyy sẽ được xử lý khi hiển thị/nhập
+        public string Gender { get; set; } = default!; // Male / Female / Other
+        public string Nationality { get; set; } = default!; // Country
 
-        [Column("full_name")]
-        public string FullName { get; set; } = null!;
-        [Column("date_of_birth")]
-        public DateTime? DateOfBirth { get; set; }
-
-        [Column("gender")]
-        public string? Gender { get; set; }
-
-        [Column("phone_number")]
-        public string? PhoneNumber { get; set; }
-
-        [Column("personal_email")]
-        public string? PersonalEmail { get; set; }
-
-        [Column("company_email")]
+        // Thông tin liên lạc & Cá nhân
         public string? CompanyEmail { get; set; }
+        public string? PersonalEmail { get; set; }
+        public string MaritalStatus { get; set; } = default!; // Single / Married / Other
+        public bool HasChildren { get; set; } // Yes/No
+        
+        // Định danh
+        public string? CitizenIdNumber { get; set; }
+        public string PersonalTaxCode { get; set; } = default!;
+        public string SocialInsuranceNumber { get; set; } = default!;
 
-        [Column("current_address")]
-        public string? CurrentAddress { get; set; }
+        // Địa chỉ & Trạng thái
+        public string CurrentAddress { get; set; } = default!;
+        public string Status { get; set; } = default!; // Ví dụ: Active, On Leave, Terminated
 
-        [Column("citizen_id")]
-        public string? CitizenId { get; set; }
+        // Mối quan hệ với các bảng khác (Foreign Keys & Navigation Properties)
+        
+        // Bộ phận & Chức danh
+        public int DepartmentId { get; set; }
+        public Department Department { get; set; } = default!;
 
-        [Column("personal_tax_code")]
-        public string? PersonalTaxCode { get; set; }
+        public int JobTitleId { get; set; }
+        public JobTitle JobTitle { get; set; } = default!;
 
-        [Column("social_insurance_no")]
-        public string? SocialInsuranceNo { get; set; }
+        // Quản lý trực tiếp (Tự tham chiếu hoặc tham chiếu đến một Employee khác)
+        public int? DirectManagerId { get; set; } // Có thể null nếu là cấp cao nhất
+        public Employee? DirectManager { get; set; } // Navigation property cho Quản lý
 
-        [Column("marital_status")]
-        public string? MaritalStatus { get; set; }
+        // Hợp đồng
+        public string EmploymentType { get; set; } = default!; // Full-time / Part-time / Internship / Remote
+        public string ContractType { get; set; } = default!; // Ví dụ: Indefinite, Fixed-term
 
-        [Column("has_children")]
-        public bool HasChildren { get; set; }
+        // Sử dụng một model riêng cho hợp đồng nếu muốn quản lý nhiều hợp đồng
+        // Hoặc các thuộc tính đơn giản cho hợp đồng hiện tại:
+        public DateTime ContractStartDate { get; set; }
+        public DateTime? ContractEndDate { get; set; } // Có thể null cho hợp đồng không xác định thời hạn
 
-        [Column("department_id")]
-        public int? DepartmentId { get; set; }
-
-        [Column("position_id")]
-        public int? PositionId { get; set; }
-
-        [Column("employment_type")]
-        public string? EmploymentType { get; set; }
-
-        [Column("contract_start_date")]
-        public DateTime? ContractStartDate { get; set; }
-
-        [Column("contract_end_date")]
-        public DateTime? ContractEndDate { get; set; }
-
-        [Column("status")]
-        public string Status { get; set; } = "ACTIVE";
-
-        [Column("manager_id")]
-        public int? ManagerId { get; set; }
-
-        // Navigation
-        // Navigation cho requests NHÂN VIÊN TỰ GỬI 
-        [InverseProperty(nameof(Request.Employee))]
-        public ICollection<Request> Requests { get; set; } = new List<Request>();
-
-        // Navigation cho requests NHÂN VIÊN LÀ NGƯỜI DUYỆT (Approver) 
-        [InverseProperty(nameof(Request.Approver))]
-        public ICollection<Request> ApprovedRequests { get; set; } = new List<Request>();
+        // Các collection đã có model riêng
+        public ICollection<EmployeePhoneNumber> PhoneNumbers { get; set; } = new List<EmployeePhoneNumber>();
+        public ICollection<EmployeeBankAccount> BankAccounts { get; set; } = new List<EmployeeBankAccount>();
+        public ICollection<EmployeeEducation> Education { get; set; } = new List<EmployeeEducation>();
+        public ICollection<ProfileUpdateHistory> ProfileUpdateHistory { get; set; } = new List<ProfileUpdateHistory>();
     }
 }

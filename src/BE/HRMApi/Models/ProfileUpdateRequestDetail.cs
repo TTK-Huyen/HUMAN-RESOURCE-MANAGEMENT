@@ -1,28 +1,23 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace HrSystem.Models
+namespace HrmApi.Models
 {
-    [Table("profile_update_request_details")]
+    // Ánh xạ đến bảng 'profile_update_request_details'
     public class ProfileUpdateRequestDetail
     {
-        [Key]
-        [Column("detail_id")]
-        public int DetailId { get; set; }
-
-        [Column("update_request_id")]
+        // Khóa chính: detail_id
+        public int Id { get; set; } 
+        
+        // Khóa ngoại: update_request_id
         public int UpdateRequestId { get; set; }
+        // Navigation Property: Yêu cầu cập nhật cha
+        public ProfileUpdateHistory UpdateRequest { get; set; } = default!;
 
-        [Column("field_name")]
-        public string FieldName { get; set; } = null!;
+        // field_name (ADDRESS, BANK_ACCOUNT, PHONE, ...)
+        public string FieldName { get; set; } = default!; 
 
-        [Column("old_value")]
+        // old_value
         public string? OldValue { get; set; }
 
-        [Column("new_value")]
-        public string NewValue { get; set; } = null!;
-
-        [ForeignKey("UpdateRequestId")]
-        public ProfileUpdateRequest UpdateRequest { get; set; } = null!;
+        // new_value
+        public string NewValue { get; set; } = default!; 
     }
 }

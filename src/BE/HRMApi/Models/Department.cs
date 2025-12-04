@@ -1,12 +1,19 @@
-namespace HrSystem.Models
+namespace HrmApi.Models
 {
+    // Ánh xạ đến bảng 'departments'
     public class Department
     {
-        public int DepartmentId { get; set; }
-        public string DepartmentCode { get; set; } = null!;
-        public string DepartmentName { get; set; } = null!;
+        // Khóa chính: department_id
+        public int Id { get; set; } 
+        
+        // department_code
+        public string DepartmentCode { get; set; } = default!;
+        
+        // department_name
+        public string Name { get; set; } = default!;
 
-        public ICollection<Employee> Employees { get; set; }
-            = new List<Employee>();
+        // Navigation Property: Mối quan hệ 1-nhiều với Employee
+        // Một Department có nhiều Employees
+        public ICollection<Employee> Employees { get; set; } = new List<Employee>();
     }
 }
