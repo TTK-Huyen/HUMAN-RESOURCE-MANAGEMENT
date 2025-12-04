@@ -16,7 +16,7 @@ namespace HrmApi.Repositories
         public async Task<Employee?> FindByIdAsync(int id)
         {
             return await _context.Employees
-                .FirstOrDefaultAsync(e => e.EmployeeId == id);
+                .FirstOrDefaultAsync(e => e.Id== id);
         }
 
         public async Task SaveAsync(Employee employee)
@@ -64,5 +64,11 @@ namespace HrmApi.Repositories
         {
             return await _context.SaveChangesAsync();
         }
+
+        public async Task<Employee?> GetByCodeAsync(string employeeCode)
+        {
+            return await _context.Employees
+                .FirstOrDefaultAsync(e => e.EmployeeCode == employeeCode);
+        }   
     }
 }

@@ -1,8 +1,8 @@
-using HrSystem.Data;
-using HrSystem.Repositories;
-using HrSystem.Services;
+using HrmApi.Repositories;
+using HrmApi.Services;
 using Microsoft.EntityFrameworkCore;
-
+using HrmApi.Models;
+using HrmApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 

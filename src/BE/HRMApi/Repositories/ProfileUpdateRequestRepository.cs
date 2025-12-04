@@ -47,7 +47,7 @@ namespace HrmApi.Repositories
         public async Task UpdateStatusAsync(int id, string newStatus, string? reason, int hrId)
         {
             var hrExists = await _context.Employees
-                .AnyAsync(e => e.EmployeeId == hrId);
+                .AnyAsync(e => e.Id == hrId);
 
             if (!hrExists)
             {
