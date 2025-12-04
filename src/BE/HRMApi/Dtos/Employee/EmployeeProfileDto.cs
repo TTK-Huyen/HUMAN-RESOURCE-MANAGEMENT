@@ -65,4 +65,17 @@ namespace HrmApi.Dtos.Employee
         public string? RejectReason { get; set; }
         public string? Comment { get; set; }
     }
+
+    public class ProfileUpdateRequestCreateDto
+    {
+        public string Reason { get; set; } = string.Empty;
+        public List<ProfileUpdateRequestDetailCreateDto> Details { get; set; } = new();
+    }
+
+    public class ProfileUpdateRequestDetailCreateDto
+    {
+        public string FieldName { get; set; } = string.Empty;
+        public string? OldValue { get; set; }
+        public string NewValue { get; set; } = string.Empty;
+    }
 }
