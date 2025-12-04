@@ -20,10 +20,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
 });
-
+// UC 1.6
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IProfileUpdateRequestRepository, ProfileUpdateRequestRepository>();
 builder.Services.AddScoped<IProfileUpdateRequestService, ProfileUpdateRequestService>();
+//UC 2.20
+builder.Services.AddScoped<IEmployeeRequestRepository, EmployeeRequestRepository>();
+builder.Services.AddScoped<IRequestStatusService, RequestStatusService>();
 
 var app = builder.Build();
 
