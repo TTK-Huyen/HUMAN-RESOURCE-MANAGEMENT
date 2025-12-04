@@ -56,6 +56,8 @@ dotnet restore
 dotnet build
 # (Nếu cần tạo migration mới)
 dotnet ef migrations add InitialCreate
+dotnet ef database drop -f // Xóa db hiện tại - localhost
+docker rm -f mysql // Xóa db hiện tại - docker
 dotnet ef database update
 dotnet run
 ```

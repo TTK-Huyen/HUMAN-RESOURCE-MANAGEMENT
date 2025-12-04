@@ -13,13 +13,13 @@ namespace HrmApi.Models
         public string Nationality { get; set; } = default!; // Country
 
         // Thông tin liên lạc & Cá nhân
-        public string CompanyEmail { get; set; } = default!;
+        public string? CompanyEmail { get; set; }
         public string? PersonalEmail { get; set; }
         public string MaritalStatus { get; set; } = default!; // Single / Married / Other
         public bool HasChildren { get; set; } // Yes/No
         
         // Định danh
-        public string CitizenIdNumber { get; set; } = default!; 
+        public string? CitizenIdNumber { get; set; }
         public string PersonalTaxCode { get; set; } = default!;
         public string SocialInsuranceNumber { get; set; } = default!;
 
