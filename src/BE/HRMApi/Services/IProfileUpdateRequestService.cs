@@ -1,6 +1,6 @@
-using HrSystem.Dtos;
+using HrmApi.Dtos;
 
-namespace HrSystem.Services
+namespace HrmApi.Services
 {
     public interface IProfileUpdateRequestService
     {

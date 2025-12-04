@@ -1,6 +1,6 @@
-using HrSystem.Dtos.RequestStatus;
+using HrmApi.Dtos.RequestStatus;
 
-namespace HrSystem.Services
+namespace HrmApi.Services
 {
     public interface IRequestStatusService
     {

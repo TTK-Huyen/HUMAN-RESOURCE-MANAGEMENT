@@ -1,7 +1,7 @@
-using HrSystem.Dtos.RequestStatus;
-using HrSystem.Repositories;
+using HrmApi.Dtos.RequestStatus;
+using HrmApi.Repositories;
 
-namespace HrSystem.Services
+namespace HrmApi.Services
 {
     public class RequestStatusService : IRequestStatusService
     {

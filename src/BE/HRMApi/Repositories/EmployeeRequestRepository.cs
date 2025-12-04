@@ -1,9 +1,9 @@
-using HrSystem.Data;
-using HrSystem.Dtos.RequestStatus;
-using HrSystem.Models;
+using HrmApi.Data;
+using HrmApi.Dtos.RequestStatus;
+using HrmApi.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace HrSystem.Repositories
+namespace HrmApi.Repositories
 {
     public class EmployeeRequestRepository : IEmployeeRequestRepository
     {

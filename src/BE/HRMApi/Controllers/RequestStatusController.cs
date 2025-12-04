@@ -1,8 +1,8 @@
-using HrSystem.Dtos.RequestStatus;
-using HrSystem.Services;
+using HrmApi.Dtos.RequestStatus;
+using HrmApi.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace HrSystem.Controllers
+namespace HrmApi.Controllers
 {
     [ApiController]
     [Route("api/v1/employees/{employeeCode}/requests")]

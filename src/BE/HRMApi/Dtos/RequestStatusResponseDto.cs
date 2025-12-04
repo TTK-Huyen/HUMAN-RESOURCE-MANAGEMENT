@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace HrSystem.Dtos
+namespace HrmApi.Dtos
 {
     public class RequestStatusResponseDto
     {

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace HrSystem.Models
+namespace HrmApi.Models
 {
     [Table("resignation_requests")]
     public class ResignationRequest

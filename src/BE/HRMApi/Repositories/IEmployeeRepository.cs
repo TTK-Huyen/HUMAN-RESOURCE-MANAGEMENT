@@ -1,6 +1,6 @@
-using HrSystem.Models;
+using HrmApi.Models;
 
-namespace HrSystem.Repositories
+namespace HrmApi.Repositories
 {
     public interface IEmployeeRepository
     {

@@ -1,7 +1,7 @@
-using HrSystem.Dtos;
-using HrSystem.Models;
+using HrmApi.Dtos;
+using HrmApi.Models;
 
-namespace HrSystem.Repositories
+namespace HrmApi.Repositories
 {
     public interface IProfileUpdateRequestRepository
     {

@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace HrSystem.Dtos.RequestStatus
+namespace HrmApi.Dtos.RequestStatus
 {
     public class ResignationRequestDetailDto
     {

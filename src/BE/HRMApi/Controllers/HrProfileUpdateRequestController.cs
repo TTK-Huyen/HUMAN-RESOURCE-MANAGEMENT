@@ -1,9 +1,9 @@
-using HrSystem.Dtos;
-using HrSystem.Services;
+using HrmApi.Dtos;
+using HrmApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace HrSystem.Controllers
+namespace HrmApi.Controllers
 {
     [ApiController]
     [Route("api/v1/hr/profile-update-requests")]
