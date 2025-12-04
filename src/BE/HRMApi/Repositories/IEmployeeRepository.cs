@@ -7,6 +7,7 @@ namespace HrmApi.Repositories
         /// <summary>
         /// Tìm employee theo mã employeeCode (ví dụ: "EMP001").
         /// </summary>
+        
         Task<Employee?> GetByCodeAsync(string employeeCode);
 
         /// <summary>

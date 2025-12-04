@@ -23,6 +23,7 @@ namespace HrmApi.Data
         public DbSet<OvertimeRequest> OvertimeRequests => Set<OvertimeRequest>();
         public DbSet<ResignationRequest> ResignationRequests => Set<ResignationRequest>();
 
+        public DbSet<ProfileUpdateRequest> ProfileUpdateRequests => Set<ProfileUpdateRequest>();
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

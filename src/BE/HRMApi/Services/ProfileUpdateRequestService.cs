@@ -26,7 +26,7 @@ namespace HrmApi.Services
             {
                 RequestId    = r.UpdateRequestId,
                 EmployeeCode = r.Employee.EmployeeCode,
-                FullName     = r.Employee.FullName,
+                FullName     = r.Employee.EmployeeName,
                 CreatedAt    = r.RequestDate,
                 Status       = r.Status
             }).ToList();
