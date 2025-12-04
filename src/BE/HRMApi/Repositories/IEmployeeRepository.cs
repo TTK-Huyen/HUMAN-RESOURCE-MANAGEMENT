@@ -1,12 +1,10 @@
-using HrmApi.Models;
+using HrSystem.Models;
 
-namespace HrmApi.Repositories
+namespace HrSystem.Repositories
 {
     public interface IEmployeeRepository
     {
-        /// <summary>
-        /// Tìm employee theo mã employeeCode (ví dụ: "EMP001").
-        /// </summary>
-        Task<Employee?> GetByCodeAsync(string employeeCode);
+        Task<Employee?> FindByIdAsync(int id);
+        Task SaveAsync(Employee employee);
     }
 }
