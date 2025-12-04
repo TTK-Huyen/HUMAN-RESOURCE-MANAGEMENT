@@ -1,11 +1,14 @@
+
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+
 
 namespace HrmApi.Models
 {
     [Table("overtime_requests")]
     public class OvertimeRequest
     {
+
         [Key]
         [Column("request_id")]
         public int RequestId { get; set; }
@@ -35,7 +38,7 @@ namespace HrmApi.Models
 
         // project_name / project_id (theo user story)
         public string? ProjectId { get; set; }
-
+    
 
         [Column("ot_reason")]
         public string? OtReason { get; set; }

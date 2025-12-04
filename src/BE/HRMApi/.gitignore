@@ -48,9 +48,23 @@ env
 # Optional: ignore publish output
 # publish/
 
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 # MSBuild / .NET Core Build Artifacts
 **/obj/
 Migration/
 
 
 frontend
+=======
+# Migrations 
+Migrations/
+
+frontend
+>>>>>>> Stashed changes
+=======
+# Migrations 
+Migrations/
+
+frontend
+>>>>>>> Stashed changes
