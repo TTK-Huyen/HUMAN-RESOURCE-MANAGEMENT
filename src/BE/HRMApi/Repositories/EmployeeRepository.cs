@@ -50,14 +50,9 @@ namespace HrmApi.Repositories
                 .Include(e => e.PhoneNumbers)
                 .Include(e => e.BankAccounts)
                 .Include(e => e.Education)
-                .Include(e => e.ProfileUpdateHistory)
+                .Include(e => e.ProfileUpdateRequests)
                 .ThenInclude(h => h.Details)
                 .FirstOrDefaultAsync(e => e.Id == id);
-        }
-
-        public void AddProfileUpdateRequest(ProfileUpdateHistory request)
-        {
-            _context.ProfileUpdateHistories.Add(request);
         }
 
         public async Task<int> SaveChangesAsync()

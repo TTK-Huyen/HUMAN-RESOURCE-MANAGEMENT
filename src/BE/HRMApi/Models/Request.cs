@@ -22,7 +22,7 @@ namespace HrmApi.Models
         public DateTime CreatedAt { get; set; }
 
         [Column("status")]
-        public string Status { get; set; } = "PENDING";
+        public string Status { get; set; } = "Pending"; // 'Pending','Approved','Rejected'
 
         [Column("approver_id")]
         public int? ApproverId { get; set; }
@@ -31,5 +31,8 @@ namespace HrmApi.Models
         // Navigation 1–1 đến bảng con (optional nhưng nên có)
         public ResignationRequest? ResignationRequest { get; set; }
         public TimesheetUpdateRequest? TimesheetUpdateRequest { get; set; }
+        // Quan hệ 1–1 với từng bảng con
+        public LeaveRequest? LeaveRequest { get; set; }
+        public OvertimeRequest? OvertimeRequest { get; set; }
     }
 }

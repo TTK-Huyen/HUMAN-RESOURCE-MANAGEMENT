@@ -67,5 +67,15 @@ namespace HrmApi.Repositories
 
             await _context.SaveChangesAsync();
         }
+
+        public async Task AddAsync(ProfileUpdateRequest request)
+        {
+            await _context.ProfileUpdateRequests.AddAsync(request);
+        }
+
+        public async Task<bool> SaveChangesAsync()
+        {
+            return await _context.SaveChangesAsync() > 0;
+        }
     }
 }

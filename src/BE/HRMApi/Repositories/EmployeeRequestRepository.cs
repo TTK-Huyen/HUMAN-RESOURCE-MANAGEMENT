@@ -170,7 +170,7 @@ namespace HrmApi.Repositories
                     .ThenInclude(r => r.Employee)
                 .Include(l => l.Request)
                     .ThenInclude(r => r.Approver)
-                .Where(l => l.RequestId == requestId &&
+                .Where(l => l.Id == requestId &&
                             l.Request.Employee.EmployeeCode == employeeCode)
                 .FirstOrDefaultAsync();
         }
@@ -182,7 +182,7 @@ namespace HrmApi.Repositories
                     .ThenInclude(r => r.Employee)
                 .Include(o => o.Request)
                     .ThenInclude(r => r.Approver)
-                .Where(o => o.RequestId == requestId &&
+                .Where(o => o.Id == requestId &&
                             o.Request.Employee.EmployeeCode == employeeCode)
                 .FirstOrDefaultAsync();
         }
@@ -194,9 +194,27 @@ namespace HrmApi.Repositories
                     .ThenInclude(r => r.Employee)
                 .Include(rg => rg.Request)
                     .ThenInclude(r => r.Approver)
-                .Where(rg => rg.RequestId == requestId &&
+                .Where(rg => rg.Id == requestId &&
                              rg.Request.Employee.EmployeeCode == employeeCode)
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task AddAsync(Request request)
+        {
+            await _context.Requests.AddAsync(request);
+        }
+
+        public async Task<Request?> GetByIdAsync(int id)
+        {
+            return await _context.Requests
+                .Include(r => r.Employee)
+                .Include(r => r.Approver)
+                .FirstOrDefaultAsync(r => r.EmployeeId == id);
+        }
+
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
         }
     }
 }

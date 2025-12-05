@@ -1,12 +1,16 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace HrmApi.Models
 {
-    // Ánh xạ đến bảng 'positions'
+    [Table("positions")]
     public class JobTitle
     {
-        // Khóa chính: position_id
+        [Key]
+        [Column("position_id")]
         public int Id { get; set; } 
-        
-        // position_name
+
+        [Column("position_name")]
         public string Title { get; set; } = default!;
         
         // level

@@ -125,6 +125,6 @@ namespace HrmApi.Models
         public ICollection<EmployeePhoneNumber> PhoneNumbers { get; set; } = new List<EmployeePhoneNumber>();
         public ICollection<EmployeeBankAccount> BankAccounts { get; set; } = new List<EmployeeBankAccount>();
         public ICollection<EmployeeEducation> Education { get; set; } = new List<EmployeeEducation>();
-        public ICollection<ProfileUpdateHistory> ProfileUpdateHistory { get; set; } = new List<ProfileUpdateHistory>();
-    }
+        public ICollection<ProfileUpdateRequest> ProfileUpdateRequests { get; set; } = new List<ProfileUpdateRequest>();
+        }
 }

@@ -31,6 +31,8 @@ namespace HrmApi.Controllers
             };
 
             var result = await _service.SearchAsync(filter);
+            Console.WriteLine("Filter parameters:");
+            Console.Write(filter);
             return Ok(result); // 200, JSON array
         }
 

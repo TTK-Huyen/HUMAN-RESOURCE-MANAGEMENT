@@ -1,4 +1,6 @@
 using HrmApi.Dtos;
+using HrmApi.Dtos.Employee;
+using HrmApi.Models;
 using HrmApi.Repositories;
 
 namespace HrmApi.Services
@@ -7,7 +9,6 @@ namespace HrmApi.Services
     {
         private readonly IProfileUpdateRequestRepository _requestRepo;
         private readonly IEmployeeRepository _employeeRepo;
-
         public ProfileUpdateRequestService(
             IProfileUpdateRequestRepository requestRepo,
             IEmployeeRepository employeeRepo)
@@ -30,6 +31,7 @@ namespace HrmApi.Services
                 CreatedAt    = r.RequestDate,
                 Status       = r.Status
             }).ToList();
+
         }
 
         // ========= API #2: GET DETAIL =========
@@ -118,5 +120,49 @@ namespace HrmApi.Services
                 RequestStatus = normalizedStatus
             };
         }
+    
+        public async Task<bool> SendProfileUpdateRequestAsync(
+            string employeeCode, 
+            ProfileUpdateRequestCreateDto dto)
+        {
+            // 1) Validate
+            var employee = await _employeeRepo.GetProfileByCodeAsync(employeeCode);
+            if (employee == null)
+                return false;
+
+            if (dto.Details == null || !dto.Details.Any())
+                return false;
+
+            foreach (var d in dto.Details)
+            {
+                if (string.IsNullOrWhiteSpace(d.FieldName) ||
+                    string.IsNullOrWhiteSpace(d.NewValue))
+                    return false;
+            }
+
+            var now = DateTime.UtcNow;
+
+            // 2) Tạo request chính cho HR review
+            var request = new ProfileUpdateRequest
+            {
+                EmployeeId = employee.Id,
+                RequestDate = now,
+                Status = "PENDING",
+                Details = dto.Details.Select(d => new ProfileUpdateRequestDetail
+                {
+                    FieldName = d.FieldName,
+                    OldValue = d.OldValue,
+                    NewValue = d.NewValue
+                }).ToList()
+            };
+
+            await _requestRepo.AddAsync(request);
+
+            // 4) SaveChanges 1 lần (nếu dùng Unit of Work)
+            var saved1 = await _requestRepo.SaveChangesAsync();
+
+            return saved1;
+        }
     }
+
 }
