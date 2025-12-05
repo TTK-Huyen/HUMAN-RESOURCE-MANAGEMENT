@@ -12,7 +12,7 @@ namespace HrmApi.Models
         // level
         public string? Level { get; set; } // Nullable
         public int PositionId { get; set; }
-        public string PositionName { get; set; } = null!;
+        public string PositionName { get; set; } = ""; 
         // Navigation Property: Mối quan hệ 1-nhiều với Employee
         // Một JobTitle (Position) có nhiều Employees
         public ICollection<Employee> Employees { get; set; } = new List<Employee>();

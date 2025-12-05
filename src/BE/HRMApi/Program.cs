@@ -38,9 +38,11 @@ if (app.Environment.IsDevelopment())
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
+        var itDept = new Department { DepartmentCode = "1", Name = "IT" };
+        var hrDept = new Department { DepartmentCode = "2", Name = "HR" };
         // Đảm bảo DB/migration đã apply
-        db.Database.Migrate();
+        //db.Database.Migrate();
+        db.Database.EnsureCreated();
 
         if (!db.Departments.Any())
         {
@@ -60,57 +62,54 @@ if (app.Environment.IsDevelopment())
 
         if (!db.Employees.Any())
         {
-            db.Employees.AddRange(
-                new Employee
-                {
-                    EmployeeCode = "EMP001",
-                    EmployeeName = "John Doe",
-                    DateOfBirth = new DateTime(1995, 5, 10),
-                    Gender = "Male",
-                    Nationality = "Vietnamese",
+            var manager = new Employee
+            {
+                EmployeeCode = "EMP001",
+                EmployeeName = "John Doe",
+                DateOfBirth  = new DateTime(1995, 5, 10),
+                Gender       = "Male",
+                Nationality  = "Vietnamese",
+                MaritalStatus = "Single",
+                HasChildren   = false,
+                PersonalTaxCode       = "PTX001",
+                SocialInsuranceNumber = "SI001",
+                CurrentAddress = "HCM City",
+                Status         = "Active",
 
-                    MaritalStatus = "Single",
-                    HasChildren = false,
+                Department   = itDept,   // nếu bạn đang dùng biến itDept/hrDept
+                JobTitleId   = 1,
+                DirectManagerId = null,  // không có quản lý
+                EmploymentType   = "Full-time",
+                ContractType     = "Indefinite",
+                ContractStartDate = new DateTime(2023, 1, 1)
+            };
 
-                    PersonalTaxCode = "PTX001",
-                    SocialInsuranceNumber = "SI001",
-                    CurrentAddress = "HCM City",
-                    Status = "Active",
+            var staff = new Employee
+            {
+                EmployeeCode = "EMP002",
+                EmployeeName = "Jane Smith",
+                DateOfBirth  = new DateTime(1998, 6, 15),
+                Gender       = "Female",
+                Nationality  = "Vietnamese",
+                MaritalStatus = "Married",
+                HasChildren   = true,
+                PersonalTaxCode       = "PTX002",
+                SocialInsuranceNumber = "SI002",
+                CurrentAddress = "HN City",
+                Status         = "Active",
 
-                    DepartmentId = 1,
-                    JobTitleId = 1,
-                    DirectManagerId = null,
+                Department  = itDept,     // hoặc hrDept
+                JobTitleId  = 2,
+                // ❗ dùng navigation, KHÔNG hard-code Id
+                DirectManager = manager,
 
-                    EmploymentType = "Full-time",
-                    ContractType = "Indefinite",
-                    ContractStartDate = new DateTime(2023, 1, 1)
-                },
-                new Employee
-                {
-                    EmployeeCode = "EMP002",
-                    EmployeeName = "Jane Smith",
-                    DateOfBirth = new DateTime(1998, 6, 15),
-                    Gender = "Female",
-                    Nationality = "Vietnamese",
+                EmploymentType    = "Full-time",
+                ContractType      = "Indefinite",
+                ContractStartDate = new DateTime(2023, 2, 1),
+                ContractEndDate   = new DateTime(2025, 2, 1)
+            };
 
-                    MaritalStatus = "Married",
-                    HasChildren = true,
-
-                    PersonalTaxCode = "PTX002",
-                    SocialInsuranceNumber = "SI002",
-                    CurrentAddress = "HN City",
-                    Status = "Active",
-
-                    DepartmentId = 1,
-                    JobTitleId = 2,
-                    DirectManagerId = 1,
-
-                    EmploymentType = "Full-time",
-                    ContractType = "Indefinite",
-                    ContractStartDate = new DateTime(2023, 2, 1),
-                    ContractEndDate = new DateTime(2025, 2, 1)
-                }
-            );
+            db.Employees.AddRange(manager, staff);
         }
 
         db.SaveChanges();
