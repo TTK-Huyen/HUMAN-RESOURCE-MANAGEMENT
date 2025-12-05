@@ -141,28 +141,13 @@ export default function LeaveRequestPage() {
       <ViolationBanner messages={errs} />
       <form className="form-grid" onSubmit={submit} noValidate>
         <FormRow label="Employee Name" required>
-          <input
-            className="input"
-            name="employeeName"
-            value={f.employeeName}
-            onChange={onChange}
-          />
+          <input className="input" value={f.employeeName} readOnly />
         </FormRow>
         <FormRow label="Employee Code" required>
-          <input
-            className="input"
-            name="employeeCode"
-            value={f.employeeCode}
-            onChange={onChange}
-          />
+          <input className="input" value={f.employeeCode} readOnly />
         </FormRow>
         <FormRow label="Department" required>
-          <input
-            className="input"
-            name="department"
-            value={f.department}
-            onChange={onChange}
-          />
+          <input className="input" value={f.department} readOnly />
         </FormRow>
 
         <FormRow label="Leave Type" required>

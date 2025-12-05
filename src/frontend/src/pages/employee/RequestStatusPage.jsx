@@ -1,9 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import "./RequestStatusPage.css";
+import {
+  getEmployeeRequests_1,
+  getLeaveRequestDetail,
+  getOvertimeRequestDetail,
+  getResignationRequestDetail,
+} from "../../services/requestApi";
 
 const REQUEST_TYPES = ["ALL", "LEAVE", "OT", "RESIGNATION"];
 const STATUS_OPTIONS = ["ALL", "PENDING", "APPROVED", "REJECTED", "CANCELLED"];
 const PAGE_SIZE = 10;
+
+// TODO: sau này thay bằng code lấy từ login / context
+const MOCK_EMPLOYEE_CODE = "EMP001";
 
 function formatDateTime(value) {
   if (!value) return "";
@@ -17,21 +26,6 @@ function formatDate(value) {
   return d.toLocaleDateString("vi-VN");
 }
 
-function getEffectiveDateForRequest(r) {
-  if (!r) return null;
-
-  switch (r.request_type) {
-    case "LEAVE":
-      return r.start_date;
-    case "OT":
-      return r.ot_date;
-    case "RESIGNATION":
-      return r.proposed_last_working_date;
-    default:
-      return null;
-  }
-}
-
 export default function RequestStatusPage() {
   const [requests, setRequests] = useState([]);
   const [filters, setFilters] = useState({
@@ -43,101 +37,75 @@ export default function RequestStatusPage() {
   });
 
   const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState(null);
+
+  // summary = data từ list, detail = data từ API chi tiết
+  const [selectedSummary, setSelectedSummary] = useState(null);
+  const [selectedDetail, setSelectedDetail] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState("");
+
+  // Gọi API list mỗi khi đổi type/status (server filter)
   useEffect(() => {
-    setLoading(true);
+    let cancelled = false;
 
-    // Mock data bám DB + có thêm approver_name để hiển thị
-    const timer = setTimeout(() => {
-      const demo = [
-        {
-          // ===== LEAVE REQUEST =====
-          request_id: 101,
-          employee_id: 1,
-          request_type: "LEAVE",
-          created_at: "2025-01-02T09:00:00",
-          status: "APPROVED",
-          approver_name: "Bob",
-          approved_at: "2025-01-03T11:00:00",
-          reject_reason: null,
+    async function load() {
+      setLoading(true);
+      setError("");
 
-          // from leave_requests
-          leave_type: "SICK",
-          start_date: "2025-01-05",
-          end_date: "2025-01-07",
-          half_day: null,
-          reason: "Bị cảm cúm nặng, cần nghỉ 3 ngày.",
-          handover_employee_id: 10,
-          attachment_path: "/uploads/medical.pdf",
-        },
-        {
-          // ===== OT REQUEST =====
-          request_id: 102,
-          employee_id: 1,
-          request_type: "OT",
-          created_at: "2025-01-10T15:25:00",
-          status: "PENDING",
-          approver_name: "Carol",
-          approved_at: null,
-          reject_reason: null,
+      try {
+        const data = await getEmployeeRequests_1(MOCK_EMPLOYEE_CODE, {
+          type: filters.type,
+          status: filters.status,
+        });
 
-          // from overtime_requests
-          ot_date: "2025-01-12",
-          start_time: "18:00",
-          end_time: "21:30",
-          total_hours: 3.5,
-          ot_reason: "Gấp rút hoàn thành sprint cuối.",
-          project_name: "DMS System Upgrade",
-        },
-        {
-          // ===== RESIGNATION REQUEST =====
-          request_id: 103,
-          employee_id: 1,
-          request_type: "RESIGNATION",
-          created_at: "2025-01-15T10:00:00",
-          status: "REJECTED",
-          approver_name: "David",
-          approved_at: "2025-01-20T16:00:00",
-          reject_reason:
-            "Thời gian bàn giao chưa đủ, cần kéo dài thêm 2 tuần.",
+        if (!cancelled) {
+          setRequests(Array.isArray(data) ? data : []);
+          setPage(1); // reset về trang 1 khi đổi filter server-side
+        }
+      } catch (err) {
+        console.error(err);
+        if (!cancelled) {
+          setError(err.message || "Failed to load requests.");
+          setRequests([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
 
-          // from resignation_requests
-          proposed_last_working_date: "2025-02-15",
-          resign_reason: "Chuyển sang công ty mới gần nhà hơn.",
-          has_completed_handover: 0,
-          hr_note: "Vui lòng cập nhật lại kế hoạch bàn giao chi tiết.",
-        },
-      ];
+    load();
 
-      setRequests(demo);
-      setLoading(false);
-    }, 300);
+    return () => {
+      cancelled = true;
+    };
+  }, [filters.type, filters.status]);
 
-    return () => clearTimeout(timer);
-  }, []);
-
+  // Lọc client-side (theo from/to/keyword)
   const filteredRequests = useMemo(() => {
     return requests.filter((r) => {
-      if (filters.type !== "ALL" && r.request_type !== filters.type) return false;
+      if (filters.type !== "ALL" && r.type !== filters.type) return false;
       if (filters.status !== "ALL" && r.status !== filters.status) return false;
 
-      const effDateStr = getEffectiveDateForRequest(r);
-      if (filters.from && effDateStr) {
+      // BE đã trả sẵn effectiveDate
+      if (filters.from && r.effectiveDate) {
         const from = new Date(filters.from);
-        const eff = new Date(effDateStr);
+        const eff = new Date(r.effectiveDate);
         if (eff < from) return false;
       }
-      if (filters.to && effDateStr) {
+      if (filters.to && r.effectiveDate) {
         const to = new Date(filters.to);
-        const eff = new Date(effDateStr);
+        const eff = new Date(r.effectiveDate);
         if (eff > to) return false;
       }
 
       if (filters.keyword) {
         const key = filters.keyword.toLowerCase();
-        const text = `${r.request_type} ${r.request_id} ${r.project_name || ""}`.toLowerCase();
+        const text = `${r.type} ${r.requestId} ${
+          r.projectName || ""
+        }`.toLowerCase();
         if (!text.includes(key)) return false;
       }
 
@@ -154,15 +122,68 @@ export default function RequestStatusPage() {
 
   function handleFilterChange(name, value) {
     setFilters((prev) => ({ ...prev, [name]: value }));
-    setPage(1);
+    if (name !== "type" && name !== "status") {
+      setPage(1);
+    }
+  }
+
+  async function loadDetail(request) {
+    setDetailLoading(true);
+    setDetailError("");
+    setSelectedDetail(null);
+
+    try {
+      let data;
+      switch (request.type) {
+        case "LEAVE":
+          data = await getLeaveRequestDetail(
+            MOCK_EMPLOYEE_CODE,
+            request.requestId
+          );
+          break;
+        case "OT":
+          data = await getOvertimeRequestDetail(
+            MOCK_EMPLOYEE_CODE,
+            request.requestId
+          );
+          break;
+        case "RESIGNATION":
+          data = await getResignationRequestDetail(
+            MOCK_EMPLOYEE_CODE,
+            request.requestId
+          );
+          break;
+        default:
+          data = null;
+      }
+
+      // Merge summary + detail để luôn có đủ field chung
+      if (data) {
+        setSelectedDetail({ ...request, ...data });
+      } else {
+        setSelectedDetail(request);
+      }
+    } catch (err) {
+      console.error(err);
+      setDetailError(err.message || "Failed to load request details.");
+      setSelectedDetail(request); // vẫn hiển thị thông tin cơ bản
+    } finally {
+      setDetailLoading(false);
+    }
   }
 
   function handleOpenDetail(request) {
-    setSelected(request);
+    setSelectedSummary(request);
+    setSelectedDetail(null);
+    setDetailError("");
+    loadDetail(request);
   }
 
   function handleCloseDetail() {
-    setSelected(null);
+    setSelectedSummary(null);
+    setSelectedDetail(null);
+    setDetailError("");
+    setDetailLoading(false);
   }
 
   function statusClass(status) {
@@ -174,39 +195,40 @@ export default function RequestStatusPage() {
     return "badge status-pending";
   }
 
+  // Render phần detail riêng cho từng loại request theo schema mới của BE
   function renderTypeSpecificDetail(r) {
     if (!r) return null;
 
-    if (r.request_type === "LEAVE") {
+    if (r.type === "LEAVE") {
       return (
         <section className="status-detail-section">
           <h4>Leave request details</h4>
           <dl className="status-detail-grid status-detail-grid--2cols">
             <div>
               <dt>Leave type</dt>
-              <dd>{r.leave_type}</dd>
+              <dd>{r.leaveType}</dd>
             </div>
             <div>
               <dt>Start date</dt>
-              <dd>{formatDate(r.start_date)}</dd>
+              <dd>{formatDate(r.startDate)}</dd>
             </div>
             <div>
               <dt>End date</dt>
-              <dd>{formatDate(r.end_date)}</dd>
+              <dd>{formatDate(r.endDate)}</dd>
             </div>
-            {r.half_day && (
+            {r.halfDay && (
               <div>
                 <dt>Half day</dt>
-                <dd>{r.half_day}</dd>
+                <dd>{r.halfDay}</dd>
               </div>
             )}
             <div>
               <dt>Handover to (employee ID)</dt>
-              <dd>{r.handover_employee_id || "-"}</dd>
+              <dd>{r.handoverToEmployeeId ?? "-"}</dd>
             </div>
             <div>
-              <dt>Attachment path</dt>
-              <dd>{r.attachment_path || "No attachment"}</dd>
+              <dt>Attachment</dt>
+              <dd>{r.attachment || "No attachment"}</dd>
             </div>
             <div className="full-row">
               <dt>Reason</dt>
@@ -217,61 +239,61 @@ export default function RequestStatusPage() {
       );
     }
 
-    if (r.request_type === "OT") {
+    if (r.type === "OT") {
       return (
         <section className="status-detail-section">
           <h4>Overtime request details</h4>
           <dl className="status-detail-grid status-detail-grid--2cols">
             <div>
               <dt>OT date</dt>
-              <dd>{formatDate(r.ot_date)}</dd>
+              <dd>{formatDate(r.otDate)}</dd>
             </div>
             <div>
               <dt>Start time</dt>
-              <dd>{r.start_time}</dd>
+              <dd>{r.startTime}</dd>
             </div>
             <div>
               <dt>End time</dt>
-              <dd>{r.end_time}</dd>
+              <dd>{r.endTime}</dd>
             </div>
             <div>
               <dt>Total hours</dt>
-              <dd>{r.total_hours}</dd>
+              <dd>{r.totalHours}</dd>
             </div>
             <div className="full-row">
               <dt>Project name</dt>
-              <dd>{r.project_name || "-"}</dd>
+              <dd>{r.projectName || "-"}</dd>
             </div>
             <div className="full-row">
               <dt>OT reason</dt>
-              <dd>{r.ot_reason || "-"}</dd>
+              <dd>{r.reason || "-"}</dd>
             </div>
           </dl>
         </section>
       );
     }
 
-    if (r.request_type === "RESIGNATION") {
+    if (r.type === "RESIGNATION") {
       return (
         <section className="status-detail-section">
           <h4>Resignation request details</h4>
           <dl className="status-detail-grid status-detail-grid--2cols">
             <div>
               <dt>Proposed last working date</dt>
-              <dd>{formatDate(r.proposed_last_working_date)}</dd>
+              <dd>{formatDate(r.proposedLastWorkingDate)}</dd>
             </div>
             <div>
               <dt>Completed handover?</dt>
-              <dd>{r.has_completed_handover ? "Yes" : "No"}</dd>
+              <dd>{r.completedHandover ? "Yes" : "No"}</dd>
             </div>
             <div className="full-row">
               <dt>Resignation reason</dt>
-              <dd>{r.resign_reason || "-"}</dd>
+              <dd>{r.resignationReason || "-"}</dd>
             </div>
-            {r.hr_note && (
+            {r.hrNote && (
               <div className="full-row">
                 <dt>HR note</dt>
-                <dd>{r.hr_note}</dd>
+                <dd>{r.hrNote}</dd>
               </div>
             )}
           </dl>
@@ -370,6 +392,8 @@ export default function RequestStatusPage() {
         <section className="status-table-wrapper">
           {loading ? (
             <div className="status-empty">Loading requests…</div>
+          ) : error ? (
+            <div className="status-empty status-error">{error}</div>
           ) : filteredRequests.length === 0 ? (
             <div className="status-empty">
               No requests found with current filters.
@@ -390,19 +414,19 @@ export default function RequestStatusPage() {
               <tbody>
                 {pagedRequests.map((r) => (
                   <tr
-                    key={r.request_id}
+                    key={r.requestId}
                     className="status-row"
                     onClick={() => handleOpenDetail(r)}
                   >
-                    <td>{r.request_id}</td>
-                    <td>{r.request_type}</td>
-                    <td>{formatDateTime(r.created_at)}</td>
-                    <td>{formatDate(getEffectiveDateForRequest(r)) || "-"}</td>
+                    <td>{r.requestId}</td>
+                    <td>{r.type}</td>
+                    <td>{formatDateTime(r.createdAt)}</td>
+                    <td>{formatDate(r.effectiveDate) || "-"}</td>
                     <td>
                       <span className={statusClass(r.status)}>{r.status}</span>
                     </td>
-                    <td>{r.approver_name || r.approver_id || "-"}</td>
-                    <td>{formatDateTime(r.approved_at) || "-"}</td>
+                    <td>{r.approverName || "-"}</td>
+                    <td>{formatDateTime(r.approvedAt) || "-"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -435,66 +459,81 @@ export default function RequestStatusPage() {
       </div>
 
       {/* Detail panel */}
-      {selected && (
+      {selectedSummary && (
         <div className="status-detail-backdrop" onClick={handleCloseDetail}>
           <div
             className="status-detail"
             onClick={(e) => e.stopPropagation()}
           >
-            <header className="status-detail-header">
-              <div>
-                <h3>Request #{selected.request_id}</h3>
-                <p className="status-detail-sub">
-                  {selected.request_type} · Current status:{" "}
-                  <span className={statusClass(selected.status)}>
-                    {selected.status}
-                  </span>
-                </p>
-              </div>
-              <button className="btn ghost" onClick={handleCloseDetail}>
-                Close
-              </button>
-            </header>
+            {(() => {
+              const r = selectedDetail || selectedSummary;
+              return (
+                <>
+                  <header className="status-detail-header">
+                    <div>
+                      <h3>Request #{r.requestId}</h3>
+                      <p className="status-detail-sub">
+                        {r.type} · Current status:{" "}
+                        <span className={statusClass(r.status)}>
+                          {r.status}
+                        </span>
+                      </p>
+                    </div>
+                    <button className="btn ghost" onClick={handleCloseDetail}>
+                      Close
+                    </button>
+                  </header>
 
-            {/* General info */}
-            <section className="status-detail-section">
-              <h4>General information</h4>
-              <dl className="status-detail-grid">
-                <div>
-                  <dt>Created at</dt>
-                  <dd>{formatDateTime(selected.created_at)}</dd>
-                </div>
-                <div>
-                  <dt>Status</dt>
-                  <dd>{selected.status}</dd>
-                </div>
-                <div>
-                  <dt>Approver</dt>
-                  <dd>
-                    {selected.approver_name || selected.approver_id || "-"}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Approved at</dt>
-                  <dd>{formatDateTime(selected.approved_at) || "-"}</dd>
-                </div>
-                {selected.reject_reason && (
-                  <div className="full-row">
-                    <dt>Reject reason</dt>
-                    <dd className="reject-reason">
-                      {selected.reject_reason}
-                    </dd>
-                  </div>
-                )}
-              </dl>
-            </section>
+                  {detailLoading && (
+                    <div className="status-detail-loading">
+                      Loading request details…
+                    </div>
+                  )}
 
-            {/* Type-specific */}
-            {renderTypeSpecificDetail(selected)}
+                  {detailError && (
+                    <div className="status-detail-error">{detailError}</div>
+                  )}
 
-            <p className="status-detail-note">
-              This screen is read-only. Past requests cannot be edited.
-            </p>
+                  {/* General info */}
+                  <section className="status-detail-section">
+                    <h4>General information</h4>
+                    <dl className="status-detail-grid">
+                      <div>
+                        <dt>Created at</dt>
+                        <dd>{formatDateTime(r.createdAt)}</dd>
+                      </div>
+                      <div>
+                        <dt>Status</dt>
+                        <dd>{r.status}</dd>
+                      </div>
+                      <div>
+                        <dt>Approver</dt>
+                        <dd>{r.approverName || "-"}</dd>
+                      </div>
+                      <div>
+                        <dt>Approved at</dt>
+                        <dd>{formatDateTime(r.approvedAt) || "-"}</dd>
+                      </div>
+                      {r.rejectReason && (
+                        <div className="full-row">
+                          <dt>Reject reason</dt>
+                          <dd className="reject-reason">
+                            {r.rejectReason}
+                          </dd>
+                        </div>
+                      )}
+                    </dl>
+                  </section>
+
+                  {/* Type-specific detail (sau khi load xong detail) */}
+                  {!detailLoading && renderTypeSpecificDetail(r)}
+
+                  <p className="status-detail-note">
+                    This screen is read-only. Past requests cannot be edited.
+                  </p>
+                </>
+              );
+            })()}
           </div>
         </div>
       )}
