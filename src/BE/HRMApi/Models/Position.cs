@@ -1,20 +1,22 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace HrmApi.Models
 {
-    // Ánh xạ đến bảng 'positions'
+    [Table("positions")]
     public class JobTitle
     {
-        // Khóa chính: position_id
+        [Key]
+        [Column("position_id")]
         public int Id { get; set; } 
-        
-        // position_name
+
+        [Column("position_name")]
         public string Title { get; set; } = default!;
-        
-        // level
-        public string? Level { get; set; } // Nullable
-        public int PositionId { get; set; }
-        public string PositionName { get; set; } = null!;
-        // Navigation Property: Mối quan hệ 1-nhiều với Employee
-        // Một JobTitle (Position) có nhiều Employees
+
+        [Column("level")]
+        public string? Level { get; set; }
+
+        // Navigation 1 - many
         public ICollection<Employee> Employees { get; set; } = new List<Employee>();
     }
 }

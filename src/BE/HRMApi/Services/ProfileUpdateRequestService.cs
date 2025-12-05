@@ -7,6 +7,7 @@ namespace HrmApi.Services
     {
         private readonly IProfileUpdateRequestRepository _requestRepo;
         private readonly IEmployeeRepository _employeeRepo;
+        
 
         public ProfileUpdateRequestService(
             IProfileUpdateRequestRepository requestRepo,
@@ -30,6 +31,7 @@ namespace HrmApi.Services
                 CreatedAt    = r.RequestDate,
                 Status       = r.Status
             }).ToList();
+
         }
 
         // ========= API #2: GET DETAIL =========

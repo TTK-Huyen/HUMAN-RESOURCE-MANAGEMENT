@@ -198,5 +198,23 @@ namespace HrmApi.Repositories
                              rg.Request.Employee.EmployeeCode == employeeCode)
                 .FirstOrDefaultAsync();
         }
+
+        public async Task AddAsync(Request request)
+        {
+            await _context.Requests.AddAsync(request);
+        }
+
+        public async Task<Request?> GetByIdAsync(int id)
+        {
+            return await _context.Requests
+                .Include(r => r.Employee)
+                .Include(r => r.Approver)
+                .FirstOrDefaultAsync(r => r.EmployeeId == id);
+        }
+
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
+        }
     }
 }

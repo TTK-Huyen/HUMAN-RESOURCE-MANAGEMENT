@@ -14,5 +14,10 @@ namespace HrmApi.Repositories
         Task<OvertimeRequest?> GetOvertimeRequestAsync(string employeeCode, int requestId);
 
         Task<ResignationRequest?> GetResignationRequestAsync(string employeeCode, int requestId);
+        
+        // Thêm mới Request chung
+        Task AddAsync(Request request);
+        Task<Request?> GetByIdAsync(int id);
+        Task SaveChangesAsync();
     }
 }

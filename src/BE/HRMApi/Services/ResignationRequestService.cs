@@ -9,12 +9,16 @@ namespace HrmApi.Services
         private readonly IResignationRequestRepository _repository;
         private readonly IEmployeeRepository _employeeRepository;
 
+        private readonly IEmployeeRequestRepository _employeeRequestRepository;
         public ResignationRequestService(
             IResignationRequestRepository repository,
-            IEmployeeRepository employeeRepository)
+            IEmployeeRepository employeeRepository,
+            IEmployeeRequestRepository employeeRequestRepository
+            )
         {
             _repository = repository;
             _employeeRepository = employeeRepository;
+            _employeeRequestRepository = employeeRequestRepository;
         }
 
         public async Task<ResignationRequestCreatedDto> CreateAsync(
@@ -25,9 +29,23 @@ namespace HrmApi.Services
             var employee = await _employeeRepository.GetByCodeAsync(employeeCode)
                            ?? throw new InvalidOperationException("Employee not found");
 
+            // 2. Tạo bản ghi ở bảng requests (bảng cha)
+            var request = new Request
+            {
+                EmployeeId  = employee.Id,
+                RequestType = "RESIGNATION",
+                CreatedAt   = DateTime.UtcNow,
+                Status      = "Pending",
+                ApproverId  = null  // sau này flow duyệt sẽ set
+            };
+
+            // Nếu bạn có RequestRepository:
+            await _employeeRequestRepository.AddAsync(request);
+            await _employeeRequestRepository.SaveChangesAsync();
             // 2. Map DTO -> Entity
             var entity = new ResignationRequest
             {
+                Id                      = request.RequestId, // Sử dụng RequestId vừa tạo
                 EmployeeId              = employee.Id,       // FK
                 ResignationDate         = dto.ResignationDate,
                 Reason                  = dto.Reason,
@@ -43,7 +61,7 @@ namespace HrmApi.Services
             // 4. Trả về DTO
             return new ResignationRequestCreatedDto
             {
-                RequestId = entity.Id,
+                RequestId = request.RequestId,
                 Status    = entity.Status.ToString()
             };
         }

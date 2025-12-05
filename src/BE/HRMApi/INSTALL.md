@@ -82,9 +82,6 @@ dotnet build
 dotnet ef migrations add InitialCreate
 dotnet ef database drop -f // Xóa db hiện tại - localhost
 docker rm -f mysql // Xóa db hiện tại - docker
-dotnet ef migrations add InitialCreate # (Nếu cần tạo migration mới)
-dotnet ef database drop -f # Xóa db hiện tại
-
 dotnet ef database update
 dotnet run
 ```
@@ -98,3 +95,43 @@ Ghi chú ngắn
 - Nếu muốn, tôi có thể: chạy `dotnet run`, commit thay đổi, hoặc cập nhật README để link tới file này.
 
 Thực hiện đủ các bước trên là bạn sẽ có API chạy được trên máy dev.
+
+### Test postman
+/api/v1/employees/{employeeCode}/requests/leave
+{
+  "leaveType": "Paid",
+  "startDate": "2025-12-10T00:00:00",
+  "endDate": "2025-12-12T00:00:00",
+  "reason": "Family vacation",
+  "handoverPersonId": 2,
+  "attachmentsBase64": "SGVsbG8gV29ybGQ=" 
+}
+
+/api/v1/employees/{employeeCode}/requests/overtime
+{
+  "date": "2025-03-05",
+  "startTime": "18:00",
+  "endTime": "21:00",
+  "reason": "Urgent feature deployment",
+  "projectId": "PRJ001"
+}
+
+
+/api/v1/employees/{employeeCode}/requests/resignation
+{
+  "resignationDate": "2025-06-01",
+  "reason": "Pursuing new career opportunities",
+  "handoverToHr": 2
+}
+
+/api/v1/employees/{employeeCode}/profile-update-requests
+{
+  "reason": "string",
+  "details": [
+    {
+      "fieldName": "Gender",
+      "oldValue": "Male",
+      "newValue": "Female"
+    }
+  ]
+}

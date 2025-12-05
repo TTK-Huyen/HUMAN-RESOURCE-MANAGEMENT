@@ -9,12 +9,17 @@ namespace HrmApi.Services
         private readonly IOvertimeRequestRepository _repository;
         private readonly IEmployeeRepository _employeeRepository;
 
+        private readonly IEmployeeRequestRepository _employeeRequestRepository;
+
         public OvertimeRequestService(
             IOvertimeRequestRepository repository,
-            IEmployeeRepository employeeRepository)
+            IEmployeeRepository employeeRepository,
+            IEmployeeRequestRepository employeeRequestRepository
+            )
         {
             _repository = repository;
             _employeeRepository = employeeRepository;
+            _employeeRequestRepository = employeeRequestRepository;
         }
 
         public async Task<OvertimeRequestCreatedDto> CreateAsync(
@@ -28,9 +33,24 @@ namespace HrmApi.Services
             // 2. Tính tổng giờ OT (double -> decimal)
             var totalHours = (dto.EndTime - dto.StartTime).TotalHours;
 
+            // 2. Tạo bản ghi ở bảng requests (bảng cha)
+            var request = new Request
+            {
+                EmployeeId  = employee.Id,
+                RequestType = "OT",
+                CreatedAt   = DateTime.UtcNow,
+                Status      = "Pending",
+                ApproverId  = null  // sau này flow duyệt sẽ set
+            };
+
+            // Nếu bạn có RequestRepository:
+            await _employeeRequestRepository.AddAsync(request);
+            await _employeeRequestRepository.SaveChangesAsync();
+
             // 3. Map DTO -> Entity
             var entity = new OvertimeRequest
             {
+                Id         = request.RequestId,    // Sử dụng RequestId vừa tạo
                 EmployeeId = employee.Id,      // FK theo ERD
                 Date       = dto.Date,
                 StartTime  = dto.StartTime,
@@ -49,7 +69,7 @@ namespace HrmApi.Services
             // 5. Trả DTO
             return new OvertimeRequestCreatedDto
             {
-                RequestId = entity.Id,
+                RequestId = request.RequestId,
                 Status    = entity.Status.ToString()
             };
         }

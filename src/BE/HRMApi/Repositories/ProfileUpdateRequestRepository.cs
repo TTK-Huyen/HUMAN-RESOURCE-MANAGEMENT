@@ -31,6 +31,10 @@ namespace HrmApi.Repositories
                 query = query.Where(r => r.Employee.EmployeeCode == filter.EmployeeCode);
             }
 
+            // In ra kết quả
+            Console.WriteLine("Generated SQL Query:");
+            Console.WriteLine(query.ToQueryString());
+
             return await query
                 .OrderByDescending(r => r.RequestDate)
                 .ToListAsync();
