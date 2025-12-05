@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import "./RequestStatusPage.css";
+import { getEmployeeRequests_1 } from "../../services/requestApi";
 
 const REQUEST_TYPES = ["ALL", "LEAVE", "OT", "RESIGNATION"];
 const STATUS_OPTIONS = ["ALL", "PENDING", "APPROVED", "REJECTED", "CANCELLED"];
 const PAGE_SIZE = 10;
+
+// TODO: sau này thay bằng code lấy từ login / context
+const MOCK_EMPLOYEE_CODE = "EMP001";
 
 function formatDateTime(value) {
   if (!value) return "";
@@ -45,81 +49,47 @@ export default function RequestStatusPage() {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
+  // Gọi API mỗi khi đổi type/status
   useEffect(() => {
-    setLoading(true);
+    let cancelled = false;
 
-    // Mock data bám DB + có thêm approver_name để hiển thị
-    const timer = setTimeout(() => {
-      const demo = [
-        {
-          // ===== LEAVE REQUEST =====
-          request_id: 101,
-          employee_id: 1,
-          request_type: "LEAVE",
-          created_at: "2025-01-02T09:00:00",
-          status: "APPROVED",
-          approver_name: "Bob",
-          approved_at: "2025-01-03T11:00:00",
-          reject_reason: null,
+    async function load() {
+      setLoading(true);
+      setError("");
 
-          // from leave_requests
-          leave_type: "SICK",
-          start_date: "2025-01-05",
-          end_date: "2025-01-07",
-          half_day: null,
-          reason: "Bị cảm cúm nặng, cần nghỉ 3 ngày.",
-          handover_employee_id: 10,
-          attachment_path: "/uploads/medical.pdf",
-        },
-        {
-          // ===== OT REQUEST =====
-          request_id: 102,
-          employee_id: 1,
-          request_type: "OT",
-          created_at: "2025-01-10T15:25:00",
-          status: "PENDING",
-          approver_name: "Carol",
-          approved_at: null,
-          reject_reason: null,
+      try {
+        const data = await getEmployeeRequests_1(MOCK_EMPLOYEE_CODE, {
+          type: filters.type,
+          status: filters.status,
+        });
 
-          // from overtime_requests
-          ot_date: "2025-01-12",
-          start_time: "18:00",
-          end_time: "21:30",
-          total_hours: 3.5,
-          ot_reason: "Gấp rút hoàn thành sprint cuối.",
-          project_name: "DMS System Upgrade",
-        },
-        {
-          // ===== RESIGNATION REQUEST =====
-          request_id: 103,
-          employee_id: 1,
-          request_type: "RESIGNATION",
-          created_at: "2025-01-15T10:00:00",
-          status: "REJECTED",
-          approver_name: "David",
-          approved_at: "2025-01-20T16:00:00",
-          reject_reason:
-            "Thời gian bàn giao chưa đủ, cần kéo dài thêm 2 tuần.",
+        if (!cancelled) {
+          setRequests(Array.isArray(data) ? data : []);
+          setPage(1); // reset về trang 1 khi đổi filter server-side
+        }
+      } catch (err) {
+        console.error(err);
+        if (!cancelled) {
+          setError(err.message || "Failed to load requests.");
+          setRequests([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
 
-          // from resignation_requests
-          proposed_last_working_date: "2025-02-15",
-          resign_reason: "Chuyển sang công ty mới gần nhà hơn.",
-          has_completed_handover: 0,
-          hr_note: "Vui lòng cập nhật lại kế hoạch bàn giao chi tiết.",
-        },
-      ];
+    load();
 
-      setRequests(demo);
-      setLoading(false);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [filters.type, filters.status]);
 
   const filteredRequests = useMemo(() => {
     return requests.filter((r) => {
+      // các filter type/status đã gửi lên BE rồi, ở đây chỉ phòng trường hợp BE trả rộng hơn
       if (filters.type !== "ALL" && r.request_type !== filters.type) return false;
       if (filters.status !== "ALL" && r.status !== filters.status) return false;
 
@@ -154,7 +124,10 @@ export default function RequestStatusPage() {
 
   function handleFilterChange(name, value) {
     setFilters((prev) => ({ ...prev, [name]: value }));
-    setPage(1);
+    if (name !== "type" && name !== "status") {
+      // với filter client-side, reset page luôn
+      setPage(1);
+    }
   }
 
   function handleOpenDetail(request) {
