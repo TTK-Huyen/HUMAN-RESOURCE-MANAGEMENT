@@ -17,6 +17,6 @@ namespace HrmApi.Services
         /// <summary>
         /// Gửi yêu cầu cập nhật hồ sơ cho employeeCode.
         /// </summary>
-        Task<bool> SendProfileUpdateRequestAsync(string employeeCode, ProfileUpdateRequestCreateDto dto);
+        
     }
 }

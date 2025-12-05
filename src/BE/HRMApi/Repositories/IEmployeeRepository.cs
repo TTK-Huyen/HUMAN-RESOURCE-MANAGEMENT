@@ -20,14 +20,6 @@ namespace HrmApi.Repositories
         /// </summary>
         Task<Employee?> GetProfileByIdAsync(int id);
 
-        /// <summary>
-        /// Thêm mới một yêu cầu cập nhật hồ sơ.
-        /// </summary>
-        void AddProfileUpdateRequest(ProfileUpdateHistory request);
-
-        /// <summary>
-        /// Lưu thay đổi vào database.
-        /// </summary>
         Task<int> SaveChangesAsync();
         
         Task<Employee?> FindByIdAsync(int id);

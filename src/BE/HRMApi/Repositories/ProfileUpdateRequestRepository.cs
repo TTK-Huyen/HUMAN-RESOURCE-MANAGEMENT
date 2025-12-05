@@ -31,10 +31,6 @@ namespace HrmApi.Repositories
                 query = query.Where(r => r.Employee.EmployeeCode == filter.EmployeeCode);
             }
 
-            // In ra kết quả
-            Console.WriteLine("Generated SQL Query:");
-            Console.WriteLine(query.ToQueryString());
-
             return await query
                 .OrderByDescending(r => r.RequestDate)
                 .ToListAsync();
@@ -70,6 +66,16 @@ namespace HrmApi.Repositories
             entity.ReviewedAt   = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+        }
+
+        public async Task AddAsync(ProfileUpdateRequest request)
+        {
+            await _context.ProfileUpdateRequests.AddAsync(request);
+        }
+
+        public async Task<bool> SaveChangesAsync()
+        {
+            return await _context.SaveChangesAsync() > 0;
         }
     }
 }

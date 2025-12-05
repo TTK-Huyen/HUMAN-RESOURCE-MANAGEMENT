@@ -13,10 +13,13 @@ namespace HrmApi.Controllers
     public class EmployeeController : ControllerBase
     {
         private readonly IEmployeeService _employeeService;
+        private readonly IProfileUpdateRequestService _profileUpdateRequestService;
 
-        public EmployeeController(IEmployeeService employeeService)
+        public EmployeeController(IEmployeeService employeeService
+            , IProfileUpdateRequestService profileUpdateRequestService)
         {
             _employeeService = employeeService;
+            _profileUpdateRequestService = profileUpdateRequestService;
         }
 
         [HttpGet("{employeeCode}/profile")]
@@ -39,7 +42,8 @@ namespace HrmApi.Controllers
             // var tokenEmployeeCode = User.FindFirstValue("EmployeeCode");
             // if (string.IsNullOrEmpty(tokenEmployeeCode) || tokenEmployeeCode != employeeCode)
             //     return Unauthorized("Access denied.");
-            var result = await _employeeService.SendProfileUpdateRequestAsync(employeeCode, dto);
+            var result = await _profileUpdateRequestService.SendProfileUpdateRequestAsync(employeeCode, dto);
+
             if (!result)
                 return BadRequest("Invalid request or access denied.");
             return Ok("Profile update request sent and pending approval.");

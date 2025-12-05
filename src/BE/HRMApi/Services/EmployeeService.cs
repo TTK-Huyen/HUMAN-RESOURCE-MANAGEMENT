@@ -9,9 +9,14 @@ namespace HrmApi.Services
     {
         private readonly IEmployeeRepository _employeeRepository;
 
-        public EmployeeService(IEmployeeRepository employeeRepository)
+        private readonly IProfileUpdateRequestRepository _profileUpdateRequestRepository;
+
+
+        public EmployeeService(IEmployeeRepository employeeRepository, IProfileUpdateRequestRepository profileUpdateRequestRepository)
         {
             _employeeRepository = employeeRepository;
+            _profileUpdateRequestRepository = profileUpdateRequestRepository;
+
         }
 
         public async Task<EmployeeProfileDto?> GetProfileAsync(string employeeCode)
@@ -63,9 +68,9 @@ namespace HrmApi.Services
                     GraduationYear = ed.GraduationYear.Year,
                     OtherCertificates = ed.OtherCertificates
                 }).ToList(),
-                ProfileUpdateHistory = employee.ProfileUpdateHistory.Select(h => new ProfileUpdateHistoryDto
+                ProfileUpdateHistory = employee.ProfileUpdateRequests.Select(h => new ProfileUpdateHistoryDto
                 {
-                    Id = h.Id,
+                    Id = h.EmployeeId,
                     RequestDate = h.RequestDate,
                     Status = h.Status,
                     ReviewedBy = h.ReviewedBy?.EmployeeName,
@@ -126,12 +131,11 @@ namespace HrmApi.Services
                     GraduationYear = ed.GraduationYear.Year,
                     OtherCertificates = ed.OtherCertificates
                 }).ToList(),
-                ProfileUpdateHistory = employee.ProfileUpdateHistory.Select(h => new ProfileUpdateHistoryDto
+                ProfileUpdateHistory = employee.ProfileUpdateRequests.Select(h => new ProfileUpdateHistoryDto
                 {
-                    Id = h.Id,
+                    Id = h.EmployeeId,
                     RequestDate = h.RequestDate,
                     Status = h.Status,
-                    ReviewedBy = h.ReviewedBy?.EmployeeName,
                     ReviewedAt = h.ReviewedAt,
                     RejectReason = h.RejectReason,
                     Comment = h.Comment
@@ -152,12 +156,11 @@ namespace HrmApi.Services
                 if (string.IsNullOrWhiteSpace(detail.FieldName) || string.IsNullOrWhiteSpace(detail.NewValue))
                     return false;
             }
-            var request = new ProfileUpdateHistory
+            var request = new ProfileUpdateRequest
             {
                 EmployeeId = employee.Id,
                 RequestDate = DateTime.UtcNow,
                 Status = "PENDING",
-                Reason = dto.Reason,
                 Details = dto.Details.Select(d => new ProfileUpdateRequestDetail
                 {
                     FieldName = d.FieldName,
@@ -165,7 +168,6 @@ namespace HrmApi.Services
                     NewValue = d.NewValue
                 }).ToList()
             };
-            _employeeRepository.AddProfileUpdateRequest(request);
             return await _employeeRepository.SaveChangesAsync() > 0;
         }
     }

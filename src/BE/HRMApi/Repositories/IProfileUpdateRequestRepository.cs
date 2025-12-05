@@ -8,5 +8,7 @@ namespace HrmApi.Repositories
         Task<List<ProfileUpdateRequest>> SearchAsync(RequestFilterDto filter);
         Task<ProfileUpdateRequest?> FindByIdWithDetailsAsync(long id);
         Task UpdateStatusAsync(int id, string newStatus, string? reason, int hrId);
+        Task AddAsync(ProfileUpdateRequest request);
+        Task<bool> SaveChangesAsync();
     }
 }

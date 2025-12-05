@@ -71,6 +71,7 @@ builder.Services.AddScoped<IProfileUpdateRequestRepository, ProfileUpdateRequest
 builder.Services.AddScoped<IProfileUpdateRequestService, ProfileUpdateRequestService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 
+
 // UC 2.20 – Xem/tracking status request
 builder.Services.AddScoped<IEmployeeRequestRepository, EmployeeRequestRepository>();
 builder.Services.AddScoped<IRequestStatusService, RequestStatusService>();
