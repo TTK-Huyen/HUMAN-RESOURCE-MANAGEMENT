@@ -5,7 +5,20 @@ using HrmApi.Models;
 using HrmApi.Data;
 using Microsoft.Extensions.DependencyInjection; // (có cũng được, thiếu thì thêm dòng này)
 
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+        policy =>
+        {
+            policy
+                .WithOrigins("http://localhost:3000") // React app
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddControllers();
@@ -28,6 +41,14 @@ builder.Services.AddScoped<IProfileUpdateRequestService, ProfileUpdateRequestSer
 //UC 2.20
 builder.Services.AddScoped<IEmployeeRequestRepository, EmployeeRequestRepository>();
 builder.Services.AddScoped<IRequestStatusService, RequestStatusService>();
+
+builder.Services.AddScoped<ILeaveRequestRepository, LeaveRequestRepository>();
+builder.Services.AddScoped<IOvertimeRequestRepository, OvertimeRequestRepository>();
+builder.Services.AddScoped<IResignationRequestRepository, ResignationRequestRepository>();
+
+builder.Services.AddScoped<ILeaveRequestService, LeaveRequestService>();
+builder.Services.AddScoped<IOvertimeRequestService, OvertimeRequestService>();
+builder.Services.AddScoped<IResignationRequestService, ResignationRequestService>();
 
 var app = builder.Build();
 
@@ -125,9 +146,9 @@ app.UseSwaggerUI(c =>
 });
 
 // 6. (Tuỳ chọn) Https redirection – nếu gây phiền thì comment lại
-// app.UseHttpsRedirection();
-
-// app.UseAuthorization();
+app.UseHttpsRedirection();
+app.UseCors(MyAllowSpecificOrigins); // Kết nối FE
+app.UseAuthorization();
 
 // 7. Map controller routes
 app.MapControllers();
