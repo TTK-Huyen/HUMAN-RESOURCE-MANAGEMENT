@@ -105,10 +105,9 @@ export default function ResignationRequestPage() {
       const payload = {
         resignationDate: f.resignationDate,
         reason: f.reason,
-        contractEnd: f.contractEnd || null,
       };
 
-      await createResignationRequest(f.employeeId, payload);
+      await createResignationRequest(f.employeeCode, payload);
       setErrs([]);
       alert("Resignation request submitted. Status = Pending.");
       setF(INITIAL_FORM);
