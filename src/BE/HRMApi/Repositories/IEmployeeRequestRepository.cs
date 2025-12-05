@@ -1,7 +1,7 @@
-using HrSystem.Dtos.RequestStatus;
-using HrSystem.Models;
+using HrmApi.Dtos.RequestStatus;
+using HrmApi.Models;
 
-namespace HrSystem.Repositories
+namespace HrmApi.Repositories
 {
     public interface IEmployeeRequestRepository
     {

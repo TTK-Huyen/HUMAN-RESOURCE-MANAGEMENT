@@ -29,5 +29,8 @@ namespace HrmApi.Repositories
         /// Lưu thay đổi vào database.
         /// </summary>
         Task<int> SaveChangesAsync();
+        
+        Task<Employee?> FindByIdAsync(int id);
+        Task SaveAsync(Employee employee);
     }
 }

@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace HRMApi.Dtos.RequestStatus
+namespace HrmApi.Dtos.RequestStatus
 {
     public class EmployeeRequestFilterDto
     {

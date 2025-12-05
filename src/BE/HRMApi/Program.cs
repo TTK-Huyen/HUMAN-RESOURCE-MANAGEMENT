@@ -3,6 +3,7 @@ using HrmApi.Services;
 using Microsoft.EntityFrameworkCore;
 using HrmApi.Models;
 using HrmApi.Data;
+using Microsoft.Extensions.DependencyInjection; // (có cũng được, thiếu thì thêm dòng này)
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,83 +34,87 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-    // Đảm bảo DB/migration đã apply
-    db.Database.Migrate();
-
-    if (!db.Departments.Any())
+    // 🔹 THÊM SCOPE Ở ĐÂY
+    using (var scope = app.Services.CreateScope())
     {
-        db.Departments.AddRange(
-            new Department { DepartmentCode = "1", Name = "IT" },
-            new Department {  DepartmentCode = "2" , Name = "HR" }
-        );
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        // Đảm bảo DB/migration đã apply
+        db.Database.Migrate();
+
+        if (!db.Departments.Any())
+        {
+            db.Departments.AddRange(
+                new Department { DepartmentCode = "1", Name = "IT" },
+                new Department { DepartmentCode = "2", Name = "HR" }
+            );
+        }
+
+        if (!db.JobTitles.Any())
+        {
+            db.JobTitles.AddRange(
+                new JobTitle { Id = 1, Title = "Software Engineer" },
+                new JobTitle { Id = 2, Title = "HR Specialist" }
+            );
+        }
+
+        if (!db.Employees.Any())
+        {
+            db.Employees.AddRange(
+                new Employee
+                {
+                    EmployeeCode = "EMP001",
+                    EmployeeName = "John Doe",
+                    DateOfBirth = new DateTime(1995, 5, 10),
+                    Gender = "Male",
+                    Nationality = "Vietnamese",
+
+                    MaritalStatus = "Single",
+                    HasChildren = false,
+
+                    PersonalTaxCode = "PTX001",
+                    SocialInsuranceNumber = "SI001",
+                    CurrentAddress = "HCM City",
+                    Status = "Active",
+
+                    DepartmentId = 1,
+                    JobTitleId = 1,
+                    DirectManagerId = null,
+
+                    EmploymentType = "Full-time",
+                    ContractType = "Indefinite",
+                    ContractStartDate = new DateTime(2023, 1, 1)
+                },
+                new Employee
+                {
+                    EmployeeCode = "EMP002",
+                    EmployeeName = "Jane Smith",
+                    DateOfBirth = new DateTime(1998, 6, 15),
+                    Gender = "Female",
+                    Nationality = "Vietnamese",
+
+                    MaritalStatus = "Married",
+                    HasChildren = true,
+
+                    PersonalTaxCode = "PTX002",
+                    SocialInsuranceNumber = "SI002",
+                    CurrentAddress = "HN City",
+                    Status = "Active",
+
+                    DepartmentId = 1,
+                    JobTitleId = 2,
+                    DirectManagerId = 1,
+
+                    EmploymentType = "Full-time",
+                    ContractType = "Indefinite",
+                    ContractStartDate = new DateTime(2023, 2, 1),
+                    ContractEndDate = new DateTime(2025, 2, 1)
+                }
+            );
+        }
+
+        db.SaveChanges();
     }
-
-    if (!db.JobTitles.Any())
-    {
-        db.JobTitles.AddRange(
-            new JobTitle { Id = 1, Title = "Software Engineer" },
-            new JobTitle { Id = 2, Title = "HR Specialist" }
-        );
-    }
-
-    if (!db.Employees.Any())
-    {
-        db.Employees.AddRange(
-            new Employee
-            {
-                EmployeeCode = "EMP001",
-                EmployeeName = "John Doe",
-                DateOfBirth = new DateTime(1995, 5, 10),
-                Gender = "Male",
-                Nationality = "Vietnamese",
-
-                MaritalStatus = "Single",
-                HasChildren = false,
-
-                PersonalTaxCode = "PTX001",
-                SocialInsuranceNumber = "SI001",
-                CurrentAddress = "HCM City",
-                Status = "Active",
-
-                DepartmentId = 1,
-                JobTitleId = 1,
-                DirectManagerId = null,
-
-                EmploymentType = "Full-time",
-                ContractType = "Indefinite",
-                ContractStartDate = new DateTime(2023, 1, 1)
-            },
-            new Employee
-            {
-                EmployeeCode = "EMP002",
-                EmployeeName = "Jane Smith",
-                DateOfBirth = new DateTime(1998, 6, 15),
-                Gender = "Female",
-                Nationality = "Vietnamese",
-
-                MaritalStatus = "Married",
-                HasChildren = true,
-
-                PersonalTaxCode = "PTX002",
-                SocialInsuranceNumber = "SI002",
-                CurrentAddress = "HN City",
-                Status = "Active",
-
-                DepartmentId = 1,
-                JobTitleId = 2,
-                DirectManagerId = 1,
-
-                EmploymentType = "Full-time",
-                ContractType = "Indefinite",
-                ContractStartDate = new DateTime(2023, 2, 1),
-                ContractEndDate = new DateTime(2025, 2, 1)
-            }
-        );
-    }
-    db.SaveChanges();
-
 }
 
 // 5. ALWAYS bật Swagger (cho đồ án cho khoẻ)

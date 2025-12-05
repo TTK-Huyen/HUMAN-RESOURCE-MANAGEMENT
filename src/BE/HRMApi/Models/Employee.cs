@@ -6,57 +6,119 @@ namespace HrmApi.Models
     [Table("employees")]
     public class Employee
     {
+        // Khóa chính: dùng Id nhưng map với employee_id
+        [Key]
+        [Column("employee_id")]
         public int Id { get; set; }
 
-        // Employee Code đã có
-        public string EmployeeCode { get; set; } = default!; 
+        // Mã NV
+        [Column("employee_code")]
+        public string EmployeeCode { get; set; } = default!;
 
-        // Các thuộc tính cơ bản
-        public string EmployeeName { get; set; } = default!;
-        public DateTime DateOfBirth { get; set; } // Format dd/mm/yyyy sẽ được xử lý khi hiển thị/nhập
-        public string Gender { get; set; } = default!; // Male / Female / Other
-        public string Nationality { get; set; } = default!; // Country
+        // Họ tên
+        [Column("full_name")]
+        public string FullName { get; set; } = null!;
 
-        // Thông tin liên lạc & Cá nhân
+        [NotMapped]
+        public string EmployeeName
+        {
+            get => FullName;
+            set => FullName = value;
+        }
+
+
+        // Ngày sinh (cho nullable cho khớp DB code 2)
+        [Column("date_of_birth")]
+        public DateTime? DateOfBirth { get; set; }
+
+        // Giới tính
+        [Column("gender")]
+        public string? Gender { get; set; } // Male / Female / Other
+
+        // Quốc tịch (code 2 không có, nếu DB có cột thì thêm [Column] đúng tên)
+        public string Nationality { get; set; } = default!;
+
+        // Thông tin liên lạc
+        [Column("company_email")]
         public string? CompanyEmail { get; set; }
-        public string? PersonalEmail { get; set; }
-        public string MaritalStatus { get; set; } = default!; // Single / Married / Other
-        public bool HasChildren { get; set; } // Yes/No
-       
 
+        [Column("personal_email")]
+        public string? PersonalEmail { get; set; }
+
+        // THÊM từ code 2: PhoneNumber
+        [Column("phone_number")]
+        public string? PhoneNumber { get; set; }
+
+        // Hôn nhân & Con cái
+        [Column("marital_status")]
+        public string? MaritalStatus { get; set; } // Single / Married / Other
+
+        [Column("has_children")]
+        public bool HasChildren { get; set; }
+
+        // Requests (từ code 2) - NHÂN VIÊN LÀ NGƯỜI GỬI
+        [InverseProperty(nameof(Request.Employee))]
+        public ICollection<Request> Requests { get; set; } = new List<Request>();
+
+        [InverseProperty(nameof(Request.Approver))]
+        public ICollection<Request> ApprovedRequests { get; set; } = new List<Request>();
+
+        // Nhân viên là người gửi đơn nghỉ
+        [InverseProperty(nameof(LeaveRequest.Employee))]
         public ICollection<LeaveRequest> LeaveRequests { get; set; } = new List<LeaveRequest>();
-    public ICollection<OvertimeRequest> OvertimeRequests { get; set; } = new List<OvertimeRequest>();
-    public ICollection<ResignationRequest> ResignationRequests { get; set; } = new List<ResignationRequest>();
-        
+
+        // Nhân viên là người được bàn giao công việc khi nghỉ
+        [InverseProperty(nameof(LeaveRequest.HandoverEmployee))]
+        public ICollection<LeaveRequest> HandoverLeaveRequests { get; set; } = new List<LeaveRequest>();
+
+        public ICollection<OvertimeRequest> OvertimeRequests { get; set; } = new List<OvertimeRequest>();
+        public ICollection<ResignationRequest> ResignationRequests { get; set; } = new List<ResignationRequest>();
+
+
         // Định danh
+        [Column("citizen_id")]
         public string? CitizenIdNumber { get; set; }
-        public string PersonalTaxCode { get; set; } = default!;
-        public string SocialInsuranceNumber { get; set; } = default!;
+
+        [Column("personal_tax_code")]
+        public string? PersonalTaxCode { get; set; } = default!;
+
+        [Column("social_insurance_no")]
+        public string? SocialInsuranceNumber { get; set; } = default!;
 
         // Địa chỉ & Trạng thái
-        public string CurrentAddress { get; set; } = default!;
-        public string Status { get; set; } = default!; // Ví dụ: Active, On Leave, Terminated
+        [Column("current_address")]
+        public string? CurrentAddress { get; set; }
 
-        // Mối quan hệ với các bảng khác (Foreign Keys & Navigation Properties)
-        
+        [Column("status")]
+        public string Status { get; set; } = "ACTIVE"; // default như code 2
+
         // Bộ phận & Chức danh
-        public int DepartmentId { get; set; }
-        public Department Department { get; set; } = default!;
+        [Column("department_id")]
+        public int? DepartmentId { get; set; }
+        public Department? Department { get; set; }
 
-        public int JobTitleId { get; set; }
-        public JobTitle JobTitle { get; set; } = default!;
+        // Dùng JobTitleId nhưng map với position_id của DB
+        [Column("position_id")]
+        public int? JobTitleId { get; set; }
+        public JobTitle? JobTitle { get; set; }
 
-        // Quản lý trực tiếp (Tự tham chiếu hoặc tham chiếu đến một Employee khác)
+        // Quản lý trực tiếp
+        // Map DirectManagerId với manager_id của DB
+        [Column("manager_id")]
         public int? DirectManagerId { get; set; } // Có thể null nếu là cấp cao nhất
-        public Employee? DirectManager { get; set; } // Navigation property cho Quản lý
+        public Employee? DirectManager { get; set; } // Navigation
 
         // Hợp đồng
-        public string EmploymentType { get; set; } = default!; // Full-time / Part-time / Internship / Remote
+        [Column("employment_type")]
+        public string? EmploymentType { get; set; } // Full-time / Part-time / Internship / Remote
+
+        // DB code 2 không có contract_type, nếu có cột thì thêm [Column("contract_type")]
         public string ContractType { get; set; } = default!; // Ví dụ: Indefinite, Fixed-term
 
-        // Sử dụng một model riêng cho hợp đồng nếu muốn quản lý nhiều hợp đồng
-        // Hoặc các thuộc tính đơn giản cho hợp đồng hiện tại:
-        public DateTime ContractStartDate { get; set; }
+        [Column("contract_start_date")]
+        public DateTime? ContractStartDate { get; set; }
+
+        [Column("contract_end_date")]
         public DateTime? ContractEndDate { get; set; } // Có thể null cho hợp đồng không xác định thời hạn
 
         // Các collection đã có model riêng

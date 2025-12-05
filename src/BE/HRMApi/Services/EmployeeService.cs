@@ -24,7 +24,7 @@ namespace HrmApi.Services
             {
                 EmployeeName = employee.EmployeeName,
                 EmployeeCode = employee.EmployeeCode,
-                DateOfBirth = employee.DateOfBirth.ToString("dd/MM/yyyy"),
+                DateOfBirth = employee.DateOfBirth?.ToString("dd/MM/yyyy"),
                 Gender = employee.Gender,
                 Nationality = employee.Nationality,
                 CompanyEmail = employee.CompanyEmail,
@@ -40,7 +40,7 @@ namespace HrmApi.Services
                 JobTitle = employee.JobTitle?.Title ?? string.Empty,
                 EmploymentType = employee.EmploymentType,
                 ContractType = employee.ContractType,
-                ContractStartDate = employee.ContractStartDate.ToString("dd/MM/yyyy"),
+                ContractStartDate = employee.ContractStartDate?.ToString("dd/MM/yyyy"),
                 ContractEndDate = employee.ContractEndDate?.ToString("dd/MM/yyyy"),
                 DirectManager = employee.DirectManager?.EmployeeName,
                 PhoneNumbers = employee.PhoneNumbers.Select(p => new EmployeePhoneNumberDto
@@ -87,7 +87,7 @@ namespace HrmApi.Services
             {
                 EmployeeName = employee.EmployeeName,
                 EmployeeCode = employee.EmployeeCode,
-                DateOfBirth = employee.DateOfBirth.ToString("dd/MM/yyyy"),
+                DateOfBirth = employee.DateOfBirth?.ToString("dd/MM/yyyy"),
                 Gender = employee.Gender,
                 Nationality = employee.Nationality,
                 CompanyEmail = employee.CompanyEmail,
@@ -103,7 +103,7 @@ namespace HrmApi.Services
                 JobTitle = employee.JobTitle?.Title ?? string.Empty,
                 EmploymentType = employee.EmploymentType,
                 ContractType = employee.ContractType,
-                ContractStartDate = employee.ContractStartDate.ToString("dd/MM/yyyy"),
+                ContractStartDate = employee.ContractStartDate?.ToString("dd/MM/yyyy"),
                 ContractEndDate = employee.ContractEndDate?.ToString("dd/MM/yyyy"),
                 DirectManager = employee.DirectManager?.EmployeeName,
                 PhoneNumbers = employee.PhoneNumbers.Select(p => new EmployeePhoneNumberDto

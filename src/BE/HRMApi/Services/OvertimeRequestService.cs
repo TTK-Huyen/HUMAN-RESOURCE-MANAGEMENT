@@ -25,27 +25,28 @@ namespace HrmApi.Services
             var employee = await _employeeRepository.GetByCodeAsync(employeeCode)
                            ?? throw new InvalidOperationException("Employee not found");
 
-            // 2. Map DTO -> Entity
+            // 2. Tính tổng giờ OT (double -> decimal)
             var totalHours = (dto.EndTime - dto.StartTime).TotalHours;
 
+            // 3. Map DTO -> Entity
             var entity = new OvertimeRequest
             {
                 EmployeeId = employee.Id,      // FK theo ERD
                 Date       = dto.Date,
                 StartTime  = dto.StartTime,
                 EndTime    = dto.EndTime,
-                TotalHours = totalHours,
+                TotalHours = (decimal)totalHours,
                 Reason     = dto.Reason,
                 ProjectId  = dto.ProjectId,
                 Status     = RequestStatus.Pending,
                 CreatedAt  = DateTime.UtcNow
             };
 
-            // 3. Lưu DB
+            // 4. Lưu DB
             await _repository.AddAsync(entity);
             await _repository.SaveChangesAsync();
 
-            // 4. Trả DTO
+            // 5. Trả DTO
             return new OvertimeRequestCreatedDto
             {
                 RequestId = entity.Id,
