@@ -392,3 +392,96 @@ export async function getEmployeeRequests_1(
 
   return await res.json(); // expect: array
 }
+
+// GET /api/v1/employees/{employeeCode}/requests/leave/{requestId}
+export async function getLeaveRequestDetail(employeeCode, requestId) {
+  const url = `${API_BASE_URL}/api/v1/employees/${encodeURIComponent(
+    employeeCode
+  )}/requests/leave/${encodeURIComponent(requestId)}`;
+
+  const res = await fetch(url);
+
+  if (res.status === 404) {
+    throw new Error("Leave request not found.");
+  }
+  if (!res.ok) {
+    let detail = null;
+    try {
+      detail = await res.json();
+    } catch {
+      // ignore
+    }
+
+    const message =
+      detail?.title ||
+      detail?.message ||
+      detail?.error ||
+      `Failed to fetch leave request detail (status ${res.status})`;
+
+    throw new Error(message);
+  }
+
+  return await res.json();
+}
+
+// GET /api/v1/employees/{employeeCode}/requests/overtime/{requestId}
+export async function getOvertimeRequestDetail(employeeCode, requestId) {
+  const url = `${API_BASE_URL}/api/v1/employees/${encodeURIComponent(
+    employeeCode
+  )}/requests/overtime/${encodeURIComponent(requestId)}`;
+
+  const res = await fetch(url);
+
+  if (res.status === 404) {
+    throw new Error("Overtime request not found.");
+  }
+  if (!res.ok) {
+    let detail = null;
+    try {
+      detail = await res.json();
+    } catch {
+      // ignore
+    }
+
+    const message =
+      detail?.title ||
+      detail?.message ||
+      detail?.error ||
+      `Failed to fetch overtime request detail (status ${res.status})`;
+
+    throw new Error(message);
+  }
+
+  return await res.json();
+}
+
+// GET /api/v1/employees/{employeeCode}/requests/resignation/{requestId}
+export async function getResignationRequestDetail(employeeCode, requestId) {
+  const url = `${API_BASE_URL}/api/v1/employees/${encodeURIComponent(
+    employeeCode
+  )}/requests/resignation/${encodeURIComponent(requestId)}`;
+
+  const res = await fetch(url);
+
+  if (res.status === 404) {
+    throw new Error("Resignation request not found.");
+  }
+  if (!res.ok) {
+    let detail = null;
+    try {
+      detail = await res.json();
+    } catch {
+      // ignore
+    }
+
+    const message =
+      detail?.title ||
+      detail?.message ||
+      detail?.error ||
+      `Failed to fetch resignation request detail (status ${res.status})`;
+
+    throw new Error(message);
+  }
+
+  return await res.json();
+}
