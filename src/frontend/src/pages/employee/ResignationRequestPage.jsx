@@ -1,19 +1,25 @@
-import { useState } from "react";
-import { create } from "../../services/requestApi";
+// ResignationRequestPage.jsx
+import { useState, useEffect } from "react";
+import {
+  createResignationRequest,
+  fetchEmployeeProfile,
+} from "../../services/requestApi";
 import ViolationBanner from "../../components/ViolationBanner";
 import { FormRow } from "../../components/FormRow";
 import "./RequestForm.css";
 
 const INITIAL_FORM = {
-  employeeId: "E001",
+  employeeCode: "E001",
   employeeName: "Alice",
   department: "Engineering",
   position: "SE",
-  contractEnd: "",
+  contractEnd: "01-31-2026",
   resignationDate: "",
   reason: "",
-  approverId: "",
 };
+
+// tạm hard-code employeeCode vì chưa có login
+const MOCK_EMPLOYEE_CODE = "EMP001";
 
 function isWeekend(d) {
   const day = new Date(d).getDay();
@@ -24,6 +30,41 @@ export default function ResignationRequestPage() {
   const [f, setF] = useState(INITIAL_FORM);
   const [errs, setErrs] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+
+  // --- LOAD CONTRACT END DATE TỪ DB ---
+  useEffect(() => {
+    async function loadContractEnd() {
+      try {
+        const profile = await fetchEmployeeProfile(MOCK_EMPLOYEE_CODE);
+
+        // tên field tuỳ theo DTO backend trả về
+        const raw =
+          profile.contract_end_date ||
+          profile.contractEndDate ||
+          profile.contractEnd ||
+          "";
+
+        // input type="date" cần format yyyy-MM-dd
+        const contractEnd = raw ? raw.slice(0, 10) : "";
+
+        setF((prev) => ({
+          ...prev,
+          contractEnd: contractEnd || prev.contractEnd,
+          // nếu muốn lấy luôn info NV từ DB thì có thể mở comment:
+          // employeeId: profile.employee_code || prev.employeeId,
+          // employeeName: profile.full_name || prev.employeeName,
+          // department: profile.department_name || prev.department,
+          // position: profile.position_name || prev.position,
+        }));
+      } catch (err) {
+        console.error("Không load được contract end date:", err);
+        // vẫn giữ mock data, không chặn màn hình
+      }
+    }
+
+    loadContractEnd();
+  }, []);
+  // -------------------------------
 
   function onChange(e) {
     const { name, value } = e.target;
@@ -47,7 +88,6 @@ export default function ResignationRequestPage() {
     }
 
     if (!f.reason) m.push("Resignation reason is required.");
-    if (!f.approverId) m.push("Approver is required.");
 
     return m;
   }
@@ -62,10 +102,21 @@ export default function ResignationRequestPage() {
 
     setSubmitting(true);
     try {
-      await create("resignation", f);
+      const payload = {
+        resignationDate: f.resignationDate,
+        reason: f.reason,
+        contractEnd: f.contractEnd || null,
+      };
+
+      await createResignationRequest(f.employeeId, payload);
       setErrs([]);
       alert("Resignation request submitted. Status = Pending.");
       setF(INITIAL_FORM);
+    } catch (err) {
+      console.error(err);
+      setErrs([
+        err.message || "Failed to submit resignation request. Please try again.",
+      ]);
     } finally {
       setSubmitting(false);
     }
@@ -80,9 +131,11 @@ export default function ResignationRequestPage() {
     <div className="card form-card fade-in-up">
       <h3>Resignation request</h3>
       <ViolationBanner messages={errs} />
+
       <form className="form-grid" onSubmit={submit} noValidate>
-        <FormRow label="Employee ID" required>
-          <input className="input" value={f.employeeId} readOnly />
+        {/* Nếu không muốn show lên UI thì xoá mấy FormRow này, state vẫn giữ data */}
+        <FormRow label="Employee Code" required>
+          <input className="input" value={f.employeeCode} readOnly />
         </FormRow>
 
         <FormRow label="Employee Name" required>
@@ -98,13 +151,8 @@ export default function ResignationRequestPage() {
         </FormRow>
 
         <FormRow label="Contract end date">
-          <input
-            className="input"
-            type="date"
-            name="contractEnd"
-            value={f.contractEnd}
-            onChange={onChange}
-          />
+          
+          <input className="input" value={f.contractEnd} readOnly />
         </FormRow>
 
         <FormRow label="Resignation date" required>
@@ -113,15 +161,6 @@ export default function ResignationRequestPage() {
             type="date"
             name="resignationDate"
             value={f.resignationDate}
-            onChange={onChange}
-          />
-        </FormRow>
-
-        <FormRow label="Approver ID" required>
-          <input
-            className="input"
-            name="approverId"
-            value={f.approverId}
             onChange={onChange}
           />
         </FormRow>
@@ -147,11 +186,7 @@ export default function ResignationRequestPage() {
           >
             Cancel
           </button>
-          <button
-            className="btn primary"
-            type="submit"
-            disabled={submitting}
-          >
+          <button className="btn primary" type="submit" disabled={submitting}>
             {submitting ? "Submitting..." : "Submit"}
           </button>
         </div>

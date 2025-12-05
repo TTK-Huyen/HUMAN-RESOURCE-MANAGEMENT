@@ -317,6 +317,42 @@ export async function createOvertimeRequest(employeeCode, payload) {
   return res.json(); // { requestId, status: "Pending", ... } nếu BE có trả
 }
 
+// ====== GỌI API THẬT CHO RESIGNATION REQUEST ======
+export async function createResignationRequest(employeeCode, payload) {
+  const url = `${API_BASE_URL}/api/v1/employees/${encodeURIComponent(
+    employeeCode
+  )}/requests/resignation`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    let errorDetail = null;
+    try {
+      errorDetail = await res.json();
+    } catch {
+      // ignore parse JSON error
+    }
+
+    const message =
+      errorDetail?.title ||
+      errorDetail?.message ||
+      errorDetail?.error ||
+      `Failed with status ${res.status}`;
+
+    throw new Error(message);
+  }
+
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+
 export async function getEmployeeRequests_1(
   employeeCode = "EMP001",
   {
