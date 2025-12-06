@@ -5,7 +5,6 @@ namespace HrmApi.Dtos.Requests
     {
         public DateTime ResignationDate { get; set; }   // resignation_date
         public string Reason { get; set; } = default!;
-        public int? HandoverToHr { get; set; }          // handover_to_hr (optional)
     }
 
     public class ResignationRequestCreatedDto

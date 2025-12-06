@@ -45,9 +45,7 @@ namespace HrmApi.Models
             set => Reason = value;
         }
 
-        // Giao lại cho HR
-        [Column("handover_to_hr_employee_id")]
-        public int? HandoverToHrEmployeeId { get; set; }
+        
 
         [Column("has_completed_handover")]
         public bool HasCompletedHandover { get; set; }

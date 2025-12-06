@@ -49,7 +49,6 @@ namespace HrmApi.Services
                 EmployeeId              = employee.Id,       // FK
                 ResignationDate         = dto.ResignationDate,
                 Reason                  = dto.Reason,
-                HandoverToHrEmployeeId  = dto.HandoverToHr,
                 Status                  = RequestStatus.Pending,
                 CreatedAt               = DateTime.UtcNow
             };
