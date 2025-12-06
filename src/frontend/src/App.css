@@ -36,3 +36,62 @@
     transform: rotate(360deg);
   }
 }
+/* Reset cơ bản */
+body {
+  background-color: #f3f4f6; /* Màu nền xám nhẹ dịu mắt */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Style cho các ô Input form */
+.input, .textarea, .select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #374151;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #d1d5db; /* Viền xám */
+  border-radius: 0.5rem; /* Bo tròn góc */
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* Hiệu ứng khi bấm vào ô input */
+.input:focus, .textarea:focus, .select:focus {
+  outline: none;
+  border-color: #2563eb; /* Viền xanh khi focus */
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2); /* Highlight xanh nhạt */
+}
+
+/* Style cho nút bấm */
+.btn {
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.btn:hover {
+  transform: translateY(-1px); /* Nút nảy lên nhẹ khi di chuột */
+}
+.btn:active {
+  transform: translateY(0);
+}
+
+/* Style cho thẻ Card (Khung chứa nội dung) */
+.card {
+  animation: fadeIn 0.5s ease-out; /* Hiệu ứng hiện dần */
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Style cho Badge trạng thái (Approved/Pending) */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}

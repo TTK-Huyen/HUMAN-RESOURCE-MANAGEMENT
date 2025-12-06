@@ -1,266 +1,146 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { fetchEmployeeProfile, sendProfileUpdateRequest } from "../../services/requestApi";
-import { FormRow } from "../../components/FormRow";
-import ViolationBanner from "../../components/ViolationBanner";
-
-const CURRENT_EMPLOYEE_CODE = "E001";
-
-const EDITABLE_FIELDS = [
-  { id: "current_address", label: "Current address", type: "textarea" },
-  { id: "phone_number", label: "Phone numbers", type: "text" },
-  { id: "personal_email", label: "Personal email", type: "email" },
-  {
-    id: "bank_accounts",
-    label: "Bank account(s)",
-    type: "textarea",
-    placeholder: "Example: Vietcombank - 0123456789 - Nguyen Van A",
-  },
-  {
-    id: "education",
-    label: "Education",
-    type: "textarea",
-    placeholder: "Degrees, major, university, graduation year, certificates...",
-  },
-];
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { EmployeeService } from '../../services/api';
+import { FormRow } from '../../components/FormRow';
+import ViolationBanner from '../../components/ViolationBanner';
 
 export default function ProfileUpdateRequestPage() {
-  const navigate = useNavigate();
-  const [profile, setProfile] = useState(null);
-  const [form, setForm] = useState({});
-  const [reason, setReason] = useState("");
-  const [violations, setViolations] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitResult, setSubmitResult] = useState(null); // {request_id, request_status}
-  const [error, setError] = useState("");
+    const navigate = useNavigate();
+    const currentEmployeeCode = "NV001"; // Hardcode tạm để test
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      setLoading(true);
-      setError("");
-      try {
-        const data = await fetchEmployeeProfile(CURRENT_EMPLOYEE_CODE);
-        if (!cancelled) {
-          setProfile(data);
-          const initial = {};
-          EDITABLE_FIELDS.forEach((f) => {
-            initial[f.id] = data[f.id] ?? "";
-          });
-          setForm(initial);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err.message || "Failed to load profile.");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  function handleChange(fieldId, value) {
-    setForm((prev) => ({ ...prev, [fieldId]: value }));
-  }
-
-  function validate() {
-    const v = [];
-    if (!reason.trim()) {
-      v.push("Reason is required.");
-    }
-    if (!profile) {
-      v.push("Profile is not loaded.");
-    }
-    if (profile) {
-      const updates = buildUpdates(profile, form);
-      if (updates.length === 0) {
-        v.push("No changes detected. Please modify at least one field.");
-      }
-    }
-    setViolations(v);
-    return v.length === 0;
-  }
-
-  function buildUpdates(original, currentForm) {
-    const updates = [];
-    EDITABLE_FIELDS.forEach(({ id }) => {
-      const oldVal = (original[id] ?? "").trim();
-      const newVal = (currentForm[id] ?? "").trim();
-      if (oldVal !== newVal) {
-        updates.push({
-          field_name: id,
-          new_value: newVal,
-        });
-      }
+    // State form dùng tên biến chuẩn camelCase khớp với Backend
+    const [form, setForm] = useState({
+        personalEmail: "", 
+        phoneNumber: "", 
+        currentAddress: "",
+        bankAccount: ""
     });
-    return updates;
-  }
+    
+    const [original, setOriginal] = useState({});
+    const [reason, setReason] = useState("");
+    const [errs, setErrs] = useState([]);
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (!validate()) return;
+    // 1. Load dữ liệu gốc từ API để điền vào form
+    useEffect(() => {
+        EmployeeService.getProfile(currentEmployeeCode).then(res => {
+            const data = res.data;
+            setOriginal(data); // Lưu dữ liệu gốc
+            
+            // Điền dữ liệu vào form
+            setForm({
+                personalEmail: data.personalEmail || "",
+                phoneNumber: data.phoneNumber || "",
+                currentAddress: data.currentAddress || "",
+                bankAccount: data.bankAccount || ""
+            });
+        }).catch(err => {
+            console.error(err);
+            setErrs(["Lỗi: Không tải được thông tin hồ sơ."]);
+        });
+    }, []);
 
-    setSubmitting(true);
-    setError("");
-    setSubmitResult(null);
+    const handleChange = (e) => {
+        setForm({ ...form, [e.target.name]: e.target.value });
+    };
 
-    try {
-      const updates = buildUpdates(profile, form);
-      const payload = {
-        reason: reason.trim(),
-        updates,
-      };
-      const res = await sendProfileUpdateRequest(
-        CURRENT_EMPLOYEE_CODE,
-        payload
-      );
-      setSubmitResult(res); // { request_id, request_status }
-      setViolations([]);
-    } catch (err) {
-      setError(err.message || "Failed to submit update request.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        if (!reason.trim()) {
+            setErrs(["Vui lòng nhập lý do thay đổi."]);
+            return;
+        }
 
-  if (loading) {
+        // Logic so sánh: Chỉ gửi những trường có thay đổi
+        // Tên trường (fieldName) gửi đi sẽ là camelCase (ví dụ: "phoneNumber")
+        const updates = [];
+        const fieldMap = {
+            personalEmail: 'personalEmail',
+            phoneNumber: 'phoneNumber',
+            currentAddress: 'currentAddress',
+            bankAccount: 'bankAccount'
+        };
+
+        Object.keys(form).forEach(key => {
+            // So sánh giá trị form mới với giá trị gốc (original)
+            // Lưu ý: original dùng key camelCase từ API trả về (vd: original.personalEmail)
+            if (form[key] !== (original[key] || "")) {
+                updates.push({
+                    field_name: fieldMap[key], // Gửi tên trường chuẩn cho BE
+                    new_value: form[key],
+                    old_value: original[key] || "" // (Optional) Gửi kèm giá trị cũ nếu BE cần
+                });
+            }
+        });
+
+        if (updates.length === 0) {
+            setErrs(["Bạn chưa thay đổi thông tin nào."]);
+            return;
+        }
+
+        try {
+            // Payload gửi đi theo đúng cấu trúc DTO Backend yêu cầu
+            const payload = {
+                reason: reason.trim(),
+                updates: updates 
+            };
+
+            await EmployeeService.sendUpdateRequest(currentEmployeeCode, payload);
+            
+            alert("Gửi yêu cầu thành công!");
+            navigate('/employee/profile');
+        } catch (error) {
+            console.error("Lỗi submit:", error);
+            const msg = error.response?.data || "Gửi yêu cầu thất bại. Vui lòng thử lại.";
+            setErrs([typeof msg === 'string' ? msg : JSON.stringify(msg)]);
+        }
+    };
+
     return (
-      <div className="card fade-in-up">
-        <div className="card-header">
-          <h2>Send profile update request</h2>
+        <div className="card form-card p-6 bg-white shadow rounded max-w-2xl mx-auto my-6">
+            <h3 className="text-xl font-bold mb-4">Cập nhật thông tin</h3>
+            <ViolationBanner messages={errs} />
+
+            <form className="space-y-4" onSubmit={handleSubmit}>
+                <div className="profile-section-title font-semibold text-blue-600 border-b pb-2 mb-4">Thông tin liên hệ</div>
+                
+                {/* Lưu ý: name của input phải khớp với key trong state form (camelCase) */}
+                <FormRow label="Email cá nhân">
+                    <input className="input border p-2 w-full rounded" name="personalEmail" value={form.personalEmail} onChange={handleChange} />
+                </FormRow>
+                
+                <FormRow label="Số điện thoại">
+                    <input className="input border p-2 w-full rounded" name="phoneNumber" value={form.phoneNumber} onChange={handleChange} />
+                </FormRow>
+                
+                <FormRow label="Địa chỉ hiện tại" full>
+                    <input className="input border p-2 w-full rounded" name="currentAddress" value={form.currentAddress} onChange={handleChange} />
+                </FormRow>
+
+                <div className="profile-section-title font-semibold text-blue-600 border-b pb-2 mb-4 mt-6">Thông tin ngân hàng</div>
+                <FormRow label="Tài khoản ngân hàng" full>
+                    <input className="input border p-2 w-full rounded" name="bankAccount" value={form.bankAccount} onChange={handleChange} />
+                </FormRow>
+
+                <div className="mt-6">
+                    <FormRow label="Lý do thay đổi (*)" full>
+                        <textarea 
+                            className="textarea border p-2 w-full rounded" 
+                            rows={3} 
+                            name="reason" 
+                            value={reason} 
+                            onChange={(e) => setReason(e.target.value)} 
+                            placeholder="Nhập lý do chi tiết..." 
+                            required 
+                        />
+                    </FormRow>
+                </div>
+
+                <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+                    <button type="button" className="btn bg-gray-300 text-gray-700 px-4 py-2 rounded" onClick={() => navigate('/employee/profile')}>Hủy</button>
+                    <button type="submit" className="btn bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Gửi yêu cầu</button>
+                </div>
+            </form>
         </div>
-        <div className="card-body">
-          <p>Loading profile...</p>
-        </div>
-      </div>
     );
-  }
-
-  if (error && !profile) {
-    return (
-      <div className="card fade-in-up">
-        <div className="card-header">
-          <h2>Send profile update request</h2>
-        </div>
-        <div className="card-body">
-          <p style={{ color: "var(--danger)" }}>{error}</p>
-          <button type="button" className="btn" onClick={() => navigate(-1)}>
-            Back
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <form className="card fade-in-up" onSubmit={handleSubmit}>
-      <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-        <div>
-          <h2 style={{ margin: 0 }}>Send profile update request</h2>
-          <p style={{ margin: 0, color: "var(--muted)" }}>
-            Changes will be reviewed and approved by HR.
-          </p>
-        </div>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={() => navigate("/employee/profile")}
-        >
-          Back to profile
-        </button>
-      </div>
-
-      <div className="card-body">
-        <ViolationBanner messages={violations} />
-
-        {submitResult && (
-          <div
-            className="alert success"
-            style={{
-              marginBottom: 16,
-              padding: 12,
-              borderRadius: 8,
-              background: "#ecfdf3",
-              border: "1px solid #bbf7d0",
-              color: "#14532d",
-              fontSize: 14,
-            }}
-          >
-            <strong>Request submitted!</strong>{" "}
-            Request ID: {submitResult.request_id}, status:{" "}
-            {submitResult.request_status}
-          </div>
-        )}
-
-        <div className="form-grid">
-          {EDITABLE_FIELDS.map((f) => (
-            <FormRow
-              key={f.id}
-              label={f.label}
-              required={false}
-              full={["current_address", "bank_accounts", "education"].includes(
-                f.id
-              )}
-            >
-              {f.type === "textarea" ? (
-                <textarea
-                  rows={3}
-                  value={form[f.id] ?? ""}
-                  onChange={(e) => handleChange(f.id, e.target.value)}
-                  placeholder={f.placeholder}
-                />
-              ) : (
-                <input
-                  type={f.type}
-                  value={form[f.id] ?? ""}
-                  onChange={(e) => handleChange(f.id, e.target.value)}
-                  placeholder={f.placeholder}
-                />
-              )}
-            </FormRow>
-          ))}
-        </div>
-
-        <div style={{ marginTop: 16 }}>
-          <FormRow label="Reason for update" required full>
-            <textarea
-              rows={3}
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Explain why you need to update your information..."
-            />
-          </FormRow>
-        </div>
-
-        {error && (
-          <p style={{ color: "var(--danger)", marginTop: 12 }}>{error}</p>
-        )}
-
-        <div
-          style={{
-            marginTop: 20,
-            display: "flex",
-            gap: 12,
-            justifyContent: "flex-end",
-          }}
-        >
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={() => navigate("/employee/profile")}
-          >
-            Cancel
-          </button>
-          <button type="submit" className="btn" disabled={submitting}>
-            {submitting ? "Submitting..." : "Submit request"}
-          </button>
-        </div>
-      </div>
-    </form>
-  );
 }

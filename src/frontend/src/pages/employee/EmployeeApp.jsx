@@ -1,16 +1,24 @@
 import { Routes, Route, NavLink, Navigate, useLocation } from "react-router-dom";
 
+// Import các trang cũ
 import LeaveRequestPage from "./LeaveRequestPage";
 import OTRequestPage from "./OTRequestPage";
 import ResignationRequestPage from "./ResignationRequestPage";
 import RequestStatusPage from "./RequestStatusPage";
 
+// Import các trang Profile mới (Của Ý)
+import MyProfilePage from "./MyProfilePage";
+import ProfileUpdateRequestPage from "./ProfileUpdateRequestPage";
+
 import "../../index.css";
 
 function HeaderTabs() {
   const { pathname } = useLocation();
-  const onCreate =
-    pathname === "/employee" || pathname.startsWith("/employee/create");
+
+  // Logic kiểm tra tab nào đang active
+  const isCreate = pathname === "/employee" || pathname.startsWith("/employee/create");
+  const isStatus = pathname.startsWith("/employee/status");
+  const isProfile = pathname.startsWith("/employee/profile");
 
   return (
     <header className="emp-header shadow-soft fade-in-down">
@@ -23,24 +31,36 @@ function HeaderTabs() {
           </div>
         </div>
         <nav className="tabs" aria-label="Main navigation">
+          {/* Tab 1: Tạo Request */}
           <NavLink
             to="/employee/create"
-            className={`tab ${onCreate ? "active" : ""}`}
+            className={`tab ${isCreate ? "active" : ""}`}
           >
             Create request
           </NavLink>
+
+          {/* Tab 2: Xem trạng thái */}
           <NavLink
             to="/employee/status"
-            className={`tab ${!onCreate ? "active" : ""}`}
+            className={`tab ${isStatus ? "active" : ""}`}
           >
             View request status
           </NavLink>
+
+          {/* Tab 3: Hồ sơ cá nhân (MỚI THÊM) */}
+          <NavLink
+            to="/employee/profile"
+            className={`tab ${isProfile ? "active" : ""}`}
+          >
+            My Profile
+          </NavLink>
         </nav>
+        
         <div className="userbox">
           <div className="avatar" />
           <div className="user-meta">
-            <span className="user-name">Alice</span>
-            <span className="user-code">E001</span>
+            <span className="user-name">Employee</span>
+            <span className="user-code">NV001</span>
           </div>
         </div>
       </div>
@@ -86,11 +106,20 @@ export default function EmployeeApp() {
       <main className="container" style={{ marginTop: 24, marginBottom: 32 }}>
         <Routes>
           <Route index element={<Navigate to="create" replace />} />
+          
+          {/* Khu vực tạo Request */}
           <Route path="create" element={<CreateGrid />} />
           <Route path="create/leave" element={<LeaveRequestPage />} />
           <Route path="create/ot" element={<OTRequestPage />} />
           <Route path="create/resignation" element={<ResignationRequestPage />} />
+          
+          {/* Khu vực xem Status */}
           <Route path="status" element={<RequestStatusPage />} />
+
+          {/* Khu vực Profile (User Case của Ý) */}
+          <Route path="profile" element={<MyProfilePage />} />
+          <Route path="profile/update-request" element={<ProfileUpdateRequestPage />} />
+
           <Route path="*" element={<Navigate to="create" replace />} />
         </Routes>
       </main>
