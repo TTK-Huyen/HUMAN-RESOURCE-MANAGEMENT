@@ -24,13 +24,13 @@ The system aims to digitalize HR processes, reduce manual work, and improve tran
 ---
 
 ## 🚀 How to Run the Project
-# HRMApi – Quick Start (Backend)
+# HRMApi (Backend)
 
 Hướng dẫn chạy backend lần đầu trên **Windows (PowerShell)**.
 
 ---
 
-## 1️⃣ Yêu cầu môi trường
+## 1️ Yêu cầu môi trường
 
 - MySQL hoặc MariaDB đang chạy  
 - PowerShell  
@@ -44,7 +44,7 @@ dotnet --list-runtimes
 
 ---
 
-## 2️⃣ Cài đặt `dotnet-ef`
+## 2️ Cài đặt `dotnet-ef`
 
 ```powershell
 dotnet tool uninstall --global dotnet-ef || true
@@ -54,7 +54,7 @@ dotnet-ef --version
 
 ---
 
-## 3️⃣ Cấu hình database
+## 3️ Cấu hình database
 
 ### Tùy chọn A: Localhost MySQL
 Cập nhật `appsettings.json`:
@@ -79,7 +79,7 @@ Cấu hình kết nối:
 
 ---
 
-## 4️⃣ Chạy Backend
+## 4️ Chạy Backend
 
 Đi đến thư mục dự án:
 ```powershell
@@ -101,7 +101,7 @@ dotnet run
 
 ---
 
-## 5️⃣ Lệnh xử lý nhanh
+## 5️ Lệnh xử lý nhanh
 
 Xóa database cũ:
 ```powershell
@@ -111,7 +111,7 @@ docker rm -f mysql                # docker db
 
 ---
 
-## 6️⃣ Kiểm thử nhanh bằng Postman
+## 6️ Kiểm thử nhanh bằng Postman
 
 Ví dụ request:
 
@@ -169,8 +169,10 @@ POST /api/v1/employees/{employeeCode}/profile-update-requests
 
 ## Ghi chú
 
+
 - Không commit password thật vào Git
 - Production nên dùng biến môi trường hoặc secret manager
+
 
 ---
 
