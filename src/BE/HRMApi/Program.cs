@@ -120,9 +120,10 @@ if (app.Environment.IsDevelopment())
     // Seed JobTitle (positions)
     if (!db.JobTitles.Any())
     {
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var itDept = new Department { DepartmentCode = "1", Name = "IT" };
-        var hrDept = new Department { DepartmentCode = "2", Name = "HR" };
+        db.JobTitles.AddRange(
+            new JobTitle { Id = 1, Title = "Software Engineer" },
+            new JobTitle { Id = 2, Title = "HR Specialist" }
+        );
         // Đảm bảo DB/migration đã apply
         //db.Database.Migrate();
         db.Database.EnsureCreated();
@@ -134,6 +135,8 @@ if (app.Environment.IsDevelopment())
                 new Department { DepartmentCode = "2", Name = "HR" }
             );
         }
+        var itDept = db.Departments.First(d => d.DepartmentCode == "1");
+        var hrDept = db.Departments.First(d => d.DepartmentCode == "2");
 
         if (!db.JobTitles.Any())
         {
@@ -271,9 +274,9 @@ app.UseSwaggerUI(c =>
 });
 
 // 6. (Tuỳ chọn) Https redirection – nếu gây phiền thì comment lại
-app.UseHttpsRedirection();
-app.UseCors(MyAllowSpecificOrigins); // Kết nối FE
-app.UseAuthorization();
+// app.UseHttpsRedirection();
+// app.UseCors(MyAllowSpecificOrigins); // Kết nối FE
+// app.UseAuthorization();
 
 app.MapControllers();
 

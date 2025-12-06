@@ -67,17 +67,17 @@ namespace HrmApi.Services
                     University = ed.University,
                     GraduationYear = ed.GraduationYear.Year,
                     OtherCertificates = ed.OtherCertificates
-                }).ToList(),
-                ProfileUpdateHistory = employee.ProfileUpdateRequests.Select(h => new ProfileUpdateHistoryDto
-                {
-                    Id = h.EmployeeId,
-                    RequestDate = h.RequestDate,
-                    Status = h.Status,
-                    ReviewedBy = h.ReviewedBy?.EmployeeName,
-                    ReviewedAt = h.ReviewedAt,
-                    RejectReason = h.RejectReason,
-                    Comment = h.Comment
                 }).ToList()
+                // ProfileUpdateRequests = employee.ProfileUpdateRequests.Select(h => new ProfileUpdateRequestsDto
+                // {
+                //     Id = h.EmployeeId,
+                //     RequestDate = h.RequestDate,
+                //     Status = h.Status,
+                //     ReviewedBy = h.ReviewedBy?.EmployeeName,
+                //     ReviewedAt = h.ReviewedAt,
+                //     RejectReason = h.RejectReason,
+                //     Comment = h.Comment
+                // }).ToList()
             };
             return dto;
         }
@@ -131,15 +131,15 @@ namespace HrmApi.Services
                     GraduationYear = ed.GraduationYear.Year,
                     OtherCertificates = ed.OtherCertificates
                 }).ToList(),
-                ProfileUpdateHistory = employee.ProfileUpdateRequests.Select(h => new ProfileUpdateHistoryDto
-                {
-                    Id = h.EmployeeId,
-                    RequestDate = h.RequestDate,
-                    Status = h.Status,
-                    ReviewedAt = h.ReviewedAt,
-                    RejectReason = h.RejectReason,
-                    Comment = h.Comment
-                }).ToList()
+                // ProfileUpdateHistory = employee.ProfileUpdateRequests.Select(h => new ProfileUpdateHistoryDto
+                // {
+                //     Id = h.EmployeeId,
+                //     RequestDate = h.RequestDate,
+                //     Status = h.Status,
+                //     ReviewedAt = h.ReviewedAt,
+                //     RejectReason = h.RejectReason,
+                //     Comment = h.Comment
+                // }).ToList()
             };
             return dto;
         }
