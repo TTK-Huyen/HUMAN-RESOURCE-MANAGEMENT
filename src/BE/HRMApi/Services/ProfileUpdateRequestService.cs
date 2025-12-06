@@ -121,32 +121,20 @@ namespace HrmApi.Services
             };
         }
     
-        public async Task<bool> SendProfileUpdateRequestAsync(
-            string employeeCode, 
-            ProfileUpdateRequestCreateDto dto)
+        public async Task<bool> SendProfileUpdateRequestAsync(string employeeCode, ProfileUpdateRequestCreateDto dto)
         {
-            // 1) Validate
-            var employee = await _employeeRepo.GetProfileByCodeAsync(employeeCode);
-            if (employee == null)
-                return false;
-
-            if (dto.Details == null || !dto.Details.Any())
-                return false;
-
-            foreach (var d in dto.Details)
+            var employee = await _employeeRepo.GetByCodeAsync(employeeCode);
+            if (employee == null) return false;
+            if (dto.Details == null || !dto.Details.Any()) return false;
+            foreach (var detail in dto.Details)
             {
-                if (string.IsNullOrWhiteSpace(d.FieldName) ||
-                    string.IsNullOrWhiteSpace(d.NewValue))
+                if (string.IsNullOrWhiteSpace(detail.FieldName) || string.IsNullOrWhiteSpace(detail.NewValue))
                     return false;
             }
-
-            var now = DateTime.UtcNow;
-
-            // 2) Tạo request chính cho HR review
             var request = new ProfileUpdateRequest
             {
                 EmployeeId = employee.Id,
-                RequestDate = now,
+                RequestDate = DateTime.UtcNow,
                 Status = "PENDING",
                 Details = dto.Details.Select(d => new ProfileUpdateRequestDetail
                 {
@@ -155,13 +143,8 @@ namespace HrmApi.Services
                     NewValue = d.NewValue
                 }).ToList()
             };
-
             await _requestRepo.AddAsync(request);
-
-            // 4) SaveChanges 1 lần (nếu dùng Unit of Work)
-            var saved1 = await _requestRepo.SaveChangesAsync();
-
-            return saved1;
+            return await _requestRepo.SaveChangesAsync();
         }
     }
 
