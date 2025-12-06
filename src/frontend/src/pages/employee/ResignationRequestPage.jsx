@@ -9,7 +9,7 @@ import { FormRow } from "../../components/FormRow";
 import "./RequestForm.css";
 
 const INITIAL_FORM = {
-  employeeCode: "E001",
+  employeeCode: "EMP001",
   employeeName: "Alice",
   department: "Engineering",
   position: "SE",

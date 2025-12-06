@@ -275,7 +275,7 @@ app.UseSwaggerUI(c =>
 
 // 6. (Tuỳ chọn) Https redirection – nếu gây phiền thì comment lại
 // app.UseHttpsRedirection();
-// app.UseCors(MyAllowSpecificOrigins); // Kết nối FE
+app.UseCors(MyAllowSpecificOrigins); // Kết nối FE
 // app.UseAuthorization();
 
 app.MapControllers();

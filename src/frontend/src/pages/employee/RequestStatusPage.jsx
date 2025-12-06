@@ -7,7 +7,7 @@ import {
   getResignationRequestDetail,
 } from "../../services/requestApi";
 
-const REQUEST_TYPES = ["ALL", "LEAVE", "OT", "RESIGNATION"];
+const REQUEST_TYPES = ["ALL", "LEAVE", "OVERTIME", "RESIGNATION"];
 const STATUS_OPTIONS = ["ALL", "PENDING", "APPROVED", "REJECTED", "CANCELLED"];
 const PAGE_SIZE = 10;
 
