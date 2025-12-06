@@ -74,9 +74,6 @@ namespace HrmApi.Dtos.Employee
         // Employee.Status: string (ACTIVE / INACTIVE / ...)
         public string Status { get; set; } = string.Empty;
 
-        // Map từ Employee.ProfileUpdateHistory
-        public List<ProfileUpdateHistoryDto> ProfileUpdateHistory { get; set; } = new();
-
         // Map từ Employee.Education
         public List<EmployeeEducationDto> Education { get; set; } = new();
     }
