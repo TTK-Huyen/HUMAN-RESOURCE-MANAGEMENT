@@ -1,4 +1,5 @@
 using HrmApi.Dtos;
+using HrmApi.Dtos.Employee;
 
 namespace HrmApi.Services
 {
@@ -11,5 +12,7 @@ namespace HrmApi.Services
             int hrId,
             long requestId,
             RequestStatusUpdateDto dto);
+
+        Task<bool> CreateRequestAsync(string employeeCode, ProfileUpdateRequestCreateDto dto);
     }
 }

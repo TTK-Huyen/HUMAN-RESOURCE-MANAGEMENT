@@ -18,10 +18,7 @@ namespace HrmApi.Models
 
         // Navigation Property: Yêu cầu cập nhật cha
         [ForeignKey(nameof(UpdateRequestId))]
-        public ProfileUpdateHistory UpdateRequest { get; set; } = default!;
-        // Nếu DB/logic của bạn dùng ProfileUpdateRequest thay vì ProfileUpdateHistory
-        // thì chỉ cần đổi kiểu ở đây:
-        // public ProfileUpdateRequest UpdateRequest { get; set; } = default!;
+        public ProfileUpdateRequest UpdateRequest { get; set; } = default!;
 
         // field_name (ADDRESS, BANK_ACCOUNT, PHONE, ...)
         [Column("field_name")]

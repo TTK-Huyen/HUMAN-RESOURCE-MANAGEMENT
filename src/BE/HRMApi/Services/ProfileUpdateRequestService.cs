@@ -1,5 +1,7 @@
 using HrmApi.Dtos;
 using HrmApi.Repositories;
+using HrmApi.Dtos.Employee;
+using HrmApi.Models;
 
 namespace HrmApi.Services
 {
@@ -119,6 +121,33 @@ namespace HrmApi.Services
                 RequestId     = requestId,
                 RequestStatus = normalizedStatus
             };
+        }
+
+        // ========= API #4: CREATE REQUEST =========
+        public async Task<bool> CreateRequestAsync(string employeeCode, ProfileUpdateRequestCreateDto dto)
+        {
+            var employee = await _employeeRepo.GetByCodeAsync(employeeCode);
+            if (employee == null) return false;
+            if (dto.Details == null || !dto.Details.Any()) return false;
+            foreach (var detail in dto.Details)
+            {
+                if (string.IsNullOrWhiteSpace(detail.FieldName) || string.IsNullOrWhiteSpace(detail.NewValue))
+                    return false;
+            }
+            var request = new ProfileUpdateRequest
+            {
+                EmployeeId = employee.Id,
+                RequestDate = DateTime.UtcNow,
+                Status = "PENDING",
+                Details = dto.Details.Select(d => new ProfileUpdateRequestDetail
+                {
+                    FieldName = d.FieldName,
+                    OldValue = d.OldValue,
+                    NewValue = d.NewValue
+                }).ToList()
+            };
+            _requestRepo.Add(request);
+            return await _requestRepo.SaveChangesAsync() > 0;
         }
     }
 }

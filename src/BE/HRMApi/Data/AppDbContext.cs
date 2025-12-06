@@ -16,7 +16,6 @@ namespace HrmApi.Data
         public DbSet<EmployeeEducation> EmployeeEducations => Set<EmployeeEducation>();
         public DbSet<EmployeePhoneNumber> EmployeePhoneNumbers => Set<EmployeePhoneNumber>();
         public DbSet<JobTitle> JobTitles => Set<JobTitle>();
-        public DbSet<ProfileUpdateHistory> ProfileUpdateHistories => Set<ProfileUpdateHistory>();
         public DbSet<ProfileUpdateRequestDetail> ProfileUpdateRequestDetails => Set<ProfileUpdateRequestDetail>();
         public DbSet<UserAccount> UserAccounts => Set<UserAccount>();
         public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
@@ -54,14 +53,8 @@ namespace HrmApi.Data
                 .WithOne(rs => rs.Request)
                 .HasForeignKey<ResignationRequest>(rs => rs.Id);
 
-            modelBuilder.Entity<Employee>()
-                .HasMany(e => e.ProfileUpdateHistory)
-                .WithOne(h => h.Employee)
-                .HasForeignKey(h => h.EmployeeId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<ProfileUpdateHistory>()
-                .HasMany(h => h.Details)
+            modelBuilder.Entity<ProfileUpdateRequest>()
+                .HasMany(r => r.Details)
                 .WithOne(d => d.UpdateRequest)
                 .HasForeignKey(d => d.UpdateRequestId)
                 .OnDelete(DeleteBehavior.Cascade);
