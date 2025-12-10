@@ -56,7 +56,7 @@ const mockDelay = (data, ms = 500) => {
 
 // ============================================================
 // REAL API SETUP (Giữ lại cấu hình này để dùng sau)
-const BASE_URL = 'http://localhost:5291/api/v1';
+const BASE_URL = 'http://localhost:5291/api/v1'; 
 const api = axios.create({ baseURL: BASE_URL, headers: { 'Content-Type': 'application/json' } });
 api.interceptors.request.use(config => {
     const token = localStorage.getItem('token');
@@ -66,43 +66,67 @@ api.interceptors.request.use(config => {
 // ============================================================
 
 export const EmployeeService = {
-    // 1. Xem hồ sơ (MOCK)
-    getProfile: (employeeCode) => {
-        console.log(`[MOCK API] Get Profile for ${employeeCode}`);
-        return mockDelay(MOCK_PROFILE);
-        // Khi chạy thật thì dùng dòng dưới:
-        // return api.get(`/employees/${employeeCode}/profile`);
-    },
+  // 1. Xem hồ sơ – dùng API thật (Swagger profile)
+  getProfile: (employeeCode) => {
+    // Trả về đúng DTO từ backend
+    return api.get(`/employees/${employeeCode}/profile`);
+    // Response data chính là:
+    // {
+    //   employeeName, employeeCode, dateOfBirth, gender, nationality, ...
+    // }
+  },
 
-    // 2. Gửi yêu cầu cập nhật (MOCK)
-    sendUpdateRequest: (employeeCode, payload) => {
-        console.log(`[MOCK API] Send Request for ${employeeCode}:`, payload);
-        return mockDelay({ message: "Gửi yêu cầu thành công!" });
-        // return api.post(`/employees/${employeeCode}/profile-update-requests`, payload);
-    },
+  // 2. Gửi yêu cầu cập nhật – dùng API thật
+  // payload phải giống Swagger:
+  // {
+  //   reason: "string",
+  //   details: [{ fieldName, oldValue, newValue }]
+  // }
+  sendUpdateRequest: (employeeCode, payload) => {
+    return api.post(
+      `/employees/${employeeCode}/profile-update-requests`,
+      payload,
+      { headers: { Accept: "*/*" } }
+    );
+    // Response data: "Profile update request sent and pending approval."
+  },
 };
 
 export const HRService = {
-    // 3. HR Lấy danh sách (MOCK)
-    getUpdateRequests: (params) => {
-        console.log(`[MOCK API] Get HR Requests`, params);
-        return mockDelay(MOCK_HR_REQUESTS);
-        // return api.get('/hr/profile-update-requests', { params });
-    },
+  // 3. HR lấy danh sách
+  // params: { status, employeeCode }
+  getUpdateRequests: (params) => {
+    return api.get('/hr/profile-update-requests', {
+      params,
+      headers: { Accept: "application/json, text/plain, */*" },
+    });
+    // data: [
+    //   { request_id, employee_code, full_name, created_at, request_status }, ...
+    // ]
+  },
 
-    // 4. HR Xem chi tiết (MOCK)
-    getRequestDetail: (requestId) => {
-        console.log(`[MOCK API] Get Detail ${requestId}`);
-        return mockDelay(MOCK_REQUEST_DETAIL);
-        // return api.get(`/hr/profile-update-requests/${requestId}`);
-    },
+  // 4. HR xem chi tiết
+  getRequestDetail: (requestId) => {
+    return api.get(`/hr/profile-update-requests/${requestId}`, {
+      headers: { Accept: "application/json, text/plain, */*" },
+    });
+    // data:
+    // {
+    //   request_id, employee_id, request_status,
+    //   details: [{ field_name, old_value, new_value }]
+    // }
+  },
 
-    // 5. HR Duyệt/Từ chối (MOCK)
-    updateRequestStatus: (requestId, statusData) => {
-        console.log(`[MOCK API] Update Status ${requestId}:`, statusData);
-        return mockDelay({ message: "Cập nhật trạng thái thành công!" });
-        // return api.patch(`/hr/profile-update-requests/${requestId}/status`, statusData);
-    },
+  // 5. HR duyệt / từ chối
+  updateRequestStatus: (requestId, statusData) => {
+    // statusData phải có: { new_status, reject_reason, Employee_ID }
+    return api.patch(
+      `/hr/profile-update-requests/${requestId}/status`,
+      statusData,
+      { headers: { Accept: "application/json, text/plain, */*" } }
+    );
+    // data: { request_id, request_status }
+  },
 };
 
 export default api;

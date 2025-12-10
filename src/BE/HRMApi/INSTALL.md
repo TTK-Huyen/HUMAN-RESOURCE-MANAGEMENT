@@ -135,3 +135,57 @@ Thực hiện đủ các bước trên là bạn sẽ có API chạy được tr
     }
   ]
 }
+
+Responses
+Curl
+
+curl -X 'GET' \
+  'http://localhost:5291/api/v1/hr/profile-update-requests/1' \
+  -H 'accept: text/plain'
+Request URL
+http://localhost:5291/api/v1/hr/profile-update-requests/1
+Server response
+Code	Details
+200	
+Response body
+Download
+{
+  "request_id": 1,
+  "employee_id": 1,
+  "request_status": "PENDING",
+  "details": [
+    {
+      "field_name": "Gender",
+      "old_value": "Male",
+      "new_value": "Female"
+    }
+  ]
+}
+Response headers
+ content-type: application/json; charset=utf-8 
+ date: Sat,06 Dec 2025 07:28:24 GMT 
+ server: Kestrel 
+ transfer-encoding: chunked 
+Responses
+Code	Description	Links
+200	
+OK
+
+Media type
+
+text/plain
+Controls Accept header.
+Example Value
+Schema
+{
+  "request_id": 0,
+  "employee_id": 0,
+  "request_status": "string",
+  "details": [
+    {
+      "field_name": "string",
+      "old_value": "string",
+      "new_value": "string"
+    }
+  ]
+}

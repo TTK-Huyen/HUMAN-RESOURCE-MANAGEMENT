@@ -2,10 +2,14 @@
 //Lấy base URL từ biến môi trường CRA
 const API_BASE_URL =
   process.env.REACT_APP_API_BASE_URL || "http://localhost:5291";
+// Dùng base URL thật, không dùng path tương đối
+const API_V1 = `${API_BASE_URL}/api/v1`;
 // ───────────────────────────────────────────────
 // Local storage helpers cho các loại request (leave, OT, resignation)
 // ───────────────────────────────────────────────
 const KEY = "ems_requests_v1";
+
+const CURRENT_HR_ID = 1; // trùng Employee_ID trong DB của HR
 
 function load() {
   try {
@@ -44,7 +48,7 @@ export function create(type, payload) {
 /**
  * Lọc request theo type + owner (local)
  */
-export function listByType(type, ownerId = "E001") {
+export function listByType(type, ownerId = "EMP001") {
   return load().filter(
     (x) => x.type === type && (!ownerId || x.employeeCode === ownerId)
   );
@@ -89,70 +93,116 @@ export async function getEmployeeRequests({
 // API V1 (Profile)
 // ───────────────────────────────────────────────
 
-const API_V1 = "/api/v1";
 
-/**
- * UC1.1 – Employee Views Personal Profile
- * GET /api/v1/employees/{employeeCode}/profile
- */
-export async function fetchEmployeeProfile(employeeCode = "E001") {
-  const res = await fetch(
-    `${API_V1}/employees/${encodeURIComponent(employeeCode)}/profile`
-  );
+
+// UC1.1 – Employee Views Personal Profile
+// GET /api/v1/employees/{employeeCode}/profile
+export async function fetchEmployeeProfile(employeeCode = "EMP001") {
+  const url = `${API_V1}/employees/${encodeURIComponent(employeeCode)}/profile`;
+  console.log("[PROFILE] Request URL:", url);
+
+  const res = await fetch(url);
+  const contentType = res.headers.get("content-type") || "";
+  console.log("[PROFILE] Status:", res.status, res.statusText);
+  console.log("[PROFILE] Content-Type:", contentType);
+
+  const raw = await res.clone().text();
+  console.log("[PROFILE] Raw body:", raw);
 
   if (res.status === 404) {
     throw new Error("Profile not found for this employee.");
   }
-  if (res.status === 403) {
+  if (res.status === 403 || res.status === 401) {
     throw new Error("You are not allowed to view this profile.");
   }
+
   if (!res.ok) {
-    throw new Error("Failed to fetch employee profile.");
+    let detail = null;
+    if (contentType.includes("application/json")) {
+      try {
+        detail = JSON.parse(raw);
+      } catch {}
+    }
+
+    const message =
+      detail?.title ||
+      detail?.message ||
+      detail?.error ||
+      detail?.error_message ||
+      `Failed to fetch employee profile (status ${res.status}).`;
+
+    throw new Error(message);
   }
 
-  return await res.json();
+  if (!contentType.includes("application/json")) {
+    console.error("[PROFILE] Expected JSON, got:", raw.slice(0, 200));
+    throw new Error("Server trả dữ liệu không đúng định dạng JSON.");
+  }
+
+  const data = JSON.parse(raw);
+  console.log("[PROFILE] Parsed JSON object:", data);
+  return data;
 }
 
 /**
  * UC1.5 – Send Profile Update Request
- * (Spec ghi GET nhưng có body nên mình dùng POST cho đúng REST)
  *
  * POST /api/v1/employees/{employeeCode}/profile-update-requests
- * Body: { reason, updates: [{ field_name, new_value }] }
- * Return: { request_id, request_status: "Pending Approval" }
+ * Body: {
+ *   reason: string,
+ *   details: [{ fieldName, oldValue, newValue }]
+ * }
+ * Return: { message: "Profile update request sent and pending approval." }
  */
 export async function sendProfileUpdateRequest(
-  employeeCode = "E001",
+  employeeCode = "EMP001",
   payload
 ) {
-  const res = await fetch(
-    `${API_V1}/employees/${encodeURIComponent(
-      employeeCode
-    )}/profile-update-requests`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    }
-  );
+  const url = `${API_V1}/employees/${encodeURIComponent(
+    employeeCode
+  )}/profile-update-requests`;
 
-  if (res.status === 404) {
-    throw new Error("Employee not found.");
-  }
-  if (res.status === 403) {
-    throw new Error("You are not allowed to update this profile.");
-  }
-  if (res.status === 400) {
-    const err = await res.json().catch(() => null);
-    throw new Error(err?.error_message || "Invalid request payload.");
-  }
+  // payload từ FE phải có dạng:
+  // {
+  //   reason: "...",
+  //   details: [
+  //     { fieldName: "Gender", oldValue: "Male", newValue: "Female" }
+  //   ]
+  // }
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "*/*", // swagger dùng text/plain nhưng vẫn ok
+    },
+    body: JSON.stringify(payload),
+  });
+
   if (!res.ok) {
-    throw new Error("Failed to create profile update request.");
+    let detail = null;
+    try {
+      detail = await res.json();
+    } catch {
+      // ignore parse error (vì 200 là text/plain)
+    }
+
+    const message =
+      detail?.title ||
+      detail?.message ||
+      detail?.error ||
+      detail?.error_message ||
+      (res.status === 404
+        ? "Employee not found."
+        : res.status === 403 || res.status === 401
+        ? "You are not allowed to update this profile."
+        : "Failed to create profile update request.");
+
+    throw new Error(message);
   }
 
-  return await res.json(); // { request_id, request_status }
+  const text = await res.text();
+  return { message: text || "Profile update request sent and pending approval." };
 }
 
 // ───────────────────────────────────────────────
@@ -176,12 +226,33 @@ export async function hrFetchProfileUpdateRequests({
   const qs = params.toString();
   const url = `${API_V1}/hr/profile-update-requests${qs ? "?" + qs : ""}`;
 
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    headers: {
+      Accept: "application/json, text/plain, */*",
+    },
+  });
+
   if (!res.ok) {
-    throw new Error("Failed to fetch profile update requests.");
+    let detail = null;
+    try {
+      detail = await res.json();
+    } catch {
+      // ignore
+    }
+
+    const message =
+      detail?.title ||
+      detail?.message ||
+      detail?.error ||
+      detail?.error_message ||
+      `Failed to fetch profile update requests (status ${res.status})`;
+
+    throw new Error(message);
   }
-  return await res.json();
+
+  return await res.json(); // array
 }
+
 
 /**
  * GET /api/v1/hr/profile-update-requests/{requestId}
@@ -198,51 +269,89 @@ export async function hrFetchProfileUpdateRequests({
  *   details: [{ field_name, old_value, new_value }]
  * }
  */
-export async function hrFetchProfileUpdateRequestDetail(requestId) {
-  const res = await fetch(
-    `${API_V1}/hr/profile-update-requests/${encodeURIComponent(requestId)}`
-  );
+export async function hrUpdateProfileUpdateRequestStatus(
+  requestId,
+  { new_status, reject_reason = "", hrId }
+) {
+  const url = `${API_V1}/hr/profile-update-requests/${encodeURIComponent(
+    requestId
+  )}/status`;
 
-  if (res.status === 404) {
-    throw new Error("Update request not found.");
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json, text/plain, */*",
+    },
+    body: JSON.stringify({
+      new_status,
+      reject_reason,
+      Employee_ID: hrId,
+    }),
+  });
+
+  let detail = null;
+  try {
+    detail = await res.json();
+  } catch {
+    // ignore
+  }
+
+  if (res.status === 400 || res.status === 404) {
+    const message = detail?.error_message || "Invalid request or not found.";
+    throw new Error(message);
   }
   if (!res.ok) {
-    throw new Error("Failed to fetch update request detail.");
+    const message =
+      detail?.title ||
+      detail?.message ||
+      detail?.error ||
+      detail?.error_message ||
+      "Failed to update request status.";
+    throw new Error(message);
   }
-  return await res.json();
+
+  return detail;
 }
+
 
 /**
  * PATCH /api/v1/hr/profile-update-requests/{requestId}/status
  * Body: { new_status: "APPROVED" | "REJECTED", reject_reason? }
  * Expect: { request_id, request_status }
  */
-export async function hrUpdateProfileUpdateRequestStatus(
-  requestId,
-  { new_status, reject_reason = "" }
-) {
-  const res = await fetch(
-    `${API_V1}/hr/profile-update-requests/${encodeURIComponent(
-      requestId
-    )}/status`,
-    {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ new_status, reject_reason }),
-    }
-  );
+export async function hrFetchProfileUpdateRequestDetail(requestId) {
+  const url = `${API_V1}/hr/profile-update-requests/${encodeURIComponent(
+    requestId
+  )}`;
 
-  if (res.status === 400 || res.status === 404) {
-    const err = await res.json().catch(() => null);
-    throw new Error(err?.error_message || "Invalid request or not found.");
+  const res = await fetch(url, {
+    headers: {
+      Accept: "application/json, text/plain, */*",
+    },
+  });
+
+  let detail = null;
+  try {
+    detail = await res.json();
+  } catch {
+    // ignore
+  }
+
+  if (res.status === 404) {
+    throw new Error(detail?.error_message || "Update request not found.");
   }
   if (!res.ok) {
-    throw new Error("Failed to update request status.");
+    const message =
+      detail?.title ||
+      detail?.message ||
+      detail?.error ||
+      detail?.error_message ||
+      "Failed to fetch update request detail.";
+    throw new Error(message);
   }
 
-  return await res.json(); // { request_id, request_status }
+  return detail;
 }
 
 // ====== GỌI API THẬT CHO LEAVE REQUEST ======

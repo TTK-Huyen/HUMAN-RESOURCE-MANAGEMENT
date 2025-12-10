@@ -76,6 +76,8 @@ export default function HrApp() {
             path="/profile-requests/:requestId"
             element={<HrProfileUpdateRequestDetailPage />}
           />
+
+          
           <Route path="*" element={<Navigate to="/hr" replace />} />
         </Routes>
       </main>

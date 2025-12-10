@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { HRService } from '../../services/api';
+import { useNavigate } from "react-router-dom";
 
 const HrProfileUpdateRequestListPage = () => {
+    const navigate = useNavigate(); 
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -45,19 +47,37 @@ const HrProfileUpdateRequestListPage = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {requests.map(req => (
-                        <tr key={req.requestId} className="hover:bg-gray-50">
-                            <td className="p-3 border">{req.employeeCode}</td>
-                            <td className="p-3 border">{req.fullName}</td>
-                            <td className="p-3 border">{new Date(req.createdAt).toLocaleDateString()}</td>
-                            <td className="p-3 border">{req.reason}</td>
-                            <td className="p-3 border text-center">
-                                <button className="text-blue-600 mr-3">Xem</button>
-                                <button className="text-green-600 font-bold" onClick={() => handleApprove(req.requestId)}>Duyệt</button>
-                            </td>
-                        </tr>
-                    ))}
+                {requests.length === 0 ? (
+                    <tr>
+                    <td colSpan={6} style={{ padding: "12px", textAlign: "center", color: "#999" }}>
+                        No pending requests found.
+                    </td>
+                    </tr>
+                ) : (
+                    requests.map((req, index) => (
+                    <tr key={req.request_id ?? `req-${index}`}>
+                        <td style={{ padding: "8px 8px" }}>#{req.request_id}</td>
+                        <td style={{ padding: "8px 8px" }}>{req.employee_code}</td>
+                        <td style={{ padding: "8px 8px" }}>{req.full_name}</td>
+                        <td style={{ padding: "8px 8px" }}>{req.created_at}</td>
+                        <td style={{ padding: "8px 8px" }}>{req.request_status}</td>
+                        <td style={{ padding: "8px 8px", textAlign: "right" }}>
+                        <button
+                            type="button"
+                            className="btn"
+                            onClick={() =>
+                            navigate(`/hr/profile-requests/${req.request_id}`)
+                            }
+                        >
+                            View detail
+                        </button>
+                        </td>
+                    </tr>
+                    ))
+                )}
                 </tbody>
+
+
             </table>
         </div>
     );
