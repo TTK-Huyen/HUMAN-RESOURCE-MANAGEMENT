@@ -95,6 +95,10 @@ builder.Services.AddScoped<ILeaveRequestService, LeaveRequestService>();
 builder.Services.AddScoped<IOvertimeRequestService, OvertimeRequestService>();
 builder.Services.AddScoped<IResignationRequestService, ResignationRequestService>();
 
+// UC 2.10 – Department dropdown
+builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+builder.Services.AddScoped<IDepartmentService, DepartmentService>();
+
 var app = builder.Build();
 
 // ===================================================
