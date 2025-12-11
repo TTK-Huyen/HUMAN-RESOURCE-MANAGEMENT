@@ -1,68 +1,7 @@
-import axios from 'axios';
-
-// --- CẤU HÌNH MOCK DATA (Dữ liệu giả để Demo) ---
-const MOCK_PROFILE = {
-    employeeCode: "NV001",
-    fullName: "Nguyễn Văn A",
-    dateOfBirth: "1999-01-01T00:00:00",
-    gender: "Male",
-    departmentName: "Phòng Kỹ Thuật (IT)",
-    jobTitle: "Lập trình viên (Developer)",
-    companyEmail: "nguyenvana@company.com",
-    personalEmail: "vana.nguyen99@gmail.com",
-    phoneNumber: "0909123456",
-    currentAddress: "123 Đường Lê Lợi, Quận 1, TP.HCM",
-    citizenId: "079099000123",
-    personalTaxCode: "8001234567",
-    bankAccount: "1012145678 (Vietcombank)",
-    contractType: "Hợp đồng chính thức"
-};
-
-const MOCK_HR_REQUESTS = [
-    {
-        requestId: 1,
-        employeeCode: "NV001",
-        fullName: "Nguyễn Văn A",
-        createdAt: "2023-10-25T08:30:00",
-        status: "PENDING",
-        reason: "Chuyển nhà nên đổi địa chỉ"
-    },
-    {
-        requestId: 2,
-        employeeCode: "NV002",
-        fullName: "Trần Thị B",
-        createdAt: "2023-10-26T09:15:00",
-        status: "PENDING",
-        reason: "Cập nhật số điện thoại mới"
-    }
-];
-
-const MOCK_REQUEST_DETAIL = {
-    requestId: 1,
-    employeeCode: "NV001",
-    fullName: "Nguyễn Văn A",
-    reason: "Chuyển nhà nên đổi địa chỉ",
-    createdAt: "2023-10-25T08:30:00",
-    status: "PENDING",
-    details: [
-        { fieldName: "currentAddress", oldValue: "123 Đường Cũ", newValue: "456 Đường Mới, Q3" }
-    ]
-};
-
-// --- SIMULATE ASYNC (Hàm giả lập độ trễ mạng) ---
-const mockDelay = (data, ms = 500) => {
-    return new Promise((resolve) => setTimeout(() => resolve({ data: data }), ms));
-};
-
+import api from './client.js';
 // ============================================================
 // REAL API SETUP (Giữ lại cấu hình này để dùng sau)
-const BASE_URL = 'http://localhost:5291/api/v1'; 
-const api = axios.create({ baseURL: BASE_URL, headers: { 'Content-Type': 'application/json' } });
-api.interceptors.request.use(config => {
-    const token = localStorage.getItem('token');
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-    return config;
-});
+
 // ============================================================
 
 export const EmployeeService = {
@@ -128,5 +67,3 @@ export const HRService = {
     // data: { request_id, request_status }
   },
 };
-
-export default api;

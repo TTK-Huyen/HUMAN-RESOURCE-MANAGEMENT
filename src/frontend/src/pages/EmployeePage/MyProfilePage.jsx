@@ -1,7 +1,7 @@
 // src/pages/employee/MyProfilePage.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchEmployeeProfile } from "../../services/requestApi";
+import { fetchEmployeeProfile } from "../../Services/requests";
 import ProfileView from "../../components/ProfileView";
 
 const CURRENT_EMPLOYEE_CODE = "EMP001";

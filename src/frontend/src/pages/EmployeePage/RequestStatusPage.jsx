@@ -5,7 +5,7 @@ import {
   getLeaveRequestDetail,
   getOvertimeRequestDetail,
   getResignationRequestDetail,
-} from "../../services/requestApi";
+} from "../../Services/requests";
 
 const REQUEST_TYPES = ["ALL", "LEAVE", "OVERTIME", "RESIGNATION"];
 const STATUS_OPTIONS = ["ALL", "PENDING", "APPROVED", "REJECTED", "CANCELLED"];
