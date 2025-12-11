@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "+uzTFe1o3V8=",
+  "dgSpecHash": "OVWVOvXmARI=",
   "success": true,
-  "projectFilePath": "F:\\HCMUS_KH\\Nam4\\PTTK HTTTHD\\HUMAN-RESOURCE-MANAGEMENT\\src\\BE\\HRMApi\\HRMApi.csproj",
+  "projectFilePath": "D:\\KHTN\\NAM4\\PTUDHTTTHD\\SourceCode\\HUMAN-RESOURCE-MANAGEMENT\\src\\BE\\HRMApi\\HRMApi.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\ASUS\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\ASUS\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\7.0.0\\microsoft.bcl.asyncinterfaces.7.0.0.nupkg.sha512",

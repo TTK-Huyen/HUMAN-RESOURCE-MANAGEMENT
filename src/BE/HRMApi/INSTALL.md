@@ -189,3 +189,11 @@ Schema
     }
   ]
 }
+
+
+{
+  "username": "user1",
+  "password": "123456",
+  "employeeId": 1,
+  "roleId": 1
+}
