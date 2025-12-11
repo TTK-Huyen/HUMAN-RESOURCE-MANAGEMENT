@@ -99,6 +99,10 @@ builder.Services.AddScoped<IResignationRequestService, ResignationRequestService
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 
+//Dashboard summary
+builder.Services.AddScoped<IRequestsDashboardService, RequestsDashboardService>();
+builder.Services.AddScoped<ILeaveRequestRepository, LeaveRequestRepository>();
+
 var app = builder.Build();
 
 // ===================================================
