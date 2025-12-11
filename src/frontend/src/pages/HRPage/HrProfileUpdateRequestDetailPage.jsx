@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   hrFetchProfileUpdateRequestDetail,
   hrUpdateProfileUpdateRequestStatus,
-} from "../../services/requestApi";
+} from "../../Services/requests";
 import ViolationBanner from "../../components/ViolationBanner";
 
 const SENSITIVE_FIELDS = [
