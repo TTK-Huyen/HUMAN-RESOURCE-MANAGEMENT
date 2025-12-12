@@ -52,6 +52,17 @@ namespace HrmApi.Services
 
         public async Task<bool> RegisterAsync(RegisterRequestDto requestDto)
         {
+            // Validate password
+            if (string.IsNullOrWhiteSpace(requestDto.Password)
+                || requestDto.Password.Length < 8
+                || !requestDto.Password.Any(char.IsUpper)
+                || !requestDto.Password.Any(char.IsLower)
+                || !requestDto.Password.Any(char.IsDigit)
+                || !requestDto.Password.Any(ch => !char.IsLetterOrDigit(ch)))
+            {
+                throw new ArgumentException("Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.");
+            }
+
             // Kiểm tra username đã tồn tại chưa
             var existing = await _userAccountRepository.FindAccountByUsernameAsync(requestDto.Username);
             if (existing != null) return false;

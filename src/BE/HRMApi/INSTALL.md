@@ -191,9 +191,10 @@ Schema
 }
 
 
+/api/v1/auth/register
 {
-  "username": "user1",
-  "password": "123456",
+  "username": "user2",
+  "password": "Password@123",
   "employeeId": 1,
   "roleId": 1
 }

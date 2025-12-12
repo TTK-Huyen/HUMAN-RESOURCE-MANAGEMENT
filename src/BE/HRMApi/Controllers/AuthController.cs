@@ -27,10 +27,17 @@ namespace HrmApi.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequestDto dto)
         {
-            var success = await _authService.RegisterAsync(dto);
-            if (!success)
-                return BadRequest("Username already exists or invalid data.");
-            return Ok(new { message = "Registration successful." });
+            try
+            {
+                var success = await _authService.RegisterAsync(dto);
+                if (!success)
+                    return BadRequest("Username already exists or invalid data.");
+                return Ok(new { message = "Registration successful." });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpGet("accounts")]
