@@ -108,6 +108,9 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddScoped<HrmApi.Security.IPasswordHasher, HrmApi.Security.PasswordHasher>();
 builder.Services.AddScoped<HrmApi.Security.IJwtTokenService, HrmApi.Security.JwtTokenService>();
+//Dashboard summary
+builder.Services.AddScoped<IRequestsDashboardService, RequestsDashboardService>();
+builder.Services.AddScoped<ILeaveRequestRepository, LeaveRequestRepository>();
 
 var app = builder.Build();
 

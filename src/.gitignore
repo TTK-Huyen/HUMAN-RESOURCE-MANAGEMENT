@@ -1,1 +1,4 @@
 frontend/node_modules
+hrm-client/node_modules
+hrm-client/package-lock.json
+hrm-client/package.json

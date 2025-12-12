@@ -1,5 +1,7 @@
 using HrmApi.Dtos.RequestStatus;
 using HrmApi.Models;
+using System.Threading.Tasks;
+using HrmApi.Models;
 
 namespace HrmApi.Repositories
 {
@@ -19,5 +21,9 @@ namespace HrmApi.Repositories
         Task AddAsync(Request request);
         Task<Request?> GetByIdAsync(int id);
         Task SaveChangesAsync();
+
+        Task<RequestDashboardSummary> GetDashboardSummaryAsync(
+            int? departmentId,
+            string? keyword);
     }
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { HRService } from '../../services/api';
+import { HRService } from '../../Services/employees.js';
 import { useNavigate } from "react-router-dom";
 
 const HrProfileUpdateRequestListPage = () => {
