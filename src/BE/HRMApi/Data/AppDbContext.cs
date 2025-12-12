@@ -19,6 +19,8 @@ namespace HrmApi.Data
         
         public DbSet<ProfileUpdateRequestDetail> ProfileUpdateRequestDetails => Set<ProfileUpdateRequestDetail>();
         public DbSet<UserAccount> UserAccounts => Set<UserAccount>();
+        
+        public DbSet<Role> Roles => Set<Role>();
         public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
         public DbSet<OvertimeRequest> OvertimeRequests => Set<OvertimeRequest>();
         public DbSet<ResignationRequest> ResignationRequests => Set<ResignationRequest>();

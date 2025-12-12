@@ -1,3 +1,5 @@
+// File: HrmApi/Models/UserAccount.cs (Đã hoàn thiện)
+
 using System.ComponentModel.DataAnnotations;
 
 namespace HrmApi.Models;
@@ -20,7 +22,7 @@ public class UserAccount
     public int EmployeeId { get; set; }
     
     // role_id (Khóa ngoại)
-    public int RoleId { get; set; }
+    public int RoleId { get; set; } // RoleId là cần thiết
     
     // status
     public AccountStatus Status { get; set; } = AccountStatus.ACTIVE;
@@ -30,5 +32,7 @@ public class UserAccount
 
     // Navigation Properties
     public Employee Employee { get; set; } = default!;
-    // public Role Role { get; set; } = default!;
+    
+    // BỎ COMMENT: Cần thiết để JOIN lấy RoleCode cho LoginResponseDto
+    public Role Role { get; set; } = default!; 
 }

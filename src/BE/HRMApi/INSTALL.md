@@ -189,3 +189,12 @@ Schema
     }
   ]
 }
+
+
+/api/v1/auth/register
+{
+  "username": "user2",
+  "password": "Password@123",
+  "employeeId": 1,
+  "roleId": 1
+}
