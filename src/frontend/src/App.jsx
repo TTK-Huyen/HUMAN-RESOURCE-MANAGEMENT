@@ -15,7 +15,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<LoginPage />} />
-        <Route path="/employee/*" element={<RequireAuth role="EMPLOYEE"><EmployeeApp /></RequireAuth>} />
+        <Route path="/employee/*" element={<RequireAuth role="EMP"><EmployeeApp /></RequireAuth>} />
         <Route path="/hr/*" element={<RequireAuth role="HR"><HrApp /></RequireAuth>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

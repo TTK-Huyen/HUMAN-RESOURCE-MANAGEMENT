@@ -1,14 +1,10 @@
 import axios from "axios";
 import api from "./client.js";
 
-
-// Bỏ comment đoạn dưới để dùng API thật
-// export async function login({ username, password }) {
-//   const res = await api.post("/auth/login", { username, password });
-//   return res.data; // { token, role }
-// }
-
-
+export async function login({ username, password }) {
+  const res = await api.post("/auth/login", { username, password });
+  return res.data; // { token, role }
+}
 
 /**
  * === MOCK FUNCTION ===

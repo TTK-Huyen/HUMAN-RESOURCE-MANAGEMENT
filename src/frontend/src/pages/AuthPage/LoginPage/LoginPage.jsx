@@ -1,25 +1,25 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import AuthForm from "../../../components/auth/AuthForm.jsx";
-import { loginMock } from "../../../Services/users.js";
+import { login } from "../../../Services/users.js";
 
 export default function LoginPage() {
   const navigate = useNavigate();
 
   const handleLogin = async (data) => {
     try {
-      const res = await loginMock(data); // giả lập API
+      const res = await login(data); // gọi API thật
       const { token, role } = res;
 
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
 
       // ✅ Điều hướng tùy vào vai trò
-      if (role === "EMPLOYEE") navigate("/employee");
+      if (role === "EMP") navigate("/employee");
       else if (role === "HR") navigate("/hr");
       else navigate("/");
     } catch (err) {
-      alert("Login failed: " + err.message);
+      alert("Login failed: " + (err.response?.data?.message || err.message));
     }
   };
 
