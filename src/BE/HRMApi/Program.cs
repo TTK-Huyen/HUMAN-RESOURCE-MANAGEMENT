@@ -103,6 +103,10 @@ builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IRequestsDashboardService, RequestsDashboardService>();
 builder.Services.AddScoped<ILeaveRequestRepository, LeaveRequestRepository>();
 
+//Dashboard list requests
+builder.Services.AddScoped<IRequestsDashboardRepository, RequestsDashboardRepository>();
+builder.Services.AddScoped<IRequestsDashboardListService, RequestsDashboardListService>();
+
 var app = builder.Build();
 
 // ===================================================

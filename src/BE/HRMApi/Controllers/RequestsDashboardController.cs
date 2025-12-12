@@ -10,10 +10,12 @@ namespace HrmApi.Controllers
     public class RequestsDashboardController : ControllerBase
     {
         private readonly IRequestsDashboardService _requestsDashboardService;
+        private readonly IRequestsDashboardListService _listService;
 
-        public RequestsDashboardController(IRequestsDashboardService requestsDashboardService)
+        public RequestsDashboardController(IRequestsDashboardService requestsDashboardService, IRequestsDashboardListService listService)
         {
             _requestsDashboardService = requestsDashboardService;
+            _listService = listService;
         }
 
         // GET /api/v1/requests/dashboard/summary?departmentId=&keyword=
@@ -22,6 +24,13 @@ namespace HrmApi.Controllers
             [FromQuery] RequestDashboardSummaryFilterDto filter)
         {
             var result = await _requestsDashboardService.GetSummaryAsync(filter);
+            return Ok(result);
+        }
+        // GET /api/v1/requests/dashboard?departmentId=1&keyword=Nguyen
+        [HttpGet]
+        public async Task<ActionResult<DashboardRequestListResponseDto>> Get([FromQuery] DashboardRequestFilterDto filter)
+        {
+            var result = await _listService.GetListAsync(filter);
             return Ok(result);
         }
     }
