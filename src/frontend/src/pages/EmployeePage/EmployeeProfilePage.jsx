@@ -30,44 +30,7 @@ export default function EmployeeProfilePage() {
       setError("");
       setViolations([]);
       
-      // Mock data for testing - replace with real API when backend is ready
-      const mockProfile = {
-        full_name: "Trần Thị Mỹ",
-        employee_code: "E001",
-        date_of_birth: "1995-05-15",
-        gender: "Female",
-        nationality: "Vietnamese",
-        company_email: "my.tran@company.com",
-        personal_email: "mythran@gmail.com",
-        marital_status: "Single",
-        has_children: false,
-        citizen_id: "123456789",
-        personal_tax_code: "9876543210",
-        social_insurance_no: "112233445566",
-        current_address: "123 Main St, Ho Chi Minh City",
-        phone_number: "0912345678",
-        bank_accounts: "Bank A: 987654321098765\nBank B: 111222333444",
-        department_name: "IT Department",
-        position_name: "Software Engineer",
-        employment_type: "Full-time",
-        contract_start_date: "2020-01-15",
-        contract_end_date: "2025-01-15",
-        manager_name: "Nguyễn Văn A",
-        status: "Active",
-        contract_type: "Permanent",
-        education: "Bachelor of IT - University of Technology\nGraduation: 2017\nCertifications: AWS Solutions Architect"
-      };
       
-      // Simulate slight delay
-      setTimeout(() => {
-        if (!cancelled) {
-          setProfile(mockProfile);
-          setLoading(false);
-        }
-      }, 500);
-
-      // Uncomment below to use real API when backend is running
-      /*
       try {
         const data = await fetchEmployeeProfile(CURRENT_EMPLOYEE_CODE);
         if (!cancelled) {
@@ -81,7 +44,7 @@ export default function EmployeeProfilePage() {
       } finally {
         if (!cancelled) setLoading(false);
       }
-      */
+      
     }
     load();
     return () => {

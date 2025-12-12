@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import {
   fetchEmployeeProfile,
   sendProfileUpdateRequest,
-} from "../../services/requestApi";
+} from "../../Services/requests";
 import { FormRow } from "../../components/FormRow";
 import ViolationBanner from "../../components/ViolationBanner";
 

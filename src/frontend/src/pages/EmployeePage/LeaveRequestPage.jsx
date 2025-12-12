@@ -1,7 +1,7 @@
 import { useState } from "react";
 import ViolationBanner from "../../components/ViolationBanner";
 import { FormRow } from "../../components/FormRow";
-import { createLeaveRequest } from "../../services/requestApi";
+import { createLeaveRequest } from "../../Services/requests";
 import "./RequestForm.css";
 
 const LEAVE_TYPES = [
