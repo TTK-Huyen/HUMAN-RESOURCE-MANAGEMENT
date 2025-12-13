@@ -26,6 +26,9 @@ namespace HrmApi.Models
 
         [Column("approver_id")]
         public int? ApproverId { get; set; }
+        [Column("approved_at")]
+        public DateTime? ApprovedAt { get; set; }
+
         public Employee? Approver { get; set; }
 
         // Navigation 1–1 đến bảng con (optional nhưng nên có)
