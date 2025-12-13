@@ -1,40 +1,117 @@
-import React from 'react';
-import { FormRow } from './FormRow'; // Tận dụng component có sẵn
+import React from "react";
+import { FormRow } from "./FormRow";
 
 const ProfileView = ({ profile }) => {
-    if (!profile) return <div className="text-gray-500 text-center py-8">Loading profile information...</div>;
-
-    // Helper để render field nhanh
-    const Field = ({ label, val, full }) => (
-        <FormRow label={label} full={full}>
-            <div className="p-2 bg-gray-100 border rounded text-gray-700 min-h-[40px] flex items-center">
-                {val || "—"}
-            </div>
-        </FormRow>
-    );
-
+  if (!profile)
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <h3 className="col-span-full text-lg font-bold text-blue-600 border-b pb-2 mt-2">General Information</h3>
-            <Field label="employee_code" val={profile.employee_code} />
-            <Field label="full_name" val={profile.full_name} />
-            <Field label="date_of_birth" val={profile.date_of_birth} />
-            <Field label="gender" val={profile.gender} />
-            <Field label="department_name" val={profile.department_name} />
-            <Field label="job_title" val={profile.job_title} />
-
-            <h3 className="col-span-full text-lg font-bold text-blue-600 border-b pb-2 mt-4">Contact Information</h3>
-            <Field label="company_email" val={profile.company_email} />
-            <Field label="personal_email" val={profile.personal_email} />
-            <Field label="phone_number" val={profile.phone_number} />
-            <Field label="current_address" val={profile.current_address} full={true} />
-
-            <h3 className="col-span-full text-lg font-bold text-blue-600 border-b pb-2 mt-4">Security & Banking Information</h3>
-            <Field label="citizen_id" val={profile.citizen_id} />
-            <Field label="personal_tax_code" val={profile.personal_tax_code} />
-            <Field label="bank_account" val={profile.bank_account} full={true} />
-        </div>
+      <div className="text-gray-500 text-center py-8">
+        Loading profile information...
+      </div>
     );
+
+  // Helper render field
+  const Field = ({ label, val, full }) => (
+    <FormRow label={label} full={full}>
+      <div className="p-2 bg-gray-100 border rounded text-gray-700 min-h-[40px] flex items-center">
+        {val !== undefined && val !== null && val !== "" ? val : "—"}
+      </div>
+    </FormRow>
+  );
+
+  // Map giá trị từ DTO (camelCase) + fallback snake_case cũ
+  const employeeCode = profile.employeeCode ?? profile.employee_code;
+  const fullName = profile.employeeName ?? profile.full_name;
+  const dateOfBirth = profile.dateOfBirth ?? profile.date_of_birth;
+  const gender = profile.gender;
+
+  const department = profile.department ?? profile.department_name;
+  const jobTitle = profile.jobTitle ?? profile.job_title;
+
+  const companyEmail = profile.companyEmail ?? profile.company_email;
+  const personalEmail = profile.personalEmail ?? profile.personal_email;
+
+  const phoneNumber =
+    (Array.isArray(profile.phoneNumbers) && profile.phoneNumbers[0]) ??
+    profile.phone_number;
+
+  const currentAddress =
+    profile.currentAddress ?? profile.current_address;
+
+  const citizenId =
+    profile.citizenIdNumber ?? profile.citizen_id ?? profile.citizenId;
+  const personalTaxCode =
+    profile.personalTaxCode ?? profile.personal_tax_code;
+  const socialInsuranceNumber =
+    profile.socialInsuranceNumber ?? profile.social_insurance_number;
+
+  const bankAccount =
+    (Array.isArray(profile.bankAccounts) && profile.bankAccounts[0]) ??
+    profile.bank_account;
+
+  const nationality = profile.nationality;
+  const employmentType =
+    profile.employmentType ?? profile.employment_type;
+  const contractType =
+    profile.contractType ?? profile.contract_type;
+  const contractStartDate =
+    profile.contractStartDate ?? profile.contract_start_date;
+  const contractEndDate =
+    profile.contractEndDate ?? profile.contract_end_date;
+  const directManager =
+    profile.directManager ?? profile.direct_manager;
+  const status = profile.status;
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* General */}
+      <h3 className="col-span-full text-lg font-bold text-blue-600 border-b pb-2 mt-2">
+        General Information
+      </h3>
+      <Field label="employee_code" val={employeeCode} />
+      <Field label="full_name" val={fullName} />
+      <Field label="date_of_birth" val={dateOfBirth} />
+      <Field label="gender" val={gender} />
+      <Field label="nationality" val={nationality} />
+      <Field label="department" val={department} />
+      <Field label="job_title" val={jobTitle} />
+      <Field label="employment_type" val={employmentType} />
+      <Field label="status" val={status} />
+
+      {/* Contract */}
+      <h3 className="col-span-full text-lg font-bold text-blue-600 border-b pb-2 mt-4">
+        Contract Information
+      </h3>
+      <Field label="contract_type" val={contractType} />
+      <Field label="contract_start_date" val={contractStartDate} />
+      <Field label="contract_end_date" val={contractEndDate} />
+      <Field label="direct_manager" val={directManager} />
+
+      {/* Contact */}
+      <h3 className="col-span-full text-lg font-bold text-blue-600 border-b pb-2 mt-4">
+        Contact Information
+      </h3>
+      <Field label="company_email" val={companyEmail} />
+      <Field label="personal_email" val={personalEmail} />
+      <Field label="phone_number" val={phoneNumber} />
+      <Field
+        label="current_address"
+        val={currentAddress}
+        full={true}
+      />
+
+      {/* Security & Banking */}
+      <h3 className="col-span-full text-lg font-bold text-blue-600 border-b pb-2 mt-4">
+        Security & Banking Information
+      </h3>
+      <Field label="citizen_id" val={citizenId} />
+      <Field label="personal_tax_code" val={personalTaxCode} />
+      <Field
+        label="social_insurance_number"
+        val={socialInsuranceNumber}
+      />
+      <Field label="bank_account" val={bankAccount} full={true} />
+    </div>
+  );
 };
 
 export default ProfileView;

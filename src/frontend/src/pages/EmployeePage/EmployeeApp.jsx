@@ -9,7 +9,6 @@ import RequestStatusPage from "./RequestStatusPage";
 // Import các trang Profile mới (Của Ý)
 import MyProfilePage from "./MyProfilePage";
 import ProfileUpdateRequestPage from "./ProfileUpdateRequestPage";
-
 import "../../index.css";
 
 function HeaderTabs() {
@@ -60,7 +59,7 @@ function HeaderTabs() {
           <div className="avatar" />
           <div className="user-meta">
             <span className="user-name">Employee</span>
-            <span className="user-code">NV001</span>
+            <span className="user-code">EMP001</span>
           </div>
         </div>
       </div>
@@ -119,7 +118,6 @@ export default function EmployeeApp() {
           {/* Khu vực Profile (User Case của Ý) */}
           <Route path="profile" element={<MyProfilePage />} />
           <Route path="profile/update-request" element={<ProfileUpdateRequestPage />} />
-
           <Route path="*" element={<Navigate to="create" replace />} />
         </Routes>
       </main>

@@ -4,7 +4,7 @@ import { fetchEmployeeProfile } from "../../services/requestApi";
 import { FormRow } from "../../components/FormRow";
 import ViolationBanner from "../../components/ViolationBanner";
 
-const CURRENT_EMPLOYEE_CODE = "E001"; // TODO: lấy từ auth sau này
+const CURRENT_EMPLOYEE_CODE = "EMP001"; // TODO: lấy từ auth sau này
 
 function formatDate(dateStr) {
   if (!dateStr) return "";

@@ -7,74 +7,91 @@ import ProfileView from "../../components/ProfileView";
 const CURRENT_EMPLOYEE_CODE = "EMP001";
 
 const MyProfilePage = () => {
-    const [p, setP] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-    useEffect(() => {
-        console.log("🚀 Bắt đầu tải Profile...");
-        
-        EmployeeService.getProfile("NV001")
-            .then(res => {
-                console.log("✅ Dữ liệu nhận được:", res.data);
-                setP(res.data);
-                setLoading(false);
-            })
-            .catch(err => {
-                console.error("❌ Lỗi tải profile:", err);
-                setLoading(false);
-            });
-    }, []);
+  useEffect(() => {
+    let cancelled = false;
 
-    if (loading) return <div className="p-10 text-center text-gray-500">⏳ Đang tải dữ liệu...</div>;
-    
-    if (!p) return <div className="p-10 text-center text-red-500">❌ Không có dữ liệu (Kiểm tra Console F12)</div>;
+    async function load() {
+      setLoading(true);
+      setError("");
 
-    // Component hiển thị dòng (nhúng trực tiếp để tránh lỗi props)
-    const Row = ({ label, value }) => (
-        <div className="mb-4 border-b pb-2">
-            <span className="block text-sm font-medium text-gray-500 uppercase">{label}</span>
-            <span className="block text-lg font-semibold text-gray-800 mt-1">{value || "—"}</span>
-        </div>
-    );
+      try {
+        const apiData = await fetchEmployeeProfile(CURRENT_EMPLOYEE_CODE);
+        console.log("[MyProfilePage] API data:", apiData);
 
+        // Giữ nguyên field BE trả về + thêm vài alias cho UI
+        const mappedProfile = {
+          ...apiData,
+
+          // alias cho UI cũ nếu có dùng
+          employeeName: apiData.employeeName,
+          employeeCode: apiData.employeeCode,
+
+          dob: apiData.dateOfBirth, // alias
+          nationality: apiData.nationality,
+
+          citizenId: apiData.citizenIdNumber,
+          taxCode: apiData.personalTaxCode,
+          socialInsurance: apiData.socialInsuranceNumber,
+
+          departmentName: apiData.department,
+          directManagerName: apiData.directManager,
+        };
+
+        console.log("[MyProfilePage] mappedProfile:", mappedProfile);
+
+        if (!cancelled) setProfile(mappedProfile);
+      } catch (err) {
+        console.error("Lỗi tải hồ sơ:", err);
+        if (!cancelled) {
+          setError(err.message || "Không tải được dữ liệu hồ sơ.");
+          setProfile(null);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (loading) {
+    return <div className="p-6">Đang tải dữ liệu từ hệ thống…</div>;
+  }
+
+  if (error) {
+    return <div className="p-6 text-red-500">{error}</div>;
+  }
+
+  if (!profile) {
     return (
-        <div className="max-w-4xl mx-auto my-10 bg-white shadow-lg rounded-xl overflow-hidden">
-            {/* Header */}
-            <div className="bg-blue-600 p-6 flex justify-between items-center text-white">
-                <div>
-                    <h1 className="text-2xl font-bold">Hồ sơ nhân viên</h1>
-                    <p className="opacity-90">Xem và quản lý thông tin cá nhân</p>
-                </div>
-                <button 
-                    onClick={() => navigate('/employee/profile/update-request')}
-                    className="bg-white text-blue-600 px-4 py-2 rounded-lg font-bold hover:bg-blue-50 transition"
-                >
-                    🖊 Yêu cầu chỉnh sửa
-                </button>
-            </div>
-
-            {/* Body */}
-            <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                <div className="md:col-span-2 text-blue-600 font-bold text-xl mb-2 border-b-2 border-blue-100 pb-2">
-                    Thông tin cơ bản
-                </div>
-                <Row label="Mã nhân viên" value={p.employeeCode} />
-                <Row label="Họ và tên" value={p.fullName} />
-                <Row label="Phòng ban" value={p.department} />
-                <Row label="Chức vụ" value={p.position} />
-
-                <div className="md:col-span-2 text-blue-600 font-bold text-xl mb-2 mt-4 border-b-2 border-blue-100 pb-2">
-                    Liên hệ & Bảo mật
-                </div>
-                <Row label="Email" value={p.email} />
-                <Row label="Số điện thoại" value={p.phone} />
-                <Row label="Địa chỉ" value={p.address} />
-                <Row label="CCCD/CMND" value={p.citizenId} />
-                <Row label="Tài khoản ngân hàng" value={p.bankAccount} />
-            </div>
-        </div>
+      <div className="p-6 text-red-500">
+        Không tìm thấy thông tin hồ sơ. Vui lòng kiểm tra lại.
+      </div>
     );
+  }
+
+  return (
+    <div className="p-6 bg-white shadow-md rounded-lg max-w-4xl mx-auto my-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Hồ sơ cá nhân</h1>
+        <button
+          onClick={() => navigate("/employee/profile/update-request")}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
+        >
+          Gửi yêu cầu cập nhật
+        </button>
+      </div>
+      <ProfileView profile={profile} />
+    </div>
+  );
 };
 
 export default MyProfilePage;
