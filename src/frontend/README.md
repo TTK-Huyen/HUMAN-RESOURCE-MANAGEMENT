@@ -25,3 +25,6 @@ src/
 ├── App.jsx                   # Root component (khai báo routes)
 ├── index.js                 # Điểm khởi đầu React
 └── index.css
+
+
+Note: chạy thì cần tải: "npm install lucide-react"
