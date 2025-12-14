@@ -43,7 +43,7 @@ export async function getEmployeeRequests(params = {}) {
   return res.data;
 }
 
-export async function fetchEmployeeProfile(employeeCode = "EMP001") {
+export async function fetchEmployeeProfile(employeeCode) {
   const res = await api.get(`/employees/${employeeCode}/profile`);
   return res.data;
 }

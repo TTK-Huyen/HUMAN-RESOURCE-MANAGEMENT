@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ViolationBanner from "../../components/ViolationBanner";
 import { FormRow } from "../../components/FormRow";
-import { createLeaveRequest } from "../../Services/requests";
+import { createLeaveRequest, fetchEmployeeProfile } from "../../Services/requests";
 import "./RequestForm.css";
 
 const LEAVE_TYPES = [
@@ -13,9 +13,9 @@ const LEAVE_TYPES = [
 ];
 
 const INITIAL_FORM = {
-  employeeName: "Alice",
-  employeeCode: "EMP001",
-  department: "Engineering",
+  employeeName: "",
+  employeeCode: "",
+  department: "",
   leaveType: "",
   startDate: "",
   endDate: "",
@@ -28,6 +28,38 @@ export default function LeaveRequestPage() {
   const [f, setF] = useState(INITIAL_FORM);
   const [errs, setErrs] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+  (async () => {
+    const employeeCode = localStorage.getItem("employeeCode") || "";
+    const employeeName = localStorage.getItem("employeeName") || "";
+
+    // Fill nhanh name/code từ login response
+    setF((prev) => ({
+      ...prev,
+      employeeCode,
+      employeeName,
+    }));
+
+    // Nếu chưa có employeeCode -> chưa login hoặc storage mất
+    if (!employeeCode) {
+      setErrs(["Missing employeeCode. Please login again."]);
+      return;
+    }
+
+    // Gọi API thật để lấy department
+    try {
+      const profile = await fetchEmployeeProfile(employeeCode);
+
+      setF((prev) => ({
+        ...prev,
+        department: profile.department ?? profile.departmentName ?? "",
+      }));
+    } catch (e) {
+      setErrs(["Cannot load employee profile."]);
+    }
+  })();
+  }, []);
 
   function onChange(e) {
     const { name, value, files } = e.target;
@@ -114,7 +146,12 @@ export default function LeaveRequestPage() {
       await createLeaveRequest(f.employeeCode, payload);
 
       alert("Leave request submitted successfully!");
-      setF(INITIAL_FORM);
+      setF((prev) => ({
+        ...INITIAL_FORM,
+        employeeName: prev.employeeName,
+        employeeCode: prev.employeeCode,
+        department: prev.department,
+      }));
       setErrs([]);
 
     } catch (err) {
@@ -127,7 +164,12 @@ export default function LeaveRequestPage() {
 
 
   function resetForm() {
-    setF(INITIAL_FORM);
+    setF((prev) => ({
+    ...INITIAL_FORM,
+    employeeName: prev.employeeName,
+    employeeCode: prev.employeeCode,
+    department: prev.department,
+    }));
     setErrs([]);
   }
 

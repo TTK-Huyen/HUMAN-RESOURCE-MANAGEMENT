@@ -9,62 +9,68 @@ import { FormRow } from "../../components/FormRow";
 import "./RequestForm.css";
 
 const INITIAL_FORM = {
-  employeeCode: "EMP001",
-  employeeName: "Alice",
-  department: "Engineering",
-  position: "SE",
-  contractEnd: "01-31-2026",
+  employeeCode: "",
+  employeeName: "",
+  department: "",
+  position: "",
+  contractEnd: "",
   resignationDate: "",
   reason: "",
 };
-
-// tạm hard-code employeeCode vì chưa có login
-const MOCK_EMPLOYEE_CODE = "EMP001";
 
 function isWeekend(d) {
   const day = new Date(d).getDay();
   return day === 0 || day === 6;
 }
 
+function toISODate(mmddyyyy) {
+  // "01/31/2026" -> "2026-01-31"
+  if (!mmddyyyy) return "";
+  const [mm, dd, yyyy] = mmddyyyy.split("/");
+  if (!mm || !dd || !yyyy) return "";
+  return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
+}
+
+
 export default function ResignationRequestPage() {
   const [f, setF] = useState(INITIAL_FORM);
   const [errs, setErrs] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
-  // --- LOAD CONTRACT END DATE TỪ DB ---
   useEffect(() => {
-    async function loadContractEnd() {
-      try {
-        const profile = await fetchEmployeeProfile(MOCK_EMPLOYEE_CODE);
+  async function loadProfile() {
+    try {
+      const employeeCodeLS = localStorage.getItem("employeeCode") || "";
 
-        // tên field tuỳ theo DTO backend trả về
-        const raw =
-          profile.contract_end_date ||
-          profile.contractEndDate ||
-          profile.contractEnd ||
-          "";
-
-        // input type="date" cần format yyyy-MM-dd
-        const contractEnd = raw ? raw.slice(0, 10) : "";
-
-        setF((prev) => ({
-          ...prev,
-          contractEnd: contractEnd || prev.contractEnd,
-          // nếu muốn lấy luôn info NV từ DB thì có thể mở comment:
-          // employeeId: profile.employee_code || prev.employeeId,
-          // employeeName: profile.full_name || prev.employeeName,
-          // department: profile.department_name || prev.department,
-          // position: profile.position_name || prev.position,
-        }));
-      } catch (err) {
-        console.error("Không load được contract end date:", err);
-        // vẫn giữ mock data, không chặn màn hình
+      if (!employeeCodeLS) {
+        setErrs(["Missing employeeCode. Please login again."]);
+        return;
       }
-    }
 
-    loadContractEnd();
+      const profile = await fetchEmployeeProfile(employeeCodeLS);
+
+      // Map đúng theo response swagger bạn gửi
+      setF((prev) => ({
+        ...prev,
+        employeeCode: profile.employeeCode || employeeCodeLS,
+        employeeName: profile.employeeName || localStorage.getItem("employeeName") || "",
+        department: profile.department || "",
+        position: profile.jobTitle || "",
+
+        // input type="date" cần yyyy-MM-dd, trong swagger contractEndDate có thể null
+        contractEnd: profile.contractEndDate ? toISODate(profile.contractEndDate) : "",
+      }));
+
+      setErrs([]);
+    } catch (err) {
+      console.error("Không load được profile:", err);
+      setErrs(["Cannot load employee profile. Please try again."]);
+    }
+  }
+
+  loadProfile();
   }, []);
-  // -------------------------------
+
 
   function onChange(e) {
     const { name, value } = e.target;
@@ -110,7 +116,14 @@ export default function ResignationRequestPage() {
       await createResignationRequest(f.employeeCode, payload);
       setErrs([]);
       alert("Resignation request submitted. Status = Pending.");
-      setF(INITIAL_FORM);
+      setF((prev) => ({
+        ...INITIAL_FORM,
+        employeeCode: prev.employeeCode,
+        employeeName: prev.employeeName,
+        department: prev.department,
+        position: prev.position,
+        contractEnd: prev.contractEnd,
+      }));
     } catch (err) {
       console.error(err);
       setErrs([
@@ -122,7 +135,14 @@ export default function ResignationRequestPage() {
   }
 
   function resetForm() {
-    setF(INITIAL_FORM);
+    setF((prev) => ({
+    ...INITIAL_FORM,
+    employeeCode: prev.employeeCode,
+    employeeName: prev.employeeName,
+    department: prev.department,
+    position: prev.position,
+    contractEnd: prev.contractEnd,
+    }));
     setErrs([]);
   }
 

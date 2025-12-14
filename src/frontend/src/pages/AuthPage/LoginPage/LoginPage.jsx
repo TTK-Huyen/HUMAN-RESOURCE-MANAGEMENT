@@ -9,10 +9,12 @@ export default function LoginPage() {
   const handleLogin = async (data) => {
     try {
       const res = await login(data); // gọi API thật
-      const { token, role } = res;
+      const { token, role, employeeCode, employeeName } = res;
 
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
+      localStorage.setItem("employeeCode", employeeCode);
+      localStorage.setItem("employeeName", employeeName);
 
       // ✅ Điều hướng tùy vào vai trò
       if (role === "EMP") navigate("/employee");

@@ -1,4 +1,5 @@
 import { Routes, Route, NavLink, Navigate, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 // Import các trang cũ
 import LeaveRequestPage from "./LeaveRequestPage";
@@ -13,6 +14,17 @@ import "../../index.css";
 
 function HeaderTabs() {
   const { pathname } = useLocation();
+  const [user, setUser] = useState({
+  employeeName: "Employee",
+  employeeCode: "",
+  });
+
+  useEffect(() => {
+    const employeeName = localStorage.getItem("employeeName") || "Employee";
+    const employeeCode = localStorage.getItem("employeeCode") || "";
+    setUser({ employeeName, employeeCode });
+  }, []);
+
 
   // Logic kiểm tra tab nào đang active
   const isCreate = pathname === "/employee" || pathname.startsWith("/employee/create");
@@ -58,8 +70,8 @@ function HeaderTabs() {
         <div className="userbox">
           <div className="avatar" />
           <div className="user-meta">
-            <span className="user-name">Employee</span>
-            <span className="user-code">EMP001</span>
+            <span className="user-name">{user.employeeName}</span>
+            <span className="user-code">{user.employeeCode}</span>
           </div>
         </div>
       </div>
