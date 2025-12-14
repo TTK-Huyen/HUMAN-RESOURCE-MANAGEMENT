@@ -64,6 +64,20 @@ namespace HrmApi.Repositories
         {
             return await _context.Employees
                 .FirstOrDefaultAsync(e => e.EmployeeCode == employeeCode);
-        }   
+        } 
+
+        // Add this method to the class
+    public async Task<LeaveRequest?> GetLeaveRequestByIdAsync(int requestId)
+    {
+        return await _context.LeaveRequests
+            .Include(l => l.Request)
+                .ThenInclude(r => r.Employee)
+                    .ThenInclude(e => e.Department)
+            .Include(l => l.Request)
+                .ThenInclude(r => r.Employee)
+                    .ThenInclude(e => e.JobTitle) // Ensure JobTitle is included
+            .Include(l => l.HandoverEmployee)
+            .FirstOrDefaultAsync(l => l.Id == requestId);
+    } 
     }
 }

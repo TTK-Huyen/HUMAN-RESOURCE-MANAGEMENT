@@ -26,6 +26,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddScoped<IRequestApprovalService, RequestApprovalService>();
 // (Nếu sau này có auth thì giữ, còn chưa dùng cũng không sao)
 builder.Services.AddAuthorization();
 
