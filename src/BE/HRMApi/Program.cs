@@ -278,8 +278,7 @@ if (app.Environment.IsDevelopment())
             }
         );
     }
-
-    // Seed Role
+    // Add commet : seed role
     if (!db.Roles.Any())
     {
         db.Roles.AddRange(
