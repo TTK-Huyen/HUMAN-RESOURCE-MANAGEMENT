@@ -9,7 +9,8 @@ import {
 import EmployeeApp from "./pages/EmployeePage/EmployeeApp";
 import HrApp from "./pages/HRPage/HrApp";
 import LoginPage from "./pages/AuthPage/LoginPage/LoginPage";
-
+import DashboardManager from "./pages/ManagerPage/PendingApprovals";
+//import Layout from './components/Layout';
 function App() {
   return (
     <Router>
@@ -17,7 +18,9 @@ function App() {
         <Route path="/" element={<LoginPage />} />
         <Route path="/employee/*" element={<RequireAuth role="EMP"><EmployeeApp /></RequireAuth>} />
         <Route path="/hr/*" element={<RequireAuth role="HR"><HrApp /></RequireAuth>} />
+        <Route path="/manager" element = {<RequireAuth role='M'><DashboardManager /></RequireAuth>} />
         <Route path="*" element={<Navigate to="/" replace />} />
+  
       </Routes>
     </Router>
   );
