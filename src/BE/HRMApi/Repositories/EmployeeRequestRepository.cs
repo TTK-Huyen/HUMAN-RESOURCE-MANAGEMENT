@@ -216,5 +216,77 @@ namespace HrmApi.Repositories
         {
             await _context.SaveChangesAsync();
         }
+        //summary
+        public async Task<RequestDashboardSummary> GetDashboardSummaryAsync(
+            int? departmentId,
+            string? keyword)
+        {
+            // giả sử DbSet là Requests và có navigation Employee
+            var query = _context.Requests
+                                .Include(r => r.Employee)
+                                .AsQueryable();
+
+            if (departmentId.HasValue)
+            {
+                query = query.Where(r => r.Employee.DepartmentId == departmentId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                keyword = keyword.Trim();
+                query = query.Where(r =>
+                    r.Employee.EmployeeCode.Contains(keyword) ||
+                    r.Employee.FullName.Contains(keyword));
+            }
+
+            // Group theo status để lấy count 1 lần
+            var grouped = await query
+                .GroupBy(r => r.Status)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var total = grouped.Sum(x => x.Count);
+            int pending = 0, approved = 0, rejected = 0;
+
+            foreach (var item in grouped)
+            {
+                switch (item.Status)
+                {
+                    case "Pending":
+                        pending = item.Count;
+                        break;
+                    case "Approved":
+                        approved = item.Count;
+                        break;
+                    case "Rejected":
+                        rejected = item.Count;
+                        break;
+                    // CANCELLED vẫn tính vào total nhưng không có thẻ riêng
+                }
+            }
+
+            return new RequestDashboardSummary
+            {
+                TotalRequests = total,
+                PendingCount = pending,
+                ApprovedCount = approved,
+                RejectedCount = rejected,
+            };
+        }
+
+        // Add this method to the class
+        public async Task<LeaveRequest?> GetLeaveRequestByIdAsync(int requestId)
+        {
+            return await _context.LeaveRequests
+                .Include(l => l.Request)
+                    .ThenInclude(r => r.Employee)
+                        .ThenInclude(e => e.Department)
+                .Include(l => l.Request)
+                    .ThenInclude(r => r.Employee)
+                        .ThenInclude(e => e.JobTitle) // Ensure JobTitle is included
+                .Include(l => l.HandoverEmployee)
+                .FirstOrDefaultAsync(l => l.Id == requestId);
+        }
     }
 }
+

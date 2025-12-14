@@ -1,5 +1,7 @@
 using HrmApi.Dtos.RequestStatus;
 using HrmApi.Models;
+using System.Threading.Tasks;
+// Đã xóa dòng duplicate: using HrmApi.Models;
 
 namespace HrmApi.Repositories
 {
@@ -15,9 +17,17 @@ namespace HrmApi.Repositories
 
         Task<ResignationRequest?> GetResignationRequestAsync(string employeeCode, int requestId);
         
-        // Thêm mới Request chung
+        // --- BỔ SUNG DÒNG NÀY ĐỂ FIX LỖI CS1061 ---
+        Task<LeaveRequest?> GetLeaveRequestByIdAsync(int requestId);
+        // ------------------------------------------
+
         Task AddAsync(Request request);
         Task<Request?> GetByIdAsync(int id);
         Task SaveChangesAsync();
-    }
+
+        Task<RequestDashboardSummary> GetDashboardSummaryAsync(
+            int? departmentId,
+            string? keyword);
+
+          }
 }

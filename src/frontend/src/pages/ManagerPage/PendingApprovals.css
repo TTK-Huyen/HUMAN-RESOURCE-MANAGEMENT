@@ -1,0 +1,337 @@
+/* --- GLOBAL VARIABLES --- */
+:root {
+  --primary-color: #0f172a; /* Slate 900 */
+  --bg-color: #f1f5f9;      /* Slate 100 - Màu nền tổng thể sáng hơn */
+  --card-bg: #ffffff;
+  --text-main: #334155;     /* Slate 700 */
+  --text-muted: #64748b;    /* Slate 500 */
+  --border-color: #e2e8f0;  /* Slate 200 */
+  
+  /* Status Colors */
+  --status-pending-bg: #fef9c3; --status-pending-text: #854d0e;
+  --status-approved-bg: #dcfce7; --status-approved-text: #166534;
+  --status-rejected-bg: #fee2e2; --status-rejected-text: #991b1b;
+}
+
+/* --- LAYOUT CONTAINER (DESKTOP FIRST) --- */
+.pa-container {
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  /* YÊU CẦU 1: Padding nhỏ lại để nội dung tràn ra sát viền hơn */
+  padding: 1.5rem; 
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text-main);
+  /* YÊU CẦU 1: Max-width lớn hơn hoặc 100% để full màn hình */
+  width: 100%;
+  max-width: 100%; 
+  box-sizing: border-box;
+}
+
+/* --- HEADER --- */
+.pa-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap; /* Cho phép rớt dòng trên mobile */
+  gap: 1rem;
+}
+
+.pa-title h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.025em;
+}
+
+.pa-title p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-top: 0.25rem;
+}
+
+.btn-create {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn-create:hover { background-color: #1d4ed8; transform: translateY(-1px); }
+
+/* --- STATS CARDS --- */
+.stats-grid {
+  display: grid;
+  /* Tự động chia cột, tối thiểu 240px, lấp đầy không gian còn lại */
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
+
+.stat-value { font-size: 2rem; font-weight: 800; color: #0f172a; margin-top: 0.25rem; }
+.stat-icon { padding: 0.875rem; border-radius: 1rem; display: flex; align-items: center; justify-content: center; }
+
+/* Colors Variants */
+.stat-card.blue .stat-icon { background: #eff6ff; color: #2563eb; }
+.stat-card.yellow .stat-icon { background: #fef9c3; color: #ca8a04; } .stat-card.yellow .stat-value { color: #ca8a04; }
+.stat-card.green .stat-icon { background: #dcfce7; color: #16a34a; } .stat-card.green .stat-value { color: #16a34a; }
+.stat-card.red .stat-icon { background: #fee2e2; color: #dc2626; } .stat-card.red .stat-value { color: #dc2626; }
+
+/* --- FILTERS --- */
+.filter-bar {
+  background: var(--card-bg);
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border-color);
+  margin-bottom: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: #f8fafc;
+  border: 1px solid var(--border-color);
+  padding: 0.625rem 1rem;
+  border-radius: 0.75rem;
+  transition: all 0.2s;
+}
+.input-group:focus-within { border-color: #2563eb; background-color: white; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+.input-group input, .input-group select { border: none; background: transparent; width: 100%; outline: none; font-size: 0.9rem; color: var(--text-main); }
+.search-wrapper { flex: 1; } /* Thanh search chiếm hết khoảng trống */
+.filter-select-wrapper { min-width: 200px; }
+
+/* --- DATA TABLE --- */
+.table-container {
+  background: var(--card-bg);
+  border-radius: 1rem;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  overflow: hidden; /* Bo góc */
+}
+
+/* Responsive Table Wrapper */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto; /* Cho phép scroll ngang trên mobile */
+  -webkit-overflow-scrolling: touch;
+}
+
+.pa-table { width: 100%; border-collapse: collapse; text-align: left; white-space: nowrap; /* Giữ nội dung trên 1 dòng */ }
+.pa-table th { background-color: #f8fafc; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 700; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); }
+.pa-table td { padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.pa-table tr:last-child td { border-bottom: none; }
+.pa-table tr:hover { background-color: #f8fafc; }
+
+/* Cell Styles */
+.cell-type { display: flex; align-items: center; gap: 0.75rem; }
+.type-icon { padding: 0.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; }
+.cell-user { display: flex; align-items: center; gap: 0.75rem; }
+.user-avatar { width: 2.5rem; height: 2.5rem; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.user-info .name { font-weight: 600; font-size: 0.9rem; color: #0f172a; }
+.user-info .id { font-size: 0.75rem; color: var(--text-muted); }
+.status-badge { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.85rem; border-radius: 99px; font-size: 0.75rem; font-weight: 700; text-transform: capitalize; }
+.status-badge.pending { background: var(--status-pending-bg); color: var(--status-pending-text); }
+.status-badge.approved { background: var(--status-approved-bg); color: var(--status-approved-text); }
+.status-badge.rejected { background: var(--status-rejected-bg); color: var(--status-rejected-text); }
+.btn-view { background: white; border: 1px solid var(--border-color); color: var(--text-muted); padding: 0.5rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+.btn-view:hover { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
+
+/* --- MODAL / DRAWER --- */
+.modal-overlay {
+  position: fixed; inset: 0; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 100;
+  display: flex; justify-content: flex-end; opacity: 0; animation: fadeIn 0.2s forwards;
+}
+
+.modal-drawer {
+  background: white; width: 100%; max-width: 500px; height: 100%; padding: 0;
+  box-shadow: -10px 0 30px rgba(0,0,0,0.2); transform: translateX(100%);
+  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; display: flex; flex-direction: column;
+}
+
+.drawer-header { padding: 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #fff; }
+.drawer-body { flex: 1; overflow-y: auto; padding: 1.5rem; background: #f8fafc; }
+.drawer-footer { padding: 1.5rem; border-top: 1px solid var(--border-color); background: white; }
+
+.detail-card { background: white; padding: 1.25rem; border-radius: 1rem; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.info-grid { background: white; border: 1px solid var(--border-color); border-radius: 1rem; overflow: hidden; }
+.info-row { display: grid; grid-template-columns: 120px 1fr; padding: 1rem; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+.info-row:last-child { border-bottom: none; }
+.info-label { color: var(--text-muted); font-weight: 500; }
+.info-value { text-align: right; font-weight: 600; color: #0f172a; }
+
+.action-buttons { display: flex; gap: 1rem; }
+.btn-action { flex: 1; padding: 0.875rem; border-radius: 0.75rem; font-weight: 600; display: flex; justify-content: center; align-items: center; gap: 0.5rem; cursor: pointer; border: none; font-size: 0.95rem; transition: transform 0.1s; }
+.btn-action.reject { background: white; border: 1px solid #fee2e2; color: #dc2626; }
+.btn-action.approve { background: #0f172a; color: white; box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.3); }
+
+/* --- ANIMATIONS --- */
+@keyframes fadeIn { to { opacity: 1; } }
+@keyframes slideIn { to { transform: translateX(0); } }
+
+/* ==========================================================================
+   YÊU CẦU 2: MOBILE RESPONSIVE (MÔ HÌNH ĐIỆN THOẠI)
+   ========================================================================== */
+@media (max-width: 768px) {
+  .pa-container {
+    padding: 1rem; /* Giảm padding trên mobile */
+    background: #f8fafc; /* Nền sáng hơn chút trên mobile */
+  }
+
+  /* Header: Xếp chồng tiêu đề và nút */
+  .pa-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .btn-create {
+    width: 100%; /* Nút to full màn hình dễ bấm */
+    justify-content: center;
+  }
+
+  /* Stats: Chuyển thành Grid 2x2 cho gọn */
+  .stats-grid {
+    grid-template-columns: 1fr 1fr; 
+    gap: 0.75rem;
+  }
+  .stat-card {
+    padding: 1rem;
+    flex-direction: column; /* Icon lên trên, số xuống dưới */
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .stat-icon { padding: 0.5rem; border-radius: 0.5rem; margin-bottom: 0.25rem; }
+  .stat-value { font-size: 1.5rem; }
+  .stat-info p { font-size: 0.75rem; }
+
+  /* Filter Bar: Xếp dọc */
+  .filter-bar {
+    flex-direction: column;
+    padding: 0.75rem;
+    align-items: stretch; /* Kéo giãn full chiều ngang */
+  }
+  .input-group { min-width: auto; }
+  .filter-select-wrapper { width: 100%; }
+
+  /* Table: Chỉ hiển thị những cột quan trọng hoặc cho scroll ngang */
+  .table-container {
+    border-radius: 0.75rem;
+  }
+  /* Ẩn bớt cột Department và Submitted date trên mobile để đỡ rối (Tùy chọn) */
+  .pa-table th:nth-child(3), .pa-table td:nth-child(3),
+  .pa-table th:nth-child(4), .pa-table td:nth-child(4) {
+     display: none; 
+  }
+  
+  /* Modal Mobile: Full màn hình, trượt từ dưới lên (nếu muốn) hoặc giữ trượt ngang nhưng full width */
+  .modal-drawer {
+    max-width: 100%; /* Full width mobile */
+  }
+  .info-row {
+    grid-template-columns: 100px 1fr; /* Điều chỉnh label nhỏ lại cho mobile */
+  }
+}
+
+/* --- STATS CARDS (COMPACT VERSION) --- */
+.stats-grid {
+  display: grid;
+  /* DESKTOP: Luôn chia thành 4 cột đều nhau để nằm trên 1 dòng */
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem; /* Giảm khoảng cách giữa các thẻ */
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  background: var(--card-bg);
+  /* Giảm padding để thẻ nhỏ lại */
+  padding: 1rem 1.25rem; 
+  border-radius: 0.75rem; /* Bo góc nhỏ hơn xíu cho cân đối */
+  border: 1px solid var(--border-color);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  min-height: 80px; /* Chiều cao tối thiểu gọn gàng */
+}
+
+.stat-card:hover { 
+  transform: translateY(-2px); 
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+}
+
+/* Thu nhỏ Font chữ */
+.stat-info p:first-child { 
+  font-size: 0.75rem; /* Label nhỏ lại */
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+
+.stat-value { 
+  font-size: 1.5rem; /* Số nhỏ lại (Cũ là 2rem) */
+  font-weight: 700; 
+  color: #0f172a; 
+  line-height: 1;
+}
+
+/* Thu nhỏ Icon */
+.stat-icon { 
+  padding: 0.65rem; /* Icon nhỏ lại */
+  border-radius: 0.5rem; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+}
+
+/* Color Variants (Giữ nguyên) */
+.stat-card.blue .stat-icon { background: #eff6ff; color: #2563eb; }
+.stat-card.yellow .stat-icon { background: #fef9c3; color: #ca8a04; } .stat-card.yellow .stat-value { color: #ca8a04; }
+.stat-card.green .stat-icon { background: #dcfce7; color: #16a34a; } .stat-card.green .stat-value { color: #16a34a; }
+.stat-card.red .stat-icon { background: #fee2e2; color: #dc2626; } .stat-card.red .stat-value { color: #dc2626; }
+
+/* --- RESPONSIVE ADJUSTMENT --- */
+/* Khi màn hình nhỏ (Mobile/Tablet dọc), tự động chuyển về 2 dòng hoặc xếp chồng */
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 cột trên mỗi dòng */
+    gap: 0.75rem;
+  }
+  
+  /* Trên điện thoại thì cho icon và số nằm dọc để tiết kiệm ngang */
+  .stat-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem;
+  }
+  
+  .stat-icon {
+    margin-bottom: 0.5rem;
+  }
+}

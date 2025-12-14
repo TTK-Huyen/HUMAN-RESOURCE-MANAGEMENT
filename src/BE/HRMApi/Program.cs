@@ -26,6 +26,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddScoped<IRequestApprovalService, RequestApprovalService>();
 // (Nếu sau này có auth thì giữ, còn chưa dùng cũng không sao)
 builder.Services.AddAuthorization();
 
@@ -94,6 +95,27 @@ builder.Services.AddScoped<IResignationRequestRepository, ResignationRequestRepo
 builder.Services.AddScoped<ILeaveRequestService, LeaveRequestService>();
 builder.Services.AddScoped<IOvertimeRequestService, OvertimeRequestService>();
 builder.Services.AddScoped<IResignationRequestService, ResignationRequestService>();
+
+// UC 2.10 – Department dropdown
+builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+builder.Services.AddScoped<IDepartmentService, DepartmentService>();
+
+// Login
+// Đăng ký cho Repository mới
+builder.Services.AddScoped<IUserAccountRepository, UserAccountRepository>();
+
+// Đăng ký cho Service Auth
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+builder.Services.AddScoped<HrmApi.Security.IPasswordHasher, HrmApi.Security.PasswordHasher>();
+builder.Services.AddScoped<HrmApi.Security.IJwtTokenService, HrmApi.Security.JwtTokenService>();
+//Dashboard summary
+builder.Services.AddScoped<IRequestsDashboardService, RequestsDashboardService>();
+builder.Services.AddScoped<ILeaveRequestRepository, LeaveRequestRepository>();
+
+//Dashboard list requests
+builder.Services.AddScoped<IRequestsDashboardRepository, RequestsDashboardRepository>();
+builder.Services.AddScoped<IRequestsDashboardListService, RequestsDashboardListService>();
 
 var app = builder.Build();
 
@@ -257,6 +279,32 @@ if (app.Environment.IsDevelopment())
         );
     }
 
+    // Seed Role
+    if (!db.Roles.Any())
+    {
+        db.Roles.AddRange(
+            new Role { RoleId = 1, RoleCode = "ADMIN", RoleName = "Administrator" },
+            new Role { RoleId = 2, RoleCode = "EMP", RoleName = "Employee" },
+            new Role { RoleId = 3, RoleCode = "HR", RoleName = "HR" }
+        );
+        db.SaveChanges();
+    }
+
+    // Seed UserAccount (tài khoản đăng nhập mẫu)
+    if (!db.UserAccounts.Any())
+    {
+        db.UserAccounts.Add(new UserAccount
+        {
+            Username = "admin",
+            PasswordHash = "123456", // Nếu dùng PasswordHasherStub thì để plain text
+            EmployeeId = db.Employees.First().Id, // Lấy employee đầu tiên
+            RoleId = 1, // ADMIN
+            Status = AccountStatus.ACTIVE,
+            LastLoginAt = null
+        });
+        db.SaveChanges();
+    }
+
     db.SaveChanges();
 }
 
@@ -275,7 +323,7 @@ app.UseSwaggerUI(c =>
 
 // 6. (Tuỳ chọn) Https redirection – nếu gây phiền thì comment lại
 // app.UseHttpsRedirection();
-// app.UseCors(MyAllowSpecificOrigins); // Kết nối FE
+app.UseCors(MyAllowSpecificOrigins); // Kết nối FE
 // app.UseAuthorization();
 
 app.MapControllers();

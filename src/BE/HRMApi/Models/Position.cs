@@ -13,12 +13,14 @@ namespace HrmApi.Models
         [Column("position_name")]
         public string Title { get; set; } = default!;
         
-        // level
-        public string? Level { get; set; } // Nullable
-        public int PositionId { get; set; }
-        public string PositionName { get; set; } = ""; 
-        // Navigation Property: Mối quan hệ 1-nhiều với Employee
-        // Một JobTitle (Position) có nhiều Employees
+        // Giữ lại nếu DB có cột 'level', nếu không thì xóa hoặc thêm [NotMapped]
+        [Column("level")]
+        public string? Level { get; set; } 
+
+        // --- CÁC DÒNG GÂY LỖI ĐÃ ĐƯỢC XỬ LÝ ---
+        // Đã xóa PositionId và PositionName vì Id và Title đã đảm nhận vai trò này.
+        
+        // Navigation Property
         public ICollection<Employee> Employees { get; set; } = new List<Employee>();
     }
 }

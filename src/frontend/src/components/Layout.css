@@ -1,0 +1,208 @@
+/* --- LAYOUT CONTAINER --- */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* --- SIDEBAR (LEFT) --- */
+.sidebar {
+  width: 260px;
+  background-color: #0f172a; /* Slate 900 - Màu nền tối */
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0; /* Đảm bảo sidebar không bị co lại */
+  border-right: 1px solid #1e293b;
+  position: sticky; /* Giữ sidebar cố định khi cuộn */
+  top: 0;
+  height: 100vh;
+  z-index: 50;
+}
+
+/* Sidebar Header (Brand) */
+.sidebar-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb); /* Hiệu ứng gradient xanh */
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.brand-text h1 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+  color: white;
+}
+
+.brand-text p {
+  font-size: 0.75rem;
+  color: #94a3b8; /* Slate 400 */
+  margin: 0;
+}
+
+/* Navigation Links */
+.sidebar-nav {
+  flex: 1;
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto; /* Cho phép cuộn nếu menu quá dài */
+}
+
+/* Style cho các thẻ Link/NavItem bên trong */
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: #cbd5e1; /* Slate 300 */
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+}
+
+.sidebar-nav a:hover, .sidebar-nav a.active {
+  background-color: #1e293b; /* Slate 800 - Màu nền khi hover */
+  color: white;
+}
+
+/* Sidebar Footer (User Profile) */
+.sidebar-footer {
+  padding: 1rem;
+  border-top: 1px solid #1e293b;
+  background-color: #0b1120;
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.user-card:hover {
+    background-color: #1e293b;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #334155;
+  border: 2px solid #1e293b;
+  background-image: url('https://ui-avatars.com/api/?name=HR+Manager&background=random');
+  background-size: cover;
+  flex-shrink: 0;
+}
+
+.user-info {
+    overflow: hidden;
+}
+
+.user-info .name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-info .email {
+  font-size: 0.75rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- MAIN CONTENT (RIGHT) --- */
+.main-wrapper {
+  flex: 1;
+  background-color: #f8fafc; /* Slate 50 - Màu nền sáng cho nội dung */
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Quan trọng để tránh vỡ layout flex */
+}
+
+.page-content {
+  flex: 1;
+  /* Nội dung bên trong sẽ tự lo padding, ví dụ PendingApprovals.css đã có padding: 1.5rem */
+}
+
+/* App Footer */
+.app-footer {
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 0.875rem;
+  display: flex;
+  justify-content: space-between;
+  background: white;
+  margin-top: auto;
+}
+
+.footer-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.footer-links a {
+  color: #64748b;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-links a:hover { 
+    text-decoration: underline; 
+    color: #0f172a; 
+}
+
+/* --- RESPONSIVE MOBILE --- */
+@media (max-width: 768px) {
+  .app-layout { 
+      flex-direction: column; 
+  }
+  
+  .sidebar { 
+      width: 100%; 
+      height: auto; 
+      position: relative;
+      border-right: none;
+      border-bottom: 1px solid #1e293b;
+  }
+  
+  .sidebar-nav { 
+      flex-direction: row; 
+      overflow-x: auto; 
+      padding: 0.5rem 1rem;
+      gap: 0.5rem;
+  }
+  
+  .sidebar-nav a {
+      padding: 0.5rem 0.75rem;
+      white-space: nowrap;
+      font-size: 0.8rem;
+  }
+
+  .user-info { display: none; } /* Ẩn thông tin user trên mobile cho gọn */
+  
+  .sidebar-footer {
+      display: none; /* Hoặc ẩn luôn footer sidebar trên mobile */
+  }
+}
