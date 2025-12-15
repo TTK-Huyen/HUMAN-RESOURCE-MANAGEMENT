@@ -117,6 +117,10 @@ builder.Services.AddScoped<ILeaveRequestRepository, LeaveRequestRepository>();
 builder.Services.AddScoped<IRequestsDashboardRepository, RequestsDashboardRepository>();
 builder.Services.AddScoped<IRequestsDashboardListService, RequestsDashboardListService>();
 
+// UC 2.19
+builder.Services.AddScoped<IRequestHistoryRepository, RequestHistoryRepository>();
+builder.Services.AddScoped<IRequestHistoryService, RequestHistoryService>();
+
 var app = builder.Build();
 
 // ===================================================
