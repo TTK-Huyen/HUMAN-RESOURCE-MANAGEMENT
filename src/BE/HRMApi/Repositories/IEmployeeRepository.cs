@@ -24,5 +24,15 @@ namespace HrmApi.Repositories
         
         Task<Employee?> FindByIdAsync(int id);
         Task SaveAsync(Employee employee);
+        
+        /// <summary>
+        /// Thêm employee mới vào database
+        /// </summary>
+        Task AddAsync(Employee employee);
+        
+        /// <summary>
+        /// Lấy danh sách tất cả employees
+        /// </summary>
+        Task<List<Employee>> GetAllEmployeesAsync();
     }
 }

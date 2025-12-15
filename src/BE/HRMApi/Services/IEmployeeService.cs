@@ -18,5 +18,14 @@ namespace HrmApi.Services
         /// Gửi yêu cầu cập nhật hồ sơ cho employeeCode.
         /// </summary>
         
+        /// <summary>
+        /// Tạo nhân viên mới cùng với tài khoản đăng nhập
+        /// </summary>
+        Task<bool> CreateEmployeeAsync(CreateEmployeeDto dto);
+        
+        /// <summary>
+        /// Lấy danh sách tất cả nhân viên
+        /// </summary>
+        Task<IEnumerable<EmployeeProfileDto>> GetAllEmployeesAsync();
     }
 }

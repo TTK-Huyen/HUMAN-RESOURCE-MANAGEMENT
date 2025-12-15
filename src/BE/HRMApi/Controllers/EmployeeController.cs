@@ -48,5 +48,46 @@ namespace HrmApi.Controllers
                 return BadRequest("Invalid request or access denied.");
             return Ok("Profile update request sent and pending approval.");
         }
+
+        /// <summary>
+        /// Tạo nhân viên mới cùng với tài khoản đăng nhập
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> CreateEmployee([FromBody] CreateEmployeeDto dto)
+        {
+            try
+            {
+                var success = await _employeeService.CreateEmployeeAsync(dto);
+                if (!success)
+                    return BadRequest(new { message = "Employee code or username already exists." });
+                
+                return Ok(new { message = "Employee created successfully." });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Internal server error: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách tất cả nhân viên
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetAllEmployees()
+        {
+            try
+            {
+                var employees = await _employeeService.GetAllEmployeesAsync();
+                return Ok(employees);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Internal server error: " + ex.Message });
+            }
+        }
     }
 }

@@ -1,6 +1,7 @@
 using HrmApi.Dtos.Employee;
 using HrmApi.Models;
 using HrmApi.Repositories;
+using HrmApi.Security;
 using Microsoft.EntityFrameworkCore;
 
 namespace HrmApi.Services
@@ -8,15 +9,20 @@ namespace HrmApi.Services
     public class EmployeeService : IEmployeeService
     {
         private readonly IEmployeeRepository _employeeRepository;
-
         private readonly IProfileUpdateRequestRepository _profileUpdateRequestRepository;
+        private readonly IUserAccountRepository _userAccountRepository;
+        private readonly IPasswordHasher _passwordHasher;
 
-
-        public EmployeeService(IEmployeeRepository employeeRepository, IProfileUpdateRequestRepository profileUpdateRequestRepository)
+        public EmployeeService(
+            IEmployeeRepository employeeRepository, 
+            IProfileUpdateRequestRepository profileUpdateRequestRepository,
+            IUserAccountRepository userAccountRepository,
+            IPasswordHasher passwordHasher)
         {
             _employeeRepository = employeeRepository;
             _profileUpdateRequestRepository = profileUpdateRequestRepository;
-
+            _userAccountRepository = userAccountRepository;
+            _passwordHasher = passwordHasher;
         }
 
         public async Task<EmployeeProfileDto?> GetProfileAsync(string employeeCode)
@@ -169,6 +175,88 @@ namespace HrmApi.Services
                 }).ToList()
             };
             return await _employeeRepository.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> CreateEmployeeAsync(CreateEmployeeDto dto)
+        {
+            // Kiểm tra EmployeeCode đã tồn tại chưa
+            var existingEmployee = await _employeeRepository.GetProfileByCodeAsync(dto.EmployeeCode);
+            if (existingEmployee != null) return false;
+
+            // Kiểm tra Username đã tồn tại chưa
+            var existingUser = await _userAccountRepository.FindAccountByUsernameAsync(dto.Username);
+            if (existingUser != null) return false;
+
+            // Tạo Employee mới
+            var employee = new Employee
+            {
+                EmployeeCode = dto.EmployeeCode,
+                EmployeeName = dto.EmployeeName,
+                DateOfBirth = dto.DateOfBirth,
+                Gender = dto.Gender,
+                Nationality = dto.Nationality ?? "Vietnamese",
+                CompanyEmail = dto.CompanyEmail,
+                PersonalEmail = dto.PersonalEmail,
+                MaritalStatus = dto.MaritalStatus,
+                HasChildren = dto.HasChildren,
+                CitizenIdNumber = dto.CitizenIdNumber,
+                PersonalTaxCode = dto.PersonalTaxCode,
+                SocialInsuranceNumber = dto.SocialInsuranceNumber,
+                CurrentAddress = dto.CurrentAddress,
+                Status = "Active",
+                DepartmentId = dto.DepartmentId,
+                JobTitleId = dto.JobTitleId,
+                DirectManagerId = dto.DirectManagerId,
+                EmploymentType = dto.EmploymentType,
+                ContractType = dto.ContractType,
+                ContractStartDate = dto.ContractStartDate,
+                ContractEndDate = dto.ContractEndDate
+            };
+
+            await _employeeRepository.AddAsync(employee);
+
+            // Tạo UserAccount cho Employee
+            var userAccount = new UserAccount
+            {
+                Username = dto.Username,
+                PasswordHash = _passwordHasher.HashPassword(dto.Password),
+                EmployeeId = employee.Id,
+                RoleId = dto.RoleId,
+                Status = AccountStatus.ACTIVE,
+                LastLoginAt = null
+            };
+
+            await _userAccountRepository.AddAsync(userAccount);
+            return true;
+        }
+
+        public async Task<IEnumerable<EmployeeProfileDto>> GetAllEmployeesAsync()
+        {
+            var employees = await _employeeRepository.GetAllEmployeesAsync();
+            return employees.Select(emp => new EmployeeProfileDto
+            {
+                EmployeeName = emp.EmployeeName,
+                EmployeeCode = emp.EmployeeCode,
+                DateOfBirth = emp.DateOfBirth?.ToString("dd/MM/yyyy"),
+                Gender = emp.Gender,
+                Nationality = emp.Nationality ?? string.Empty,
+                CompanyEmail = emp.CompanyEmail,
+                PersonalEmail = emp.PersonalEmail,
+                MaritalStatus = emp.MaritalStatus,
+                HasChildren = emp.HasChildren,
+                CitizenIdNumber = emp.CitizenIdNumber,
+                PersonalTaxCode = emp.PersonalTaxCode,
+                SocialInsuranceNumber = emp.SocialInsuranceNumber,
+                CurrentAddress = emp.CurrentAddress,
+                Status = emp.Status,
+                Department = emp.Department?.Name,
+                JobTitle = emp.JobTitle?.Title,
+                DirectManager = emp.DirectManager?.EmployeeName,
+                EmploymentType = emp.EmploymentType,
+                ContractType = emp.ContractType,
+                ContractStartDate = emp.ContractStartDate?.ToString("dd/MM/yyyy"),
+                ContractEndDate = emp.ContractEndDate?.ToString("dd/MM/yyyy")
+            });
         }
     }
 }

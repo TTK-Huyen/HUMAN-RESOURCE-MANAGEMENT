@@ -66,18 +66,32 @@ namespace HrmApi.Repositories
                 .FirstOrDefaultAsync(e => e.EmployeeCode == employeeCode);
         } 
 
-        // Add this method to the class
-    public async Task<LeaveRequest?> GetLeaveRequestByIdAsync(int requestId)
-    {
-        return await _context.LeaveRequests
-            .Include(l => l.Request)
-                .ThenInclude(r => r.Employee)
-                    .ThenInclude(e => e.Department)
-            .Include(l => l.Request)
-                .ThenInclude(r => r.Employee)
-                    .ThenInclude(e => e.JobTitle) // Ensure JobTitle is included
-            .Include(l => l.HandoverEmployee)
-            .FirstOrDefaultAsync(l => l.Id == requestId);
-    } 
+        public async Task<LeaveRequest?> GetLeaveRequestByIdAsync(int requestId)
+        {
+            return await _context.LeaveRequests
+                .Include(l => l.Request)
+                    .ThenInclude(r => r.Employee)
+                        .ThenInclude(e => e.Department)
+                .Include(l => l.Request)
+                    .ThenInclude(r => r.Employee)
+                        .ThenInclude(e => e.JobTitle) // Ensure JobTitle is included
+                .Include(l => l.HandoverEmployee)
+                .FirstOrDefaultAsync(l => l.Id == requestId);
+        }
+
+        public async Task AddAsync(Employee employee)
+        {
+            _context.Employees.Add(employee);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<Employee>> GetAllEmployeesAsync()
+        {
+            return await _context.Employees
+                .Include(e => e.Department)
+                .Include(e => e.JobTitle)
+                .Include(e => e.DirectManager)
+                .ToListAsync();
+        }
     }
 }
