@@ -135,3 +135,16 @@ Thực hiện đủ các bước trên là bạn sẽ có API chạy được tr
     }
   ]
 }
+
+### User account
+Employee account
+- username: employee
+- password: Emp123!@
+
+Hr account
+- username: hr
+- password: Hr123!@#
+
+Manager account
+- username: manager
+- password: Mgr123!@#

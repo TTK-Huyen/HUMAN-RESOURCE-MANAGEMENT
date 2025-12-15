@@ -277,30 +277,96 @@ if (app.Environment.IsDevelopment())
                 ContractEndDate = new DateTime(2025, 2, 1)
             }
         );
-    }
-    // Add commet : seed role
+    }    // Add commet : seed role
     if (!db.Roles.Any())
     {
         db.Roles.AddRange(
-            new Role { RoleId = 1, RoleCode = "ADMIN", RoleName = "Administrator" },
-            new Role { RoleId = 2, RoleCode = "EMP", RoleName = "Employee" },
-            new Role { RoleId = 3, RoleCode = "HR", RoleName = "HR" }
+            new Role { RoleId = 1, RoleCode = "EMP", RoleName = "Employee" },
+            new Role { RoleId = 2, RoleCode = "HR", RoleName = "HR" },
+            new Role { RoleId = 3, RoleCode = "MANAGER", RoleName = "Manager" }
         );
         db.SaveChanges();
     }
 
-    // Seed UserAccount (tài khoản đăng nhập mẫu)
+    // Seed UserAccount (tài khoản đăng nhập mẫu cho từng role)
     if (!db.UserAccounts.Any())
     {
+        var passwordHasher = scope.ServiceProvider.GetRequiredService<HrmApi.Security.IPasswordHasher>();
+        var employees = db.Employees.ToList();
+        
+        // Account cho EMPLOYEE role
+        db.UserAccounts.Add(new UserAccount
+        {
+            Username = "employee",
+            PasswordHash = passwordHasher.HashPassword("Emp123!@"), // Password thỏa mãn ràng buộc
+            EmployeeId = employees.First().Id, // Employee đầu tiên
+            RoleId = 1, // EMPLOYEE
+            Status = AccountStatus.ACTIVE,
+            LastLoginAt = null
+        });
+
+        // Account cho HR role
+        db.UserAccounts.Add(new UserAccount
+        {
+            Username = "hr",
+            PasswordHash = passwordHasher.HashPassword("Hr123!@#"), // Password thỏa mãn ràng buộc
+            EmployeeId = employees.Skip(1).First().Id, // Employee thứ hai
+            RoleId = 2, // HR
+            Status = AccountStatus.ACTIVE,
+            LastLoginAt = null
+        });
+
+        // Account cho MANAGER role  
+        db.UserAccounts.Add(new UserAccount
+        {
+            Username = "manager",
+            PasswordHash = passwordHasher.HashPassword("Mgr123!@#"), // Password thỏa mãn ràng buộc
+            EmployeeId = employees.First().Id, // Có thể dùng chung employee
+            RoleId = 3, // MANAGER
+            Status = AccountStatus.ACTIVE,
+            LastLoginAt = null
+        });
+
+        db.SaveChanges();
+    }
+    if (!db.UserAccounts.Any())
+    {
+        var passwordHasher = scope.ServiceProvider.GetRequiredService<HrmApi.Security.IPasswordHasher>();
+        var employees = db.Employees.ToList();
+        
+        // Account cho ADMIN role
         db.UserAccounts.Add(new UserAccount
         {
             Username = "admin",
-            PasswordHash = "123456", // Nếu dùng PasswordHasherStub thì để plain text
-            EmployeeId = db.Employees.First().Id, // Lấy employee đầu tiên
+            PasswordHash = passwordHasher.HashPassword("Admin123!"), // Password thỏa mãn ràng buộc
+            EmployeeId = employees.First().Id, // Employee đầu tiên
             RoleId = 1, // ADMIN
             Status = AccountStatus.ACTIVE,
             LastLoginAt = null
         });
+
+        // Account cho EMPLOYEE role
+        db.UserAccounts.Add(new UserAccount
+        {
+            Username = "employee",
+            PasswordHash = passwordHasher.HashPassword("Emp123!@"), // Password thỏa mãn ràng buộc
+            EmployeeId = employees.Skip(1).First().Id, // Employee thứ hai
+            RoleId = 2, // EMP
+            Status = AccountStatus.ACTIVE,
+            LastLoginAt = null
+        });
+
+        // Account cho HR role  
+        db.UserAccounts.Add(new UserAccount
+        {
+            Username = "hr",
+            PasswordHash = passwordHasher.HashPassword("Hr123!@#"), // Password thỏa mãn ràng buộc
+            EmployeeId = employees.First().Id, // Có thể dùng chung employee với admin hoặc tạo thêm
+            RoleId = 3, // HR
+            Status = AccountStatus.ACTIVE,
+            LastLoginAt = null
+        });
+
         db.SaveChanges();
     }
 
