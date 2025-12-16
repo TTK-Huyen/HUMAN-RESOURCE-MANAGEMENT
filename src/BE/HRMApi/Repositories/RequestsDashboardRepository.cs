@@ -50,6 +50,7 @@ namespace HrmApi.Repositories
                 .OrderByDescending(r => r.CreatedAt)
                 .Select(r => new DashboardRequestItemDto
                 {
+                    RequestId = r.RequestId,
                     RequestCode = "REQ-" + r.RequestId,
                     RequestType = r.RequestType,
                     Status = r.Status,

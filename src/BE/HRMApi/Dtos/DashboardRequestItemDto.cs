@@ -4,6 +4,7 @@ namespace HrmApi.Dtos.Requests
 {
     public class DashboardRequestItemDto
     {
+        public int RequestId { get; set; }
         public string RequestCode { get; set; } = null!;
         public string RequestType { get; set; } = null!;
         public DashboardEmployeeDto Employee { get; set; } = null!;

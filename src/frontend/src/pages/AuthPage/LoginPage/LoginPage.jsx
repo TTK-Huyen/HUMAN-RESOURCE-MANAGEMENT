@@ -19,7 +19,7 @@ export default function LoginPage() {
       // ✅ Điều hướng tùy vào vai trò
       if (role === "EMP") navigate("/employee");
       else if (role === "HR") navigate("/hr");
-      else if (role === "M") navigate ("/manager");
+      else if (role === "MANAGER") navigate ("/manager");
       else navigate("/");
     } catch (err) {
       alert("Login failed: " + (err.response?.data?.message || err.message));
