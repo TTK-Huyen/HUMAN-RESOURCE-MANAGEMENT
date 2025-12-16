@@ -289,3 +289,61 @@
 .btn-cancel-logout:hover {
   background-color: #e2e8f0;
 }
+/* ... Các CSS cũ giữ nguyên ... */
+
+/* --- ZEBRA STRIPING (Màu xen kẽ) --- */
+/* Dòng lẻ màu trắng */
+.pa-table tbody tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+/* Dòng chẵn màu xám nhạt */
+.pa-table tbody tr:nth-child(even) {
+    background-color: #f8fafc; /* Slate-50 */
+}
+
+/* Hiệu ứng hover (làm đậm hơn chút khi di chuột vào) */
+.pa-table tbody tr:hover {
+    background-color: #e2e8f0 !important; /* Slate-200 */
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+/* --- PHÂN TRANG (Pagination) --- */
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Căn phải */
+    gap: 12px;
+    margin-top: 16px;
+    padding: 10px 0;
+}
+
+.btn-page {
+    padding: 6px 14px;
+    border: 1px solid #cbd5e1;
+    background-color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #475569;
+    transition: all 0.2s;
+}
+
+.btn-page:hover:not(:disabled) {
+    background-color: #f1f5f9;
+    border-color: #94a3b8;
+}
+
+.btn-page:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #f8fafc;
+}
+
+.page-info {
+    font-size: 0.9rem;
+    color: #64748b;
+    font-weight: 500;
+}

@@ -1,13 +1,14 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { 
   Clock, CheckCircle, XCircle, Eye, Search, Filter, 
-  Calendar, FileText, LogOut, Paperclip, AlertTriangle, Info
+  Calendar, FileText, LogOut, Paperclip, AlertTriangle, Info, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import './PendingApprovals.css';
 import Layout from '../../components/Layout'; 
 
 // --- CONFIG ---
 const API_BASE = "/api/v1";
+const PAGE_SIZE = 10; // Số lượng request mỗi trang
 
 const formatDate = (dateString) => {
     if (!dateString) return "--";
@@ -45,7 +46,7 @@ const StatusBadge = ({ status }) => {
     return <span className={`status-badge ${styleClass}`}>{icon} {status}</span>;
 };
 
-// --- GENERIC CONFIRMATION DIALOG ---
+// --- CONFIRMATION DIALOG ---
 const ConfirmDialog = ({ isOpen, title, message, onConfirm, onCancel, type = 'info' }) => {
     if (!isOpen) return null;
     return (
@@ -58,12 +59,7 @@ const ConfirmDialog = ({ isOpen, title, message, onConfirm, onCancel, type = 'in
                 <p>{message}</p>
                 <div className="logout-actions">
                     <button className="btn-popup btn-cancel-logout" onClick={onCancel}>Cancel</button>
-                    <button 
-                        className={`btn-popup ${type === 'danger' ? 'btn-confirm-logout' : 'btn-confirm-approve'}`} 
-                        onClick={onConfirm}
-                    >
-                        Yes, I'm sure
-                    </button>
+                    <button className={`btn-popup ${type === 'danger' ? 'btn-confirm-logout' : 'btn-confirm-approve'}`} onClick={onConfirm}>Yes, I'm sure</button>
                 </div>
             </div>
         </div>
@@ -76,8 +72,14 @@ export default function PendingApprovals() {
   const [departments, setDepartments] = useState([]);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
+  
+  // Filter State
   const [keyword, setKeyword] = useState("");
   const [deptId, setDeptId] = useState("");
+  
+  // Pagination State [MỚI]
+  const [currentPage, setCurrentPage] = useState(1);
+  
   const [selectedReq, setSelectedReq] = useState(null);
 
   useEffect(() => {
@@ -102,6 +104,7 @@ export default function PendingApprovals() {
       if (listRes.ok) {
         const listData = await listRes.json();
         let items = listData.items || [];
+        // Sắp xếp
         items.sort((a, b) => {
             const isPendingA = a.status?.toUpperCase() === 'PENDING';
             const isPendingB = b.status?.toUpperCase() === 'PENDING';
@@ -111,7 +114,8 @@ export default function PendingApprovals() {
             const dateB = new Date(b.effectiveDate || 0).getTime();
             return dateA - dateB;
         });
-        setRequests(items); 
+        setRequests(items);
+        setCurrentPage(1); // Reset về trang 1 khi data thay đổi (filter/search)
       }
     } catch (error) { console.error("Dashboard Load Error:", error); } 
     finally { setLoading(false); }
@@ -121,6 +125,18 @@ export default function PendingApprovals() {
     const timer = setTimeout(() => fetchDashboardData(), 500);
     return () => clearTimeout(timer);
   }, [fetchDashboardData]);
+
+  // [MỚI] Logic tính toán Pagination
+  const indexOfLastRequest = currentPage * PAGE_SIZE;
+  const indexOfFirstRequest = indexOfLastRequest - PAGE_SIZE;
+  const currentRequests = requests.slice(indexOfFirstRequest, indexOfLastRequest);
+  const totalPages = Math.ceil(requests.length / PAGE_SIZE);
+
+  const handlePageChange = (newPage) => {
+      if (newPage >= 1 && newPage <= totalPages) {
+          setCurrentPage(newPage);
+      }
+  };
 
   return (
     <Layout>
@@ -148,7 +164,8 @@ export default function PendingApprovals() {
               <tbody>
                 {loading ? ( <tr><td colSpan="6" style={{textAlign:'center', padding:'2rem'}}>Loading data...</td></tr> ) : 
                  requests.length === 0 ? ( <tr><td colSpan="6" style={{textAlign:'center', padding:'2rem'}}>No requests found.</td></tr> ) : (
-                  requests.map((req) => {
+                  // [ĐÃ SỬA] Render currentRequests thay vì requests
+                  currentRequests.map((req) => {
                     const conf = getTypeConfig(req.requestType);
                     return (
                       <tr key={req.requestCode}>
@@ -165,6 +182,29 @@ export default function PendingApprovals() {
               </tbody>
             </table>
           </div>
+
+          {/* [MỚI] THANH PHÂN TRANG */}
+          {!loading && requests.length > 0 && (
+              <div className="pagination-controls">
+                  <span className="page-info">
+                      Page {currentPage} of {totalPages}
+                  </span>
+                  <button 
+                      className="btn-page" 
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                  >
+                      <ChevronLeft size={16} />
+                  </button>
+                  <button 
+                      className="btn-page" 
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                  >
+                      <ChevronRight size={16} />
+                  </button>
+              </div>
+          )}
         </div>
 
         {selectedReq && <DetailModal req={selectedReq} onClose={() => setSelectedReq(null)} onRefresh={fetchDashboardData} />}
@@ -174,7 +214,7 @@ export default function PendingApprovals() {
 }
 
 // ============================================================================
-// DETAIL MODAL
+// DETAIL MODAL (Giữ nguyên)
 // ============================================================================
 const DetailModal = ({ req, onClose, onRefresh }) => {
   const typeConfig = getTypeConfig(req.requestType);
@@ -215,11 +255,10 @@ const DetailModal = ({ req, onClose, onRefresh }) => {
       return { type: "Resignation", date: `${formatDate(req.effectiveDate)}`, reason: "Career Change", note: "Asset Handover Completed" };
   })();
 
-  // [ĐÃ SỬA] Thêm validation lý do từ chối ngay tại đây
   const initiateAction = (type) => {
       if (type === 'REJECTED' && !rejectReason.trim()) {
           showNotification("Please enter a rejection reason!", "error");
-          return; // Dừng lại, không mở Confirm Dialog
+          return;
       }
       setConfirmAction({ show: true, type });
   };
@@ -297,13 +336,8 @@ const DetailModal = ({ req, onClose, onRefresh }) => {
   return (
     <div className="modal-overlay">
       <div className="modal-drawer">
-        {toast && (
-            <div className={`toast-notification ${toast.type}`}>
-                {toast.type === 'success' ? <CheckCircle size={18}/> : <AlertTriangle size={18}/>}
-                <span>{toast.message}</span>
-            </div>
-        )}
-
+        {toast && <div className={`toast-notification ${toast.type}`}>{toast.type === 'success' ? <CheckCircle size={18}/> : <AlertTriangle size={18}/>}<span>{toast.message}</span></div>}
+        
         <div className="drawer-header"><h3>Request Details #{req.requestCode}</h3><button onClick={onClose} className="btn-close"><XCircle size={24}/></button></div>
         <div className="drawer-body">
             <div className="info-box user-box"><div className="avatar-med">{req.employee?.fullName?.charAt(0)}</div><div><b>{req.employee?.fullName}</b><div className="sub-text">{req.employee?.departmentName}</div></div></div>
@@ -332,19 +366,12 @@ const DetailModal = ({ req, onClose, onRefresh }) => {
                         <textarea rows="3" value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Enter reason..."/>
                         <div className="btn-group">
                             <button className="btn-action btn-cancel" onClick={() => setShowRejectBox(false)}>Cancel</button>
-                            {/* [ĐÃ SỬA] Bỏ disabled để có thể bấm và kích hoạt thông báo lỗi */}
                             <button className="btn-action btn-confirm-reject" onClick={() => initiateAction('REJECTED')}>Confirm</button>
                         </div>
                     </div>
                 )}
              </div>
-        ) : ( 
-             <div className="drawer-footer text-center">
-                 <span style={{fontWeight:600, color: currentStatus?.toUpperCase()==='APPROVED'?'#16a34a':'#dc2626'}}>
-                     Request is {currentStatus}
-                 </span>
-             </div> 
-        )}
+        ) : ( <div className="drawer-footer text-center"><span style={{fontWeight:600, color: currentStatus?.toUpperCase()==='APPROVED'?'#16a34a':'#dc2626'}}>Request is {currentStatus}</span></div> )}
       </div>
 
       <ConfirmDialog 
