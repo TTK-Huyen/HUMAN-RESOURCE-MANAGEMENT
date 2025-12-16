@@ -14,16 +14,44 @@ const PAGE_SIZE = 10;
 // TODO: sau này thay bằng code lấy từ login / context
 const MOCK_EMPLOYEE_CODE = "EMP001";
 
+// [ĐÃ SỬA] Format ngày giờ: Ép buộc giờ Việt Nam (+7)
 function formatDateTime(value) {
   if (!value) return "";
-  const d = new Date(value);
-  return d.toLocaleString("vi-VN");
+  try {
+    let safeDateStr = value;
+    // Nếu chuỗi thiếu 'Z' hoặc offset, thêm 'Z' để báo hiệu là UTC
+    if (typeof safeDateStr === 'string' && !safeDateStr.endsWith('Z') && !safeDateStr.includes('+')) {
+        safeDateStr += 'Z';
+    }
+    const d = new Date(safeDateStr);
+    if (isNaN(d.getTime())) return "";
+    
+    // Convert sang múi giờ Asia/Ho_Chi_Minh
+    return d.toLocaleString("en-GB", {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+      hour12: false,
+      timeZone: 'Asia/Ho_Chi_Minh'
+    });
+  } catch { return ""; }
 }
 
+// [ĐÃ SỬA] Format ngày: Ép buộc giờ Việt Nam (+7)
 function formatDate(value) {
   if (!value) return "";
-  const d = new Date(value);
-  return d.toLocaleDateString("vi-VN");
+  try {
+    let safeDateStr = value;
+    if (typeof safeDateStr === 'string' && !safeDateStr.endsWith('Z') && !safeDateStr.includes('+')) {
+        safeDateStr += 'Z';
+    }
+    const d = new Date(safeDateStr);
+    if (isNaN(d.getTime())) return "";
+
+    return d.toLocaleDateString("en-GB", {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      timeZone: 'Asia/Ho_Chi_Minh'
+    });
+  } catch { return ""; }
 }
 
 export default function RequestStatusPage() {
