@@ -9,7 +9,6 @@ import Layout from '../../components/Layout';
 // --- CONFIG ---
 const API_BASE = "/api/v1";
 
-// Date Formatter (Keep +7 timezone, use en-GB for DD/MM/YYYY format)
 const formatDate = (dateString) => {
     if (!dateString) return "--";
     try {
@@ -23,6 +22,7 @@ const formatDate = (dateString) => {
         return date.toLocaleString('en-GB', { 
             day: '2-digit', month: '2-digit', year: 'numeric', 
             hour: '2-digit', minute: '2-digit',
+            hour12: false,
             timeZone: 'Asia/Ho_Chi_Minh' 
         });
     } catch { return "--"; }
@@ -67,44 +67,6 @@ const ConfirmDialog = ({ isOpen, title, message, onConfirm, onCancel, type = 'in
                 </div>
             </div>
         </div>
-    );
-};
-
-// --- USER PROFILE ---
-const UserProfile = () => {
-    const [user, setUser] = useState({ name: 'Guest', role: '' });
-    const [showConfirm, setShowConfirm] = useState(false);
-
-    useEffect(() => {
-        const name = localStorage.getItem('employeeName') || 'User';
-        const role = localStorage.getItem('role') || 'N/A';
-        setUser({ name, role });
-    }, []);
-
-    const handleLogout = () => {
-        localStorage.clear();
-        window.location.href = '/login'; 
-    };
-
-    return (
-        <>
-            <div className="user-profile-section">
-                <div className="user-info-group">
-                    <span className="user-name">{user.name}</span>
-                    <span className="user-role">{user.role === 'M' ? 'Manager' : user.role}</span>
-                </div>
-                <button className="btn-logout" onClick={() => setShowConfirm(true)} title="Logout"><LogOut size={18} /></button>
-            </div>
-            
-            <ConfirmDialog 
-                isOpen={showConfirm}
-                title="Logout?"
-                message="Are you sure you want to logout?"
-                onConfirm={handleLogout}
-                onCancel={() => setShowConfirm(false)}
-                type="danger"
-            />
-        </>
     );
 };
 
@@ -165,7 +127,6 @@ export default function PendingApprovals() {
       <div className="pa-container">
         <div className="pa-header">
           <div className="pa-title"><h1>Request Management</h1><p>Centralized Approval Dashboard</p></div>
-          <UserProfile />
         </div>
 
         <div className="stats-grid">
@@ -224,8 +185,6 @@ const DetailModal = ({ req, onClose, onRefresh }) => {
   const [processing, setProcessing] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(req.status);
   const [toast, setToast] = useState(null); 
-  
-  // [MỚI] State xác nhận hành động
   const [confirmAction, setConfirmAction] = useState({ show: false, type: null });
 
   useEffect(() => { setCurrentStatus(req.status); }, [req]);
@@ -256,17 +215,18 @@ const DetailModal = ({ req, onClose, onRefresh }) => {
       return { type: "Resignation", date: `${formatDate(req.effectiveDate)}`, reason: "Career Change", note: "Asset Handover Completed" };
   })();
 
-  // 1. Kích hoạt Popup Xác nhận
+  // [ĐÃ SỬA] Thêm validation lý do từ chối ngay tại đây
   const initiateAction = (type) => {
+      if (type === 'REJECTED' && !rejectReason.trim()) {
+          showNotification("Please enter a rejection reason!", "error");
+          return; // Dừng lại, không mở Confirm Dialog
+      }
       setConfirmAction({ show: true, type });
   };
 
-  // 2. Thực thi Action sau khi bấm "Yes"
   const executeFinalAction = async () => {
-      // Đóng popup xác nhận
       setConfirmAction({ ...confirmAction, show: false });
-      
-      const status = confirmAction.type; // 'APPROVED' hoặc 'REJECTED'
+      const status = confirmAction.type;
       const requestId = req.id || req.requestId;
       const token = localStorage.getItem('token'); 
 
@@ -292,7 +252,6 @@ const DetailModal = ({ req, onClose, onRefresh }) => {
           if (response.ok) {
               const data = await response.json();
               showNotification(data.message || `Success! Request marked as ${status}`, "success");
-              
               setProcessing(false);
               setCurrentStatus(status);
               fetchHistory();
@@ -365,7 +324,6 @@ const DetailModal = ({ req, onClose, onRefresh }) => {
                 {!showRejectBox ? (
                     <div className="btn-group">
                         <button className="btn-action btn-reject" onClick={() => setShowRejectBox(true)}><XCircle size={18}/> Reject</button>
-                        {/* Bấm Approve -> Mở Confirm Dialog */}
                         <button className="btn-action btn-approve" onClick={() => initiateAction('APPROVED')} disabled={processing}>{processing ? 'Processing...' : <><CheckCircle size={18}/> Approve</>}</button>
                     </div>
                 ) : (
@@ -374,8 +332,8 @@ const DetailModal = ({ req, onClose, onRefresh }) => {
                         <textarea rows="3" value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Enter reason..."/>
                         <div className="btn-group">
                             <button className="btn-action btn-cancel" onClick={() => setShowRejectBox(false)}>Cancel</button>
-                            {/* Bấm Confirm -> Mở Confirm Dialog */}
-                            <button className="btn-action btn-confirm-reject" disabled={!rejectReason.trim()} onClick={() => initiateAction('REJECTED')}>Confirm</button>
+                            {/* [ĐÃ SỬA] Bỏ disabled để có thể bấm và kích hoạt thông báo lỗi */}
+                            <button className="btn-action btn-confirm-reject" onClick={() => initiateAction('REJECTED')}>Confirm</button>
                         </div>
                     </div>
                 )}
@@ -388,7 +346,6 @@ const DetailModal = ({ req, onClose, onRefresh }) => {
              </div> 
         )}
       </div>
-
 
       <ConfirmDialog 
           isOpen={confirmAction.show}
