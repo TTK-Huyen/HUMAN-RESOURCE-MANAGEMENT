@@ -22,6 +22,11 @@ namespace HrmApi.Controllers
             string employeeCode,
             [FromQuery] EmployeeRequestFilterDto filter)
         {
+            // [ĐÃ SỬA] Ép buộc lấy tất cả bản ghi thay vì phân trang mặc định (10)
+            // Gán PageSize thật lớn để Service trả về hết danh sách
+            filter.Page = 1;
+            filter.PageSize = int.MaxValue; 
+
             var result = await _requestService.GetRequestsByEmployeeAsync(employeeCode, filter);
             return Ok(result);
         }
