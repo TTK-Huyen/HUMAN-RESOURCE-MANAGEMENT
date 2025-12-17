@@ -231,6 +231,8 @@ Những trường và quy tắc validate tương ứng với code hiện tại:
 5) Header (ví dụ chuẩn để dùng làm template CSV/XLSX):
 EmployeeCode,FullName,Username,Password,DateOfBirth,Gender,CitizenIdNumber,PhoneNumber,CompanyEmail,PersonalEmail,CurrentAddress,DepartmentCode,JobTitleCode,RoleName,EmploymentType,ContractType,ContractStartDate,ContractEndDate,DirectManagerCode,MaritalStatus,HasChildren,PersonalTaxCode,SocialInsuranceNumber,Nationality
 
+
+dotnet add package EPPlus
 ### User account
 Employee account
 - username: employee

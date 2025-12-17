@@ -382,21 +382,78 @@ namespace HrmApi.Services
             {
                 worksheet.Cells[1, i + 1].Value = headers[i];
                 worksheet.Cells[1, i + 1].Style.Font.Bold = true;
-            }
-
-            // Add sample data
-            worksheet.Cells[2, 1].Value = "EMP001";
-            worksheet.Cells[2, 2].Value = "Nguyễn Văn A";
-            worksheet.Cells[2, 3].Value = "nguyenvana";
+            }            // Add sample data for EMP001
+            worksheet.Cells[2, 1].Value = "EMP101";
+            worksheet.Cells[2, 2].Value = "Nguyễn Văn An";
+            worksheet.Cells[2, 3].Value = "nguyenvanan";
             worksheet.Cells[2, 4].Value = "Password123!";
             worksheet.Cells[2, 5].Value = "1990-01-15";
             worksheet.Cells[2, 6].Value = "Male";
             worksheet.Cells[2, 7].Value = "123456789";
             worksheet.Cells[2, 8].Value = "0901234567";
             worksheet.Cells[2, 9].Value = "nguyenvana@company.com";
+            worksheet.Cells[2, 10].Value = "nguyenvana.personal@gmail.com";
+            worksheet.Cells[2, 11].Value = "123 Đường ABC, Quận 1, TP.HCM";
+            worksheet.Cells[2, 12].Value = 1;
+            worksheet.Cells[2, 13].Value = 1;
             worksheet.Cells[2, 14].Value = "Employee";
             worksheet.Cells[2, 15].Value = "Full-time";
             worksheet.Cells[2, 16].Value = "Indefinite";
+            worksheet.Cells[2, 17].Value = "2024-01-01";
+            worksheet.Cells[2, 20].Value = "Single";
+            worksheet.Cells[2, 21].Value = "No";
+            worksheet.Cells[2, 22].Value = "123456789";
+            worksheet.Cells[2, 23].Value = "SI123456789";
+            worksheet.Cells[2, 24].Value = "Vietnam";
+
+            // Add sample data for EMP102
+            worksheet.Cells[3, 1].Value = "EMP102";
+            worksheet.Cells[3, 2].Value = "Trần Thị B";
+            worksheet.Cells[3, 3].Value = "tranthib";
+            worksheet.Cells[3, 4].Value = "Password123!";
+            worksheet.Cells[3, 5].Value = "1992-03-10";
+            worksheet.Cells[3, 6].Value = "Female";
+            worksheet.Cells[3, 7].Value = "987654321";
+            worksheet.Cells[3, 8].Value = "0909876543";
+            worksheet.Cells[3, 9].Value = "tranthib@company.com";
+            worksheet.Cells[3, 10].Value = "tranthib.personal@gmail.com";
+            worksheet.Cells[3, 11].Value = "456 Đường DEF, Quận 2, TP.HCM";
+            worksheet.Cells[3, 12].Value = 1;
+            worksheet.Cells[3, 13].Value = 1;
+            worksheet.Cells[3, 14].Value = "Employee";
+            worksheet.Cells[3, 15].Value = "Full-time";
+            worksheet.Cells[3, 16].Value = "Indefinite";
+            worksheet.Cells[3, 17].Value = "2024-02-01";
+            worksheet.Cells[3, 20].Value = "Married";
+            worksheet.Cells[3, 21].Value = "Yes";
+            worksheet.Cells[3, 22].Value = "987654321";
+            worksheet.Cells[3, 23].Value = "SI987654321";
+            worksheet.Cells[3, 24].Value = "Vietnam";
+
+            // Add sample data for EMP103
+            worksheet.Cells[4, 1].Value = "EMP103";
+            worksheet.Cells[4, 2].Value = "Lê Văn C";
+            worksheet.Cells[4, 3].Value = "levanc";
+            worksheet.Cells[4, 4].Value = "Password123!";
+            worksheet.Cells[4, 5].Value = "1994-11-05";
+            worksheet.Cells[4, 6].Value = "Male";
+            worksheet.Cells[4, 7].Value = "456789123";
+            worksheet.Cells[4, 8].Value = "0912345678";
+            worksheet.Cells[4, 9].Value = "levanc@company.com";
+            worksheet.Cells[4, 10].Value = "levanc.personal@gmail.com";
+            worksheet.Cells[4, 11].Value = "789 Đường GHI, Quận 3, TP.HCM";
+            worksheet.Cells[4, 12].Value = 1;
+            worksheet.Cells[4, 13].Value = 1;
+            worksheet.Cells[4, 14].Value = "Employee";
+            worksheet.Cells[4, 15].Value = "Part-time";
+            worksheet.Cells[4, 16].Value = "Fixed-term";
+            worksheet.Cells[4, 17].Value = "2024-03-01";
+            worksheet.Cells[4, 18].Value = "2025-03-01";
+            worksheet.Cells[4, 20].Value = "Single";
+            worksheet.Cells[4, 21].Value = "No";
+            worksheet.Cells[4, 22].Value = "456789123";
+            worksheet.Cells[4, 23].Value = "SI456789123";
+            worksheet.Cells[4, 24].Value = "Vietnam";
 
             worksheet.Cells.AutoFitColumns();
 
