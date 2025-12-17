@@ -120,6 +120,8 @@ builder.Services.AddScoped<IRequestsDashboardListService, RequestsDashboardListS
 // UC 2.19
 builder.Services.AddScoped<IRequestHistoryRepository, RequestHistoryRepository>();
 builder.Services.AddScoped<IRequestHistoryService, RequestHistoryService>();
+// Excel Import Service
+builder.Services.AddScoped<IExcelImportService, ExcelImportService>();
 
 var app = builder.Build();
 

@@ -21,6 +21,9 @@
     <!-- Provider MySQL (chỉ 1 lần) -->
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
     
+    <!-- EPPlus for Excel processing -->
+    <PackageReference Include="EPPlus" Version="7.4.2" />
+    
     <!-- Other packages -->
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.1" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
