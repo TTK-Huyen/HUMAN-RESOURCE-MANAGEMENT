@@ -117,6 +117,9 @@ builder.Services.AddScoped<ILeaveRequestRepository, LeaveRequestRepository>();
 builder.Services.AddScoped<IRequestsDashboardRepository, RequestsDashboardRepository>();
 builder.Services.AddScoped<IRequestsDashboardListService, RequestsDashboardListService>();
 
+// Excel Import Service
+builder.Services.AddScoped<IExcelImportService, ExcelImportService>();
+
 var app = builder.Build();
 
 // ===================================================
