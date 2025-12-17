@@ -28,12 +28,10 @@ namespace HrmApi.Services
         public async Task<EmployeeProfileDto?> GetProfileAsync(string employeeCode)
         {
             var employee = await _employeeRepository.GetProfileByCodeAsync(employeeCode);
-            if (employee == null) return null;
-
-            // Mapping từ Employee sang EmployeeProfileDto
+            if (employee == null) return null;            // Mapping từ Employee sang EmployeeProfileDto
             var dto = new EmployeeProfileDto
             {
-                EmployeeName = employee.EmployeeName,
+                EmployeeName = employee.FullName,
                 EmployeeCode = employee.EmployeeCode,
                 DateOfBirth = employee.DateOfBirth?.ToString("dd/MM/yyyy"),
                 Gender = employee.Gender,
@@ -53,7 +51,7 @@ namespace HrmApi.Services
                 ContractType = employee.ContractType,
                 ContractStartDate = employee.ContractStartDate?.ToString("dd/MM/yyyy"),
                 ContractEndDate = employee.ContractEndDate?.ToString("dd/MM/yyyy"),
-                DirectManager = employee.DirectManager?.EmployeeName,
+                DirectManager = employee.DirectManager?.FullName,
                 PhoneNumbers = employee.PhoneNumbers.Select(p => new EmployeePhoneNumberDto
                 {
                     PhoneNumber = p.PhoneNumber,
@@ -94,9 +92,8 @@ namespace HrmApi.Services
             if (employee == null || employee.EmployeeCode != employeeCode)
                 return null;
             // Mapping giống GetProfileAsync
-            var dto = new EmployeeProfileDto
-            {
-                EmployeeName = employee.EmployeeName,
+            var dto = new EmployeeProfileDto            {
+                EmployeeName = employee.FullName,
                 EmployeeCode = employee.EmployeeCode,
                 DateOfBirth = employee.DateOfBirth?.ToString("dd/MM/yyyy"),
                 Gender = employee.Gender,
@@ -116,7 +113,7 @@ namespace HrmApi.Services
                 ContractType = employee.ContractType,
                 ContractStartDate = employee.ContractStartDate?.ToString("dd/MM/yyyy"),
                 ContractEndDate = employee.ContractEndDate?.ToString("dd/MM/yyyy"),
-                DirectManager = employee.DirectManager?.EmployeeName,
+                DirectManager = employee.DirectManager?.FullName,
                 PhoneNumbers = employee.PhoneNumbers.Select(p => new EmployeePhoneNumberDto
                 {
                     PhoneNumber = p.PhoneNumber,
@@ -191,7 +188,7 @@ namespace HrmApi.Services
             var employee = new Employee
             {
                 EmployeeCode = dto.EmployeeCode,
-                EmployeeName = dto.EmployeeName,
+                FullName = dto.EmployeeName,
                 DateOfBirth = dto.DateOfBirth,
                 Gender = dto.Gender,
                 Nationality = dto.Nationality ?? "Vietnamese",
@@ -232,8 +229,36 @@ namespace HrmApi.Services
 
         public async Task<IEnumerable<EmployeeProfileDto>> GetAllEmployeesAsync()
         {
-            var employees = await _employeeRepository.GetAllEmployeesAsync();
-            return employees.Select(emp => new EmployeeProfileDto
+            var employees = await _employeeRepository.GetAllEmployeesAsync();            return employees.Select(emp => new EmployeeProfileDto
+            {
+                EmployeeName = emp.FullName,
+                EmployeeCode = emp.EmployeeCode,
+                DateOfBirth = emp.DateOfBirth?.ToString("dd/MM/yyyy"),
+                Gender = emp.Gender,
+                Nationality = emp.Nationality ?? string.Empty,
+                CompanyEmail = emp.CompanyEmail,
+                PersonalEmail = emp.PersonalEmail,
+                MaritalStatus = emp.MaritalStatus,
+                HasChildren = emp.HasChildren,
+                CitizenIdNumber = emp.CitizenIdNumber,
+                PersonalTaxCode = emp.PersonalTaxCode,
+                SocialInsuranceNumber = emp.SocialInsuranceNumber,
+                CurrentAddress = emp.CurrentAddress,                Status = emp.Status,
+                Department = emp.Department?.Name,
+                JobTitle = emp.JobTitle?.Title,
+                DirectManager = emp.DirectManager?.FullName,
+                EmploymentType = emp.EmploymentType,
+                ContractType = emp.ContractType,
+                ContractStartDate = emp.ContractStartDate?.ToString("dd/MM/yyyy"),
+                ContractEndDate = emp.ContractEndDate?.ToString("dd/MM/yyyy")
+            });
+        }
+
+        public async Task<PaginatedEmployeeResponseDto> GetEmployeesWithFilterAsync(EmployeeFilterDto filter)
+        {
+            var (employees, totalCount) = await _employeeRepository.GetEmployeesWithFilterAsync(filter);
+            
+            var employeeDtos = employees.Select(emp => new EmployeeProfileDto
             {
                 EmployeeName = emp.EmployeeName,
                 EmployeeCode = emp.EmployeeCode,
@@ -248,15 +273,43 @@ namespace HrmApi.Services
                 PersonalTaxCode = emp.PersonalTaxCode,
                 SocialInsuranceNumber = emp.SocialInsuranceNumber,
                 CurrentAddress = emp.CurrentAddress,
-                Status = emp.Status,
-                Department = emp.Department?.Name,
+                Status = emp.Status,                Department = emp.Department?.Name,
                 JobTitle = emp.JobTitle?.Title,
-                DirectManager = emp.DirectManager?.EmployeeName,
+                DirectManager = emp.DirectManager?.FullName,
                 EmploymentType = emp.EmploymentType,
                 ContractType = emp.ContractType,
                 ContractStartDate = emp.ContractStartDate?.ToString("dd/MM/yyyy"),
                 ContractEndDate = emp.ContractEndDate?.ToString("dd/MM/yyyy")
-            });
+            }).ToList();
+
+            var totalPages = (int)Math.Ceiling((double)totalCount / filter.PageSize);
+
+            return new PaginatedEmployeeResponseDto
+            {
+                Data = employeeDtos,
+                TotalCount = totalCount,
+                Page = filter.Page,
+                PageSize = filter.PageSize,
+                TotalPages = totalPages,
+                HasNextPage = filter.Page < totalPages,
+                HasPreviousPage = filter.Page > 1
+            };
+        }        public async Task<IEnumerable<EssentialEmployeeDto>> GetEssentialEmployeeInfoAsync(string? employeeCode = null)
+        {
+            var employees = await _employeeRepository.GetEssentialEmployeeInfoAsync(employeeCode);
+
+            return employees.Select(emp => new EssentialEmployeeDto
+            {
+                Id = emp.Id,
+                EmployeeCode = emp.EmployeeCode,
+                FullName = emp.FullName,
+                DateOfBirth = emp.DateOfBirth,
+                Gender = emp.Gender,
+                CitizenIdNumber = emp.CitizenIdNumber,
+                PhoneNumber = emp.PhoneNumber,
+                DepartmentName = emp.Department?.Name,
+                JobTitleName = emp.JobTitle?.Title
+            }).ToList();
         }
     }
 }

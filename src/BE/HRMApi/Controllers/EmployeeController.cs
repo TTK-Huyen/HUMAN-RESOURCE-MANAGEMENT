@@ -71,17 +71,50 @@ namespace HrmApi.Controllers
             {
                 return StatusCode(500, new { message = "Internal server error: " + ex.Message });
             }
-        }
-
-        /// <summary>
-        /// Lấy danh sách tất cả nhân viên
+        }        /// <summary>
+        /// Lấy danh sách nhân viên với filter và pagination
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetAllEmployees()
+        public async Task<IActionResult> GetAllEmployees([FromQuery] EmployeeFilterDto? filter)
         {
             try
             {
-                var employees = await _employeeService.GetAllEmployeesAsync();
+                // Nếu không có filter thì sử dụng filter mặc định
+                if (filter == null)
+                {
+                    filter = new EmployeeFilterDto
+                    {
+                        Page = 1,
+                        PageSize = 10,
+                        SortBy = "employeename",
+                        SortDirection = "ASC"
+                    };
+                }
+
+                var result = await _employeeService.GetEmployeesWithFilterAsync(filter);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Internal server error: " + ex.Message });
+            }
+        }        /// <summary>
+        /// Lấy danh sách thông tin cơ bản của nhân viên (name, code, dob, gender, citizenID, phone, department, job title)
+        /// </summary>
+        /// <param name="employeeCode">Mã nhân viên cụ thể (optional). Nếu không truyền, trả về tất cả nhân viên</param>
+        [HttpGet("essential")]
+        public async Task<IActionResult> GetEssentialEmployeeInfo([FromQuery] string? employeeCode = null)
+        {
+            try
+            {
+                var employees = await _employeeService.GetEssentialEmployeeInfoAsync(employeeCode);
+                
+                // Nếu tìm kiếm theo employeeCode cụ thể nhưng không tìm thấy
+                if (!string.IsNullOrEmpty(employeeCode) && !employees.Any())
+                {
+                    return NotFound(new { message = $"Employee with code '{employeeCode}' not found or is not active." });
+                }
+                
                 return Ok(employees);
             }
             catch (Exception ex)
