@@ -10,10 +10,7 @@ import {
 const REQUEST_TYPES = ["ALL", "LEAVE", "OVERTIME", "RESIGNATION"];
 const STATUS_OPTIONS = ["ALL", "PENDING", "APPROVED", "REJECTED", "CANCELLED"];
 const PAGE_SIZE = 10;
-
-// TODO: sau này thay bằng code lấy từ login / context
-const MOCK_EMPLOYEE_CODE = "EMP001";
-
+ 
 // [ĐÃ SỬA] Format ngày giờ: Ép buộc giờ Việt Nam (+7)
 function formatDateTime(value) {
   if (!value) return "";
@@ -65,6 +62,7 @@ export default function RequestStatusPage() {
   });
 
   const [page, setPage] = useState(1);
+  const employeeCode = localStorage.getItem("employeeCode");
 
   // summary = data từ list, detail = data từ API chi tiết
   const [selectedSummary, setSelectedSummary] = useState(null);
@@ -84,7 +82,7 @@ export default function RequestStatusPage() {
       setError("");
 
       try {
-        const data = await getEmployeeRequests_1(MOCK_EMPLOYEE_CODE, {
+        const data = await getEmployeeRequests_1(employeeCode, {
           type: filters.type,
           status: filters.status,
         });
@@ -165,19 +163,19 @@ export default function RequestStatusPage() {
       switch (request.type) {
         case "LEAVE":
           data = await getLeaveRequestDetail(
-            MOCK_EMPLOYEE_CODE,
+            employeeCode,
             request.requestId
           );
           break;
         case "OT":
           data = await getOvertimeRequestDetail(
-            MOCK_EMPLOYEE_CODE,
+            employeeCode,
             request.requestId
           );
           break;
         case "RESIGNATION":
           data = await getResignationRequestDetail(
-            MOCK_EMPLOYEE_CODE,
+            employeeCode,
             request.requestId
           );
           break;
