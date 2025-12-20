@@ -396,6 +396,8 @@ app.UseSwaggerUI(c =>
     // c.RoutePrefix = string.Empty;
 });
 
+app.UseStaticFiles();
+
 // 6. (Tuỳ chọn) Https redirection – nếu gây phiền thì comment lại
 // app.UseHttpsRedirection();
 app.UseCors(MyAllowSpecificOrigins); // Kết nối FE
