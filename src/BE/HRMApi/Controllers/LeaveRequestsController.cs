@@ -16,16 +16,20 @@ namespace HrmApi.Controllers
         }
 
         [HttpPost]
+        [Consumes("multipart/form-data")]
         public async Task<ActionResult<LeaveRequestCreatedDto>> CreateLeaveRequest(
             string employeeCode,
-            [FromBody] CreateLeaveRequestDto dto)
+            [FromForm] CreateLeaveRequestDto dto) 
         {
-            var result = await _service.CreateAsync(employeeCode, dto);
-
-            // Không còn GetDetail nữa, nên trả Created + body đơn giản
-            // Có thể dùng Created(...) hoặc Ok(...)
-            return Created(string.Empty, result);
-            // hoặc: return Ok(result);
+            try 
+            {
+                var result = await _service.CreateAsync(employeeCode, dto);
+                return Created(string.Empty, result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
     }
