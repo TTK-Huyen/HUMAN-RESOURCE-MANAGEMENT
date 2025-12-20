@@ -86,6 +86,19 @@ namespace HrmApi.Repositories
             _context.Employees.Add(employee);
             await _context.SaveChangesAsync();
         }
+        
+        public async Task<Employee?> GetByIdAsync(int id)
+        {
+            return await _context.Employees.FirstOrDefaultAsync(e => e.Id == id);
+        }
+
+        public async Task<Employee?> GetManagerByIdAsync(int managerId)
+        {
+            return await _context.Employees
+                .FirstOrDefaultAsync(e => e.Id == managerId);
+        }
+
+
 
         public async Task<List<Employee>> GetAllEmployeesAsync()
         {

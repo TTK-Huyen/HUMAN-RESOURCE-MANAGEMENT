@@ -2,6 +2,8 @@ using HrmApi.Dtos;
 using HrmApi.Dtos.Requests;
 using HrmApi.Models;
 using HrmApi.Repositories;
+using HrmApi.Dtos.Notifications;
+using HrmApi.Services.Notifications;
 
 namespace HrmApi.Services
 {
@@ -9,13 +11,16 @@ namespace HrmApi.Services
     {
         private readonly IEmployeeRequestRepository _requestRepo;
         private readonly IEmployeeRepository _employeeRepo;
+        private readonly INotificationPublisher _noti;
 
         public RequestApprovalService(
             IEmployeeRequestRepository requestRepo, 
-            IEmployeeRepository employeeRepo)
+            IEmployeeRepository employeeRepo,
+            INotificationPublisher noti)
         {
             _requestRepo = requestRepo;
             _employeeRepo = employeeRepo;
+            _noti = noti;
         }
 
         public async Task<ManagerLeaveRequestDetailDto> GetLeaveRequestDetailAsync(int requestId)
@@ -97,6 +102,32 @@ namespace HrmApi.Services
             // TODO: Send Notification (Logic skipped for now)
 
             await _requestRepo.SaveChangesAsync();
+            var requester = leaveRequest.Request.Employee;
+
+            // dto.HrId đang được dùng làm approverId trong bảng requests 
+            // nên ta lấy actor từ HrId:
+            var actor = await _employeeRepo.GetByIdAsync(dto.HrId);
+
+            await _noti.PublishAsync(new NotificationEventDto
+            {
+                EventType = newStatus == "Approved" ? "REQUEST_APPROVED" : "REQUEST_REJECTED",
+                RequestType = "LEAVE",
+                RequestId = requestId,
+
+                ActorUserId = actor.Id,
+                ActorName = actor.FullName,
+
+                RequesterUserId = requester.Id,
+                RequesterEmail = requester.PersonalEmail,
+
+                ManagerUserId = actor.Id,
+                ManagerEmail = actor.PersonalEmail,
+
+                Status = newStatus.ToUpper(),
+                Message = newStatus == "Approved"
+                    ? "Yêu cầu nghỉ phép đã được duyệt"
+                    : "Yêu cầu nghỉ phép đã bị từ chối"
+            });
 
             return new LeaveRequestApprovalResponseDto
             {

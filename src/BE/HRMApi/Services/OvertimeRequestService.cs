@@ -1,6 +1,8 @@
 using HrmApi.Dtos.Requests;
 using HrmApi.Models;
 using HrmApi.Repositories;
+using HrmApi.Dtos.Notifications;
+using HrmApi.Services.Notifications;
 
 namespace HrmApi.Services
 {
@@ -10,16 +12,19 @@ namespace HrmApi.Services
         private readonly IEmployeeRepository _employeeRepository;
 
         private readonly IEmployeeRequestRepository _employeeRequestRepository;
+        private readonly INotificationPublisher _noti;
 
         public OvertimeRequestService(
             IOvertimeRequestRepository repository,
             IEmployeeRepository employeeRepository,
-            IEmployeeRequestRepository employeeRequestRepository
+            IEmployeeRequestRepository employeeRequestRepository,
+            INotificationPublisher noti
             )
         {
             _repository = repository;
             _employeeRepository = employeeRepository;
             _employeeRequestRepository = employeeRequestRepository;
+            _noti = noti;
         }
 
         public async Task<OvertimeRequestCreatedDto> CreateAsync(
@@ -65,6 +70,32 @@ namespace HrmApi.Services
             // 4. Lưu DB
             await _repository.AddAsync(entity);
             await _repository.SaveChangesAsync();
+            Employee? manager = null;
+
+            if (employee.DirectManagerId.HasValue)
+            {
+                manager = await _employeeRepository.GetManagerByIdAsync(employee.DirectManagerId.Value);
+            }
+
+
+            await _noti.PublishAsync(new NotificationEventDto
+            {
+                EventType = "REQUEST_CREATED",
+                RequestType = "OT",                 // bạn đang lưu RequestType="OT" 
+                RequestId = request.RequestId,
+
+                ActorUserId = employee.Id,
+                ActorName = employee.FullName,
+
+                RequesterUserId = employee.Id,
+                RequesterEmail = employee.PersonalEmail,
+
+                ManagerUserId = manager?.Id,
+                ManagerEmail = manager?.PersonalEmail,
+
+                Status = "Pending",
+                Message = "Yêu cầu tăng ca mới cần phê duyệt"
+            });
 
             // 5. Trả DTO
             return new OvertimeRequestCreatedDto

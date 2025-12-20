@@ -123,6 +123,10 @@ builder.Services.AddScoped<IRequestHistoryService, RequestHistoryService>();
 // Excel Import Service
 builder.Services.AddScoped<IExcelImportService, ExcelImportService>();
 
+//EVEN CATCHING 
+builder.Services.AddHttpClient<HrmApi.Services.Notifications.INotificationPublisher,
+                              HrmApi.Services.Notifications.NotificationPublisher>();
+
 var app = builder.Build();
 
 // ===================================================

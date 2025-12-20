@@ -11,6 +11,9 @@ namespace HrmApi.Repositories
         
         Task<Employee?> GetByCodeAsync(string employeeCode);
 
+        Task<Employee?> GetByIdAsync(int id);
+        Task<Employee?> GetManagerByIdAsync(int managerId);
+
         /// <summary>
         /// Lấy thông tin hồ sơ cá nhân đầy đủ (bao gồm các navigation properties) theo mã employeeCode.
         /// </summary>
@@ -45,5 +48,6 @@ namespace HrmApi.Repositories
         /// </summary>
         /// <param name="employeeCode">Mã nhân viên cụ thể (optional). Nếu null hoặc empty, trả về tất cả nhân viên</param>
         Task<List<Employee>> GetEssentialEmployeeInfoAsync(string? employeeCode = null);
+
     }
 }

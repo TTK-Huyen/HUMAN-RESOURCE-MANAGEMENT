@@ -46,7 +46,8 @@ namespace HrmApi.Services
                 Token = token,
                 EmployeeCode = userAccount.Employee.EmployeeCode,
                 EmployeeName = userAccount.Employee.EmployeeName,
-                Role = userAccount.Role.RoleCode
+                Role = userAccount.Role.RoleCode,
+                EmployeeId = userAccount.Employee.Id
             };
         }
 
