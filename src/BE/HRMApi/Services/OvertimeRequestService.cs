@@ -1,107 +1,81 @@
 using HrmApi.Dtos.Requests;
 using HrmApi.Models;
 using HrmApi.Repositories;
-using HrmApi.Dtos.Notifications;
-using HrmApi.Services.Notifications;
 
 namespace HrmApi.Services
 {
     public class OvertimeRequestService : IOvertimeRequestService
     {
         private readonly IOvertimeRequestRepository _repository;
-        private readonly IEmployeeRepository _employeeRepository;
-
-        private readonly IEmployeeRequestRepository _employeeRequestRepository;
-        private readonly INotificationPublisher _noti;
+        private readonly IEmployeeRepository _employeeRepo;
+        private readonly IEmployeeRequestRepository _requestRepo;
 
         public OvertimeRequestService(
             IOvertimeRequestRepository repository,
-            IEmployeeRepository employeeRepository,
-            IEmployeeRequestRepository employeeRequestRepository,
-            INotificationPublisher noti
-            )
+            IEmployeeRepository employeeRepo,
+            IEmployeeRequestRepository requestRepo)
         {
             _repository = repository;
-            _employeeRepository = employeeRepository;
-            _employeeRequestRepository = employeeRequestRepository;
-            _noti = noti;
+            _employeeRepo = employeeRepo;
+            _requestRepo = requestRepo;
         }
 
-        public async Task<OvertimeRequestCreatedDto> CreateAsync(
-            string employeeCode,
-            CreateOvertimeRequestDto dto)
+        public async Task<OvertimeRequestCreatedDto> CreateAsync(string employeeCode, CreateOvertimeRequestDto dto)
         {
-            // 1. Tìm employee theo mã
-            var employee = await _employeeRepository.GetByCodeAsync(employeeCode)
+            var employee = await _employeeRepo.GetByCodeAsync(employeeCode)
                            ?? throw new InvalidOperationException("Employee not found");
 
-            // 2. Tính tổng giờ OT (double -> decimal)
-            var totalHours = (dto.EndTime - dto.StartTime).TotalHours;
+            // --- XỬ LÝ PARSE GIỜ TẠI ĐÂY ---
+            // Tự động hiểu cả "18:00" lẫn "18:00:00"
+            if (!TimeSpan.TryParse(dto.StartTime, out var startTime))
+                throw new ArgumentException("Invalid StartTime format (expected HH:mm)");
 
-            // 2. Tạo bản ghi ở bảng requests (bảng cha)
+            if (!TimeSpan.TryParse(dto.EndTime, out var endTime))
+                throw new ArgumentException("Invalid EndTime format (expected HH:mm)");
+
+            // Validate logic: End > Start
+            if (endTime <= startTime)
+                throw new ArgumentException("End time must be later than start time.");
+            
+            // Tính tổng giờ
+            var totalHours = (decimal)(endTime - startTime).TotalHours;
+            // -------------------------------
+
+            // 1. Tạo Request chung
             var request = new Request
             {
-                EmployeeId  = employee.Id,
-                RequestType = "OT",
-                CreatedAt   = DateTime.UtcNow,
-                Status      = "Pending",
-                ApproverId  = null  // sau này flow duyệt sẽ set
-            };
-
-            // Nếu bạn có RequestRepository:
-            await _employeeRequestRepository.AddAsync(request);
-            await _employeeRequestRepository.SaveChangesAsync();
-
-            // 3. Map DTO -> Entity
-            var entity = new OvertimeRequest
-            {
-                Id         = request.RequestId,    // Sử dụng RequestId vừa tạo
-                EmployeeId = employee.Id,      // FK theo ERD
-                Date       = dto.Date,
-                StartTime  = dto.StartTime,
-                EndTime    = dto.EndTime,
-                TotalHours = (decimal)totalHours,
-                Reason     = dto.Reason,
-                ProjectId  = dto.ProjectId,
-                Status     = RequestStatus.Pending,
-                CreatedAt  = DateTime.UtcNow
-            };
-
-            // 4. Lưu DB
-            await _repository.AddAsync(entity);
-            await _repository.SaveChangesAsync();
-            Employee? manager = null;
-
-            if (employee.DirectManagerId.HasValue)
-            {
-                manager = await _employeeRepository.GetManagerByIdAsync(employee.DirectManagerId.Value);
-            }
-
-
-            await _noti.PublishAsync(new NotificationEventDto
-            {
-                EventType = "REQUEST_CREATED",
-                RequestType = "OT",                 // bạn đang lưu RequestType="OT" 
-                RequestId = request.RequestId,
-
-                ActorUserId = employee.Id,
-                ActorName = employee.FullName,
-
-                RequesterUserId = employee.Id,
-                RequesterEmail = employee.PersonalEmail,
-
-                ManagerUserId = manager?.Id,
-                ManagerEmail = manager?.PersonalEmail,
-
+                EmployeeId = employee.Id,
+                RequestType = "OVERTIME",
                 Status = "Pending",
-                Message = "Yêu cầu tăng ca mới cần phê duyệt"
-            });
+                CreatedAt = DateTime.UtcNow
+            };
+            await _requestRepo.AddAsync(request);
+            await _requestRepo.SaveChangesAsync();
 
-            // 5. Trả DTO
+            // 2. Tạo Overtime Request chi tiết
+            var otRequest = new OvertimeRequest
+            {
+                Id = request.RequestId, // Link 1-1
+                EmployeeId = employee.Id,
+                Date = dto.Date,
+                
+                StartTime = startTime, // Lưu giá trị đã parse
+                EndTime = endTime,     // Lưu giá trị đã parse
+                TotalHours = totalHours,
+                
+                Reason = dto.Reason,
+                ProjectName = dto.ProjectId, // Mapping tạm ProjectId vào ProjectName hoặc cột tương ứng
+                Status = RequestStatus.Pending,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _repository.AddAsync(otRequest);
+            await _repository.SaveChangesAsync();
+
             return new OvertimeRequestCreatedDto
             {
                 RequestId = request.RequestId,
-                Status    = entity.Status.ToString()
+                Status = "Pending"
             };
         }
     }
