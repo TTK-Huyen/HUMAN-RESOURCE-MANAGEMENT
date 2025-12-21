@@ -4,11 +4,16 @@ namespace HrmApi.Dtos
 {
     public class RequestStatusUpdateDto
     {
-        [JsonPropertyName("new_status")]
-        public string NewStatus { get; set; } = null!;   // "Approved" | "Rejected"
+        // Map đúng key "Status" như mô tả User Story
+        [JsonPropertyName("Status")] 
+        public string NewStatus { get; set; } = null!;   // "APPROVED" | "REJECTED"
 
-        [JsonPropertyName("reject_reason")]
-        public string? RejectReason { get; set; }        // bắt buộc nếu Rejected
+        // Map đúng key "RejectReason"
+        [JsonPropertyName("RejectReason")]
+        public string? RejectReason { get; set; }
+
+        // Key này cần thiết để biết ai duyệt. 
+        // Nếu FE tự động sinh code mà thiếu key này, bạn có thể cần hardcode hoặc update FE.
         [JsonPropertyName("Employee_ID")]
         public int HrId { get; set; }
     }

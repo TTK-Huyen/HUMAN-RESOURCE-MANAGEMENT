@@ -49,5 +49,6 @@ namespace HrmApi.Repositories
         /// <param name="employeeCode">Mã nhân viên cụ thể (optional). Nếu null hoặc empty, trả về tất cả nhân viên</param>
         Task<List<Employee>> GetEssentialEmployeeInfoAsync(string? employeeCode = null);
 
+        Task<List<Employee>> GetAllAsync();
     }
 }
