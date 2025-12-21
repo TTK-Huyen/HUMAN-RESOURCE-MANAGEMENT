@@ -12,20 +12,25 @@ namespace HrmApi.Services
         private readonly IEmployeeRequestRepository _requestRepo;
         private readonly IEmployeeRepository _employeeRepo;
         private readonly INotificationPublisher _noti;
+        private readonly IOvertimeRequestRepository _otRepo; 
 
         public RequestApprovalService(
             IEmployeeRequestRepository requestRepo, 
             IEmployeeRepository employeeRepo,
-            INotificationPublisher noti)
+            INotificationPublisher noti,
+            IOvertimeRequestRepository otRepo)
         {
             _requestRepo = requestRepo;
             _employeeRepo = employeeRepo;
             _noti = noti;
+            _otRepo = otRepo;
         }
 
+        // =========================================================
+        // PHẦN 1: XỬ LÝ DUYỆT ĐƠN NGHỈ PHÉP (LEAVE REQUEST)
+        // =========================================================
         public async Task<ManagerLeaveRequestDetailDto> GetLeaveRequestDetailAsync(int requestId)
         {
-            // Fetch request (Need to implement GetById in Repo that includes Employee & Dept)
             var leaveRequest = await _requestRepo.GetLeaveRequestByIdAsync(requestId);
             if (leaveRequest == null)
             {
@@ -34,15 +39,11 @@ namespace HrmApi.Services
 
             var emp = leaveRequest.Request.Employee;
             var deptName = emp.Department?.Name ?? "N/A";
-            var positionName = emp.JobTitle?.Title ?? "N/A"; // Assuming JobTitle has Title property
+            var positionName = emp.JobTitle?.Title ?? "N/A";
             
-            // Mock logic for "Remaining employees in department" (Conflict check)
-            // In real app: Count employees in this Dept NOT on leave during StartDate-EndDate
+            // Mock data
             int remainingEmployees = 10; 
             bool hasConflict = remainingEmployees < 2; 
-
-            // Mock logic for "Remaining leave days"
-            // In real app: Fetch from LeaveBalance table
             float remainingLeave = 12.0f;
 
             return new ManagerLeaveRequestDetailDto
@@ -81,59 +82,163 @@ namespace HrmApi.Services
                 throw new InvalidOperationException($"Request is already {request.Status}");
             }
 
-            // Validations
             if (dto.NewStatus.ToUpper() == "REJECTED" && string.IsNullOrWhiteSpace(dto.RejectReason))
             {
                 throw new ArgumentException("Rejection reason is required.");
             }
 
-            // Update Status
             string newStatus = dto.NewStatus.ToUpper() == "APPROVED" ? "Approved" : "Rejected";
             
             request.Status = newStatus;
             request.ApprovedAt = DateTime.UtcNow;
-            request.ApproverId = dto.HrId; // Using Employee_ID from DTO as Approver
+            request.ApproverId = dto.HrId; 
 
             leaveRequest.Status = newStatus == "Approved" 
                 ? RequestStatus.Approved 
                 : RequestStatus.Rejected;
 
-            // TODO: Update Leave Balance if Approved (Logic skipped for now)
-            // TODO: Send Notification (Logic skipped for now)
-
             await _requestRepo.SaveChangesAsync();
+            
             var requester = leaveRequest.Request.Employee;
-
-            // dto.HrId đang được dùng làm approverId trong bảng requests 
-            // nên ta lấy actor từ HrId:
             var actor = await _employeeRepo.GetByIdAsync(dto.HrId);
 
-            await _noti.PublishAsync(new NotificationEventDto
+            if (actor != null) 
             {
-                EventType = newStatus == "Approved" ? "REQUEST_APPROVED" : "REQUEST_REJECTED",
-                RequestType = "LEAVE",
-                RequestId = requestId,
-
-                ActorUserId = actor.Id,
-                ActorName = actor.FullName,
-
-                RequesterUserId = requester.Id,
-                RequesterEmail = requester.PersonalEmail,
-
-                ManagerUserId = actor.Id,
-                ManagerEmail = actor.PersonalEmail,
-
-                Status = newStatus.ToUpper(),
-                Message = newStatus == "Approved"
-                    ? "Yêu cầu nghỉ phép đã được duyệt"
-                    : "Yêu cầu nghỉ phép đã bị từ chối"
-            });
+                await _noti.PublishAsync(new NotificationEventDto
+                {
+                    EventType = newStatus == "Approved" ? "REQUEST_APPROVED" : "REQUEST_REJECTED",
+                    RequestType = "LEAVE",
+                    RequestId = requestId,
+                    ActorUserId = actor.Id,
+                    ActorName = actor.FullName,
+                    RequesterUserId = requester.Id,
+                    RequesterEmail = requester.PersonalEmail,
+                    ManagerUserId = actor.Id,
+                    ManagerEmail = actor.PersonalEmail,
+                    Status = newStatus.ToUpper(),
+                    Message = newStatus == "Approved"
+                        ? "Yêu cầu nghỉ phép đã được duyệt"
+                        : "Yêu cầu nghỉ phép đã bị từ chối"
+                });
+            }
 
             return new LeaveRequestApprovalResponseDto
             {
                 Message = $"Leave request {newStatus.ToLower()} successfully",
                 RequestId = requestId,
                 NewStatus = newStatus.ToUpper()
+            };
+        }
+
+        // =========================================================
+        // PHẦN 2: XỬ LÝ DUYỆT OT (OVERTIME REQUEST)
+        // =========================================================
+        public async Task<ManagerOvertimeRequestDetailDto> GetOvertimeRequestDetailAsync(int requestId)
+        {
+            var otRequest = await _otRepo.GetOvertimeRequestByIdAsync(requestId);
+            if (otRequest == null)
+            {
+                throw new KeyNotFoundException("Overtime request not found");
+            }
+
+            var emp = otRequest.Request.Employee;
+            
+            // Tính số giờ: Cần ép kiểu double vì TotalHours trong DB của bạn là decimal
+            double totalHours = (double)otRequest.TotalHours; 
+            int otDaysMonth = 2; // Mock data
+
+            return new ManagerOvertimeRequestDetailDto
+            {
+                RequestId = otRequest.Id,
+                EmployeeId = emp.EmployeeCode,
+                EmployeeName = emp.FullName,
+                Department = emp.Department?.Name ?? "N/A",
+                
+                // --- SỬA LỖI TẠI ĐÂY ---
+                OtDate = otRequest.Date, // Dùng propery Date thay vì OvertimeDate
+                // -----------------------
+
+                StartTime = otRequest.StartTime.ToString(@"hh\:mm"),
+                EndTime = otRequest.EndTime.ToString(@"hh\:mm"),
+                TotalHours = Math.Round(totalHours, 2),
+                
+                // --- SỬA LỖI TẠI ĐÂY ---
+                Project = otRequest.ProjectName, // Dùng property ProjectName thay vì Project
+                // -----------------------
+
+                Reason = otRequest.Reason,
+                OtDaysThisMonth = otDaysMonth,
+                Status = otRequest.Request.Status
+            };
+        }
+
+        public async Task<OtRequestApprovalResponseDto> ApproveOvertimeRequestAsync(int requestId, RequestStatusUpdateDto dto)
+        {
+            var otRequest = await _otRepo.GetOvertimeRequestByIdAsync(requestId);
+            if (otRequest == null)
+            {
+                throw new KeyNotFoundException("Overtime request not found");
+            }
+
+            var request = otRequest.Request;
+            if (request.Status != "Pending")
+            {
+                throw new InvalidOperationException($"Request is already {request.Status}");
+            }
+
+            if (dto.NewStatus.ToUpper() == "REJECTED" && string.IsNullOrWhiteSpace(dto.RejectReason))
+            {
+                throw new ArgumentException("Rejection reason is required.");
+            }
+
+            // Rule: Không quá 4 giờ/ngày
+            // Ép kiểu decimal sang double để so sánh
+            if (dto.NewStatus.ToUpper() == "APPROVED" && (double)otRequest.TotalHours > 4.0)
+            {
+                throw new InvalidOperationException("Cannot approve: Overtime exceeds 4 hours limit per day.");
+            }
+
+            string newStatus = dto.NewStatus.ToUpper() == "APPROVED" ? "Approved" : "Rejected";
+            DateTime now = DateTime.UtcNow;
+
+            request.Status = newStatus;
+            request.ApprovedAt = now;
+            request.ApproverId = dto.HrId; 
+
+            otRequest.Status = newStatus == "Approved" 
+                ? RequestStatus.Approved 
+                : RequestStatus.Rejected;
+
+            await _otRepo.SaveChangesAsync();
+
+            var requester = request.Employee;
+            var approver = await _employeeRepo.GetByIdAsync(dto.HrId);
+
+            if (approver != null)
+            {
+                // Format ngày dùng otRequest.Date
+                await _noti.PublishAsync(new NotificationEventDto
+                {
+                    EventType = newStatus == "Approved" ? "OT_APPROVED" : "OT_REJECTED",
+                    RequestType = "OVERTIME",
+                    RequestId = requestId,
+                    ActorUserId = approver.Id,
+                    ActorName = approver.FullName,
+                    RequesterUserId = requester.Id,
+                    RequesterEmail = requester.PersonalEmail,
+                    ManagerUserId = approver.Id,
+                    ManagerEmail = approver.PersonalEmail,
+                    Status = newStatus.ToUpper(),
+                    Message = $"Yêu cầu OT ngày {otRequest.Date:dd/MM} đã được {newStatus}" 
+                });
+            }
+
+            return new OtRequestApprovalResponseDto
+            {
+                Message = $"OT request {newStatus.ToLower()} successfully.",
+                RequestId = requestId,
+                NewStatus = newStatus.ToUpper(),
+                ApproveAt = now
             };
         }
     }
