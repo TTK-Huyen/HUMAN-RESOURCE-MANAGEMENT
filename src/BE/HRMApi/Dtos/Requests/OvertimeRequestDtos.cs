@@ -4,10 +4,11 @@ namespace HrmApi.Dtos.Requests
     public class CreateOvertimeRequestDto
     {
         public DateTime Date { get; set; }          // date
-        public TimeSpan StartTime { get; set; }     // start_time
-        public TimeSpan EndTime { get; set; }       // end_time
+public string StartTime { get; set; } = default!; 
+        public string EndTime { get; set; } = default!;   
+        
         public string Reason { get; set; } = default!;
-        public string? ProjectId { get; set; }         // project_id (optional)
+        public string? ProjectId { get; set; }       // project_id (optional)
     }
 
     // 201 Created response
