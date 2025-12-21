@@ -143,7 +143,6 @@ namespace HrmApi.Services
 
             var emp = otRequest.Request.Employee;
             
-            // Tính số giờ: Cần ép kiểu double vì TotalHours trong DB của bạn là decimal
             double totalHours = (double)otRequest.TotalHours; 
             int otDaysMonth = 2; // Mock data
 
@@ -153,19 +152,11 @@ namespace HrmApi.Services
                 EmployeeId = emp.EmployeeCode,
                 EmployeeName = emp.FullName,
                 Department = emp.Department?.Name ?? "N/A",
-                
-                // --- SỬA LỖI TẠI ĐÂY ---
-                OtDate = otRequest.Date, // Dùng propery Date thay vì OvertimeDate
-                // -----------------------
-
+                OtDate = otRequest.Date, 
                 StartTime = otRequest.StartTime.ToString(@"hh\:mm"),
                 EndTime = otRequest.EndTime.ToString(@"hh\:mm"),
                 TotalHours = Math.Round(totalHours, 2),
-                
-                // --- SỬA LỖI TẠI ĐÂY ---
-                Project = otRequest.ProjectName, // Dùng property ProjectName thay vì Project
-                // -----------------------
-
+                Project = otRequest.ProjectName, 
                 Reason = otRequest.Reason,
                 OtDaysThisMonth = otDaysMonth,
                 Status = otRequest.Request.Status
@@ -174,6 +165,7 @@ namespace HrmApi.Services
 
         public async Task<OtRequestApprovalResponseDto> ApproveOvertimeRequestAsync(int requestId, RequestStatusUpdateDto dto)
         {
+            // 1. Tìm Request
             var otRequest = await _otRepo.GetOvertimeRequestByIdAsync(requestId);
             if (otRequest == null)
             {
@@ -186,53 +178,86 @@ namespace HrmApi.Services
                 throw new InvalidOperationException($"Request is already {request.Status}");
             }
 
+            // 2. Validate lý do từ chối
             if (dto.NewStatus.ToUpper() == "REJECTED" && string.IsNullOrWhiteSpace(dto.RejectReason))
             {
                 throw new ArgumentException("Rejection reason is required.");
             }
 
-            // Rule: Không quá 4 giờ/ngày
-            // Ép kiểu decimal sang double để so sánh
-            if (dto.NewStatus.ToUpper() == "APPROVED" && (double)otRequest.TotalHours > 4.0)
+            // 3. Validate Rule: Không quá 4 giờ/ngày
+            double totalHours = (double)otRequest.TotalHours;
+            if (dto.NewStatus.ToUpper() == "APPROVED" && totalHours > 4.0)
             {
                 throw new InvalidOperationException("Cannot approve: Overtime exceeds 4 hours limit per day.");
             }
 
+            // -----------------------------------------------------
+            // 4. XỬ LÝ NGƯỜI DUYỆT (FIX LỖI ID = 0)
+            // -----------------------------------------------------
+            Employee? approver = null;
+
+            if (dto.HrId > 0)
+            {
+                // Nếu Frontend gửi ID cụ thể -> Tìm người đó
+                approver = await _employeeRepo.GetByIdAsync(dto.HrId);
+                if (approver == null)
+                {
+                    throw new ArgumentException($"Approver (HR/Manager) with ID {dto.HrId} not found.");
+                }
+            }
+            else
+            {
+                // Nếu Frontend KHÔNG gửi ID (HrId = 0) -> Tự động tìm Manager/Admin đầu tiên
+                // Giả định Repo có hàm GetAllAsync. Nếu không, bạn cần tạo hàm này hoặc dùng query khác.
+                var allEmployees = await _employeeRepo.GetAllAsync(); 
+                
+                // Ưu tiên lấy người có Role là Manager hoặc HR
+                approver = allEmployees.FirstOrDefault(e => e.JobTitle?.Title == "Manager" || e.JobTitle?.Title == "HR") 
+                           ?? allEmployees.FirstOrDefault(); // Nếu không có thì lấy đại người đầu tiên làm fallback
+
+                if (approver == null)
+                {
+                    throw new InvalidOperationException("System error: Could not auto-assign an Approver (No employees found).");
+                }
+            }
+            // -----------------------------------------------------
+
+            // 5. Update Status
             string newStatus = dto.NewStatus.ToUpper() == "APPROVED" ? "Approved" : "Rejected";
             DateTime now = DateTime.UtcNow;
 
             request.Status = newStatus;
             request.ApprovedAt = now;
-            request.ApproverId = dto.HrId; 
+            
+            // Gán ID người duyệt vừa tìm được
+            request.ApproverId = approver.Id; 
 
             otRequest.Status = newStatus == "Approved" 
                 ? RequestStatus.Approved 
                 : RequestStatus.Rejected;
 
+            // 6. Lưu xuống DB
             await _otRepo.SaveChangesAsync();
 
+            // 7. Gửi thông báo
             var requester = request.Employee;
-            var approver = await _employeeRepo.GetByIdAsync(dto.HrId);
-
-            if (approver != null)
+            
+            // Biến 'approver' chắc chắn không null nhờ logic ở bước 4
+            await _noti.PublishAsync(new NotificationEventDto
             {
-                // Format ngày dùng otRequest.Date
-                await _noti.PublishAsync(new NotificationEventDto
-                {
-                    EventType = newStatus == "Approved" ? "OT_APPROVED" : "OT_REJECTED",
-                    RequestType = "OVERTIME",
-                    RequestId = requestId,
-                    ActorUserId = approver.Id,
-                    ActorName = approver.FullName,
-                    RequesterUserId = requester.Id,
-                    RequesterEmail = requester.PersonalEmail,
-                    ManagerUserId = approver.Id,
-                    ManagerEmail = approver.PersonalEmail,
-                    Status = newStatus.ToUpper(),
-                    Message = $"Yêu cầu OT ngày {otRequest.Date:dd/MM} đã được {newStatus}" 
-                });
-            }
-
+                EventType = newStatus == "Approved" ? "OT_APPROVED" : "OT_REJECTED",
+                RequestType = "OVERTIME",
+                RequestId = requestId,
+                ActorUserId = approver.Id,
+                ActorName = approver.FullName,
+                RequesterUserId = requester.Id,
+                RequesterEmail = requester.PersonalEmail,
+                ManagerUserId = approver.Id,
+                ManagerEmail = approver.PersonalEmail,
+                Status = newStatus.ToUpper(),
+                Message = $"Yêu cầu OT ngày {otRequest.Date:dd/MM} đã được {newStatus}"
+            });
+            
             return new OtRequestApprovalResponseDto
             {
                 Message = $"OT request {newStatus.ToLower()} successfully.",
