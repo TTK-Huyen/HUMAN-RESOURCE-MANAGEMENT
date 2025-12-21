@@ -6,5 +6,7 @@ namespace HrmApi.Repositories
     {
         Task AddAsync(OvertimeRequest request);
         Task SaveChangesAsync();
+
+        Task<OvertimeRequest?> GetOvertimeRequestByIdAsync(int requestId);
     }
 }
