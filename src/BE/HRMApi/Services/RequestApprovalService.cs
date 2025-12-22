@@ -14,16 +14,19 @@ namespace HrmApi.Services
         private readonly INotificationPublisher _noti;
         private readonly IOvertimeRequestRepository _otRepo; 
 
+        private readonly IResignationRequestRepository _resignationRepo;
         public RequestApprovalService(
             IEmployeeRequestRepository requestRepo, 
             IEmployeeRepository employeeRepo,
             INotificationPublisher noti,
-            IOvertimeRequestRepository otRepo)
+            IOvertimeRequestRepository otRepo,
+            IResignationRequestRepository resignationRepo)
         {
             _requestRepo = requestRepo;
             _employeeRepo = employeeRepo;
             _noti = noti;
             _otRepo = otRepo;
+            _resignationRepo = resignationRepo;
         }
 
         // =========================================================
@@ -261,6 +264,138 @@ namespace HrmApi.Services
             return new OtRequestApprovalResponseDto
             {
                 Message = $"OT request {newStatus.ToLower()} successfully.",
+                RequestId = requestId,
+                NewStatus = newStatus.ToUpper(),
+                ApproveAt = now
+            };
+        }
+
+        // =========================================================
+        // PHẦN 3: XỬ LÝ DUYỆT ĐƠN NGHỈ VIỆC (RESIGNATION REQUEST) - MỚI
+        // =========================================================
+        public async Task<ManagerResignationRequestDetailDto> GetResignationRequestDetailAsync(int requestId)
+        {
+            var resRequest = await _resignationRepo.GetResignationRequestByIdAsync(requestId);
+            if (resRequest == null)
+            {
+                throw new KeyNotFoundException("Resignation request not found");
+            }
+
+            var emp = resRequest.Employee;
+            
+            return new ManagerResignationRequestDetailDto
+            {
+                RequestId = resRequest.Id,
+                EmployeeId = emp.Id,
+                EmployeeName = emp.FullName,
+                Department = emp.Department?.Name ?? "N/A",
+                LastWorkingDate = resRequest.ResignationDate, // Mapping ProposedLastWorkingDate
+                Reason = resRequest.Reason,
+                HandoverCompleted = resRequest.HasCompletedHandover,
+                HrNote = resRequest.HrNote,
+                Status = resRequest.Request.Status,
+                CreatedAt = resRequest.CreatedAt
+            };
+        }
+
+        public async Task<ResignationRequestApprovalResponseDto> ApproveResignationRequestAsync(int requestId, RequestStatusUpdateDto dto)
+        {
+            // 1. Tìm Request
+            var resRequest = await _resignationRepo.GetResignationRequestByIdAsync(requestId);
+            if (resRequest == null)
+            {
+                throw new KeyNotFoundException("Resignation request not found");
+            }
+
+            var request = resRequest.Request;
+            if (request.Status != "Pending")
+            {
+                throw new InvalidOperationException($"Request is already {request.Status}");
+            }
+
+            // 2. Validate Status
+            var statusInput = dto.NewStatus?.Trim().ToUpper();
+            string newStatus;
+            if (statusInput == "APPROVED") newStatus = "Approved";
+            else if (statusInput == "REJECTED") newStatus = "Rejected";
+            else throw new ArgumentException($"Invalid Status: '{dto.NewStatus}'. Only accept 'APPROVED' or 'REJECTED'.");
+
+            if (newStatus == "Rejected" && string.IsNullOrWhiteSpace(dto.RejectReason))
+            {
+                throw new ArgumentException("Rejection reason is required.");
+            }
+
+            // 3. Tìm người duyệt (Approver) - Auto Assign nếu HrId = 0
+            Employee? approver = null;
+            if (dto.HrId > 0)
+            {
+                approver = await _employeeRepo.GetByIdAsync(dto.HrId);
+                if (approver == null) throw new ArgumentException($"Approver with ID {dto.HrId} not found.");
+            }
+            else
+            {
+                var allEmployees = await _employeeRepo.GetAllAsync();
+                approver = allEmployees.FirstOrDefault(e => 
+                    e.JobTitle != null && 
+                    (e.JobTitle.Title.Contains("Manager") || e.JobTitle.Title.Contains("HR") || e.JobTitle.Title.Contains("Admin"))
+                ) ?? allEmployees.FirstOrDefault();
+
+                if (approver == null) throw new InvalidOperationException("System error: Could not auto-assign an Approver.");
+            }
+
+            // 4. Update Trạng thái Request
+            DateTime now = DateTime.UtcNow;
+            request.Status = newStatus;
+            request.ApprovedAt = now;
+            request.ApproverId = approver.Id;
+            // Lưu lý do từ chối vào Note nếu cần (ResignationRequest có HrNote)
+            if (newStatus == "Rejected")
+            {
+                resRequest.HrNote = dto.RejectReason;
+            }
+
+            resRequest.Status = newStatus == "Approved" ? RequestStatus.Approved : RequestStatus.Rejected;
+
+            // 5. BUSINESS RULE: Nếu Approved -> Update trạng thái nhân viên -> "In Offboarding Process"
+            if (newStatus == "Approved")
+            {
+                var employeeToUpdate = resRequest.Employee;
+                if (employeeToUpdate != null)
+                {
+                    // Cập nhật trạng thái nhân viên
+                    employeeToUpdate.Status = "In Offboarding Process"; 
+                    
+                    // (Optional) Có thể set ContractEndDate = LastWorkingDate nếu cần
+                    // employeeToUpdate.ContractEndDate = resRequest.ResignationDate;
+                }
+            }
+
+            await _resignationRepo.SaveChangesAsync();
+
+            // 6. Gửi thông báo
+            var requester = resRequest.Employee;
+            await _noti.PublishAsync(new NotificationEventDto
+            {
+                EventType = newStatus == "Approved" ? "RESIGNATION_APPROVED" : "RESIGNATION_REJECTED",
+                RequestType = "RESIGNATION",
+                RequestId = requestId,
+                ActorUserId = approver.Id,
+                ActorName = approver.FullName,
+                RequesterUserId = requester.Id,
+                RequesterEmail = requester.PersonalEmail,
+                ManagerUserId = approver.Id,
+                ManagerEmail = approver.PersonalEmail,
+                Status = newStatus.ToUpper(),
+                Message = newStatus == "Approved" 
+                    ? "Đơn nghỉ việc đã được duyệt. Quy trình Offboarding bắt đầu." 
+                    : "Đơn nghỉ việc đã bị từ chối."
+            });
+
+            return new ResignationRequestApprovalResponseDto
+            {
+                Message = newStatus == "Approved" 
+                    ? "Resignation approved. Offboarding process activated." 
+                    : "Resignation rejected.",
                 RequestId = requestId,
                 NewStatus = newStatus.ToUpper(),
                 ApproveAt = now
