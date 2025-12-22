@@ -14,10 +14,14 @@ Các bước tối thiểu để chạy project `HRMApi` lần đầu trên Wind
    Di chuyển vào thư mục backend và chạy:
    `py -m venv env`
 
+   Dành cho MacOS: python3 -m venv env
+
 2. Kích hoạt môi trường ảo  
    Kích hoạt mỗi lần phát triển backend.
    
-   `.\env\Scripts\activate`  
+   `.\env\Scripts\activate`
+
+   Cho MacOS: source env/bin/activate
 
 3. Cài đặt tất cả các gói trong file `requirements.txt` vào môi trường ảo  
    `pip install -r requirements.txt`  
