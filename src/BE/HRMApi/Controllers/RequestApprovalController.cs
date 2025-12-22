@@ -104,5 +104,52 @@ namespace HrmApi.Controllers
                 return BadRequest(new { error = ex.Message });
             }
         }
+
+        // ... (Các endpoint Leave và Overtime cũ giữ nguyên) ...
+
+        // =============================================
+        // PHẦN 3: RESIGNATION REQUEST (NGHỈ VIỆC) - MỚI
+        // =============================================
+
+        // GET: /api/v1/getdetail-resignation-requests/{code}
+        [HttpGet("getdetail-resignation-requests/{code}")]
+        public async Task<ActionResult<ManagerResignationRequestDetailDto>> GetResignationRequestDetail(int code)
+        {
+            try
+            {
+                // code ở đây là requestId
+                var result = await _approvalService.GetResignationRequestDetailAsync(code);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { error = "Resignation Request not found" });
+            }
+        }
+
+        // PUT: /api/v1/resignation-requests/{requestId}/approval
+        [HttpPut("resignation-requests/{requestId}/approval")]
+        public async Task<ActionResult<ResignationRequestApprovalResponseDto>> ApproveResignationRequest(
+            int requestId, 
+            [FromBody] RequestStatusUpdateDto dto)
+        {
+            try
+            {
+                var result = await _approvalService.ApproveResignationRequestAsync(requestId, dto);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { error = "Request not found" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
     }
 }
