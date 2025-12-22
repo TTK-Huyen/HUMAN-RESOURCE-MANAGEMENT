@@ -13,5 +13,9 @@ namespace HrmApi.Services
         // Bạn thiếu 2 dòng này nên Controller không gọi được
         Task<ManagerOvertimeRequestDetailDto> GetOvertimeRequestDetailAsync(int requestId);
         Task<OtRequestApprovalResponseDto> ApproveOvertimeRequestAsync(int requestId, RequestStatusUpdateDto dto);
+
+        Task<ManagerResignationRequestDetailDto> GetResignationRequestDetailAsync(int requestId);
+        Task<ResignationRequestApprovalResponseDto> ApproveResignationRequestAsync(int requestId, RequestStatusUpdateDto dto);
+    
     }
 }
