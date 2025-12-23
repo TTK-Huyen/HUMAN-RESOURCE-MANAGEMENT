@@ -2,17 +2,19 @@ import React, { useState, useEffect } from "react";
 import { LayoutDashboard, History, LogOut, FileText } from "lucide-react"; 
 import NavItem from "./NavItem";
 import "./Layout.css"; 
+import NotificationBell from "../components/NotificationBell";
 
 export default function Layout({ children }) {
   // --- STATE MỚI: QUẢN LÝ USER & POPUP LOGOUT ---
-  const [user, setUser] = useState({ name: 'Guest', code: 'N/A' });
+  const [user, setUser] = useState({ name: 'Guest', code: 'N/A', id: null });
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // 1. Lấy thông tin user từ LocalStorage khi load trang
   useEffect(() => {
     const name = localStorage.getItem('employeeName') || 'HR Manager'; // Fallback nếu chưa login
     const code = localStorage.getItem('employeeCode') || 'ADMIN';
-    setUser({ name, code });
+    const id = Number(localStorage.getItem("employeeId"));
+    setUser({ name, code, id: Number.isFinite(id) ? id : null });
   }, []);
 
   // 2. Hàm xử lý Đăng xuất
@@ -65,6 +67,7 @@ export default function Layout({ children }) {
               <div className="email">{user.code}</div>
             </div>
 
+            <NotificationBell userId={user.id} />
             {/* Nút Logout mở Popup */}
             <button 
                 onClick={() => setShowLogoutConfirm(true)}

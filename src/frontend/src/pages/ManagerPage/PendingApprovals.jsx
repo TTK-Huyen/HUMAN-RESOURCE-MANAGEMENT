@@ -46,6 +46,33 @@ export default function PendingApprovals() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedReq, setSelectedReq] = useState(null);
 
+  // LISTEN EVENT từ NotificationBell: click notification → mở y như bấm con mắt
+  useEffect(() => {
+    const handler = async (ev) => {
+      const { requestId, requestType } = ev.detail || {};
+      if (!requestId) return;
+
+      // 1) tìm trong danh sách hiện tại
+      const found = requests.find((r) => (r.id || r.requestId) === requestId);
+      if (found) {
+        setSelectedReq(found);
+        return;
+      }
+
+      // 2) nếu không có trong list (do filter/paging), mở bằng object tối thiểu
+      setSelectedReq({
+        id: requestId,
+        requestId,
+        requestType: requestType || "leave",
+        requestCode: `REQ-${requestId}`,
+        status: "PENDING",
+      });
+    };
+
+    window.addEventListener("notification:openRequest", handler);
+    return () => window.removeEventListener("notification:openRequest", handler);
+  }, [requests]);
+
   useEffect(() => {
     fetch(`${API_BASE}/departments`).then(res => res.ok ? res.json() : []).then(setDepartments).catch(console.error);
   }, []);

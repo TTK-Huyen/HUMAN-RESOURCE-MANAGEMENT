@@ -2,15 +2,17 @@ import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { FileText, History, User, LogOut } from "lucide-react";
 import "./Layout.css";
+import NotificationBell from "../components/NotificationBell";
 
 export default function EmployeeLayout({ children }) {
-  const [user, setUser] = useState({ name: "Employee", code: "" });
+  const [user, setUser] = useState({ name: "Employee", code: "", id: null });
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     const name = localStorage.getItem("employeeName") || "Employee";
     const code = localStorage.getItem("employeeCode") || "";
-    setUser({ name, code });
+    const id = Number(localStorage.getItem("employeeId"));
+    setUser({ name, code, id: Number.isFinite(id) ? id : null });
   }, []);
 
   const handleLogout = () => {
@@ -78,7 +80,7 @@ export default function EmployeeLayout({ children }) {
               </div>
               <div className="email">{user.code}</div>
             </div>
-
+            <NotificationBell userId={user.id} />
             <button
               onClick={() => setShowLogoutConfirm(true)}
               style={{
