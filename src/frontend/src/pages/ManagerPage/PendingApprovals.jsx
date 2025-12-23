@@ -11,24 +11,46 @@ import StatusBadge from '../../components/StatusBadge';
 const API_BASE = "/api/v1";
 const PAGE_SIZE = 10;
 
+// [QUAN TRỌNG] Config Mapping theo Request Type để Modal biết gọi API nào
 const getTypeConfig = (typeStr) => {
     const t = typeStr?.toLowerCase() || '';
-    if (t.includes('leave')) return { label: 'Leave', icon: <Calendar size={18}/>, colorClass: 'bg-blue', apiDetailPath: 'getdetail-leave-requests', apiApprovePath: 'leave-requests' };
-    if (t.includes('overtime')) return { label: 'Overtime', icon: <Clock size={18}/>, colorClass: 'bg-orange', apiDetailPath: 'getdetail-overtime-requests', apiApprovePath: 'overtime-requests' };
-    if (t.includes('resignation')) return { label: 'Resignation', icon: <LogOut size={18}/>, colorClass: 'bg-red', apiDetailPath: 'getdetail-resignation-requests', apiApprovePath: 'resignation-requests' };
-    return { label: typeStr, icon: <FileText size={18}/>, colorClass: 'bg-gray', apiDetailPath: 'requests', apiApprovePath: 'requests' };
+    
+    // 1. Leave Requests
+    if (t.includes('leave')) return { 
+        label: 'Leave', 
+        icon: <Calendar size={18}/>, 
+        colorClass: 'bg-blue', 
+        // URL Approve: /manager/leave-requests/{id}/approval
+        apiApprovePath: 'manager/leave-requests' 
+    };
+    
+    // 2. Overtime Requests (Theo ảnh image_ade9c7.png)
+    if (t.includes('overtime')) return { 
+        label: 'Overtime', 
+        icon: <Clock size={18}/>, 
+        colorClass: 'bg-orange', 
+        // URL Approve: /overtime-requests/{id}/approval
+        apiApprovePath: 'overtime-requests'
+    };
+    
+    // 3. Resignation Requests (Theo ảnh image_ade9c7.png)
+    if (t.includes('resignation')) return { 
+        label: 'Resignation', 
+        icon: <LogOut size={18}/>, 
+        colorClass: 'bg-red', 
+        // URL Approve: /resignation-requests/{id}/approval
+        apiApprovePath: 'resignation-requests'
+    };
+    
+    return { label: typeStr, icon: <FileText size={18}/>, colorClass: 'bg-gray', apiApprovePath: 'requests' };
 };
 
-// 👇 [CẬP NHẬT MỚI] Cộng thủ công 7 tiếng
 const formatDate = (dateString) => {
     if (!dateString) return "--";
     try {
         const date = new Date(dateString);
         if (isNaN(date.getTime())) return "--";
-
-        // Cộng thêm 7 giờ
         date.setTime(date.getTime() + 7 * 60 * 60 * 1000);
-
         return date.toLocaleString('en-GB', { 
             day: '2-digit', month: '2-digit', year: 'numeric',
             hour: '2-digit', minute: '2-digit', hour12: false
@@ -46,20 +68,18 @@ export default function PendingApprovals() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedReq, setSelectedReq] = useState(null);
 
-  // LISTEN EVENT từ NotificationBell: click notification → mở y như bấm con mắt
+  // Notification Listener (Giữ nguyên)
   useEffect(() => {
     const handler = async (ev) => {
       const { requestId, requestType } = ev.detail || {};
       if (!requestId) return;
 
-      // 1) tìm trong danh sách hiện tại
       const found = requests.find((r) => (r.id || r.requestId) === requestId);
       if (found) {
         setSelectedReq(found);
         return;
       }
-
-      // 2) nếu không có trong list (do filter/paging), mở bằng object tối thiểu
+      // Fallback
       setSelectedReq({
         id: requestId,
         requestId,
@@ -68,15 +88,16 @@ export default function PendingApprovals() {
         status: "PENDING",
       });
     };
-
     window.addEventListener("notification:openRequest", handler);
     return () => window.removeEventListener("notification:openRequest", handler);
   }, [requests]);
 
+  // Load Departments
   useEffect(() => {
     fetch(`${API_BASE}/departments`).then(res => res.ok ? res.json() : []).then(setDepartments).catch(console.error);
   }, []);
 
+  // Load Dashboard Data
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
     try {
