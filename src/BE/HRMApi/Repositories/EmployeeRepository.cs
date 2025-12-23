@@ -239,5 +239,12 @@ namespace HrmApi.Repositories
                 .OrderBy(e => e.FullName)
                 .ToListAsync();
         }
+
+        public async Task<List<Employee>> GetAllAsync()
+        {
+            return await _context.Employees
+                .Include(e => e.JobTitle) // Quan trọng: Join bảng Role để lấy tên quyền (Manager/HR)
+                .ToListAsync();
+        }
     }
 }

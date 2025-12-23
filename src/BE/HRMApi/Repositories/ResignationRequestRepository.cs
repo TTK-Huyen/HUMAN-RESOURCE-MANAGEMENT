@@ -13,7 +13,6 @@ namespace HrmApi.Repositories
             _context = context;
         }
 
-
         public async Task AddAsync(ResignationRequest request)
         {
             await _context.ResignationRequests.AddAsync(request);
@@ -22,6 +21,20 @@ namespace HrmApi.Repositories
         public Task SaveChangesAsync()
         {
             return _context.SaveChangesAsync();
+        }
+
+        // --- IMPLEMENT HÀM MỚI ---
+        public async Task<ResignationRequest?> GetResignationRequestByIdAsync(int requestId)
+        {
+            return await _context.ResignationRequests
+                // Join bảng Request cha
+                .Include(r => r.Request)
+                // Join thông tin nhân viên
+                .Include(r => r.Employee)
+                    .ThenInclude(e => e.Department) // Lấy tên phòng ban
+                .Include(r => r.Employee)
+                    .ThenInclude(e => e.JobTitle)   // Lấy chức vụ
+                .FirstOrDefaultAsync(r => r.Id == requestId);
         }
     }
 }

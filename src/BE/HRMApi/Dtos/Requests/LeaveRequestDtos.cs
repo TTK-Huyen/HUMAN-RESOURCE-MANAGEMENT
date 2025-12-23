@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 namespace HrmApi.Dtos.Requests
 {
     // POST body /leave
@@ -8,8 +10,11 @@ namespace HrmApi.Dtos.Requests
         public DateTime EndDate { get; set; }               // end_date
         public string Reason { get; set; } = default!;      // reason
 
-        public int? HandoverPersonId { get; set; }           // handover_person_id
+        public int? HandoverPersonId { get; set; } 
+        
         public string? AttachmentsBase64 { get; set; }      // attachments (optional)
+
+        public IFormFile? File { get; set; }          // handover_person_id
     }
 
     // Response 201
