@@ -57,7 +57,7 @@ namespace HrmApi.Services
             {
                 Id = request.RequestId, // Link 1-1
                 EmployeeId = employee.Id,
-                Date = dto.Date,
+                Date = dto.OtDate,
                 
                 StartTime = startTime, // Lưu giá trị đã parse
                 EndTime = endTime,     // Lưu giá trị đã parse

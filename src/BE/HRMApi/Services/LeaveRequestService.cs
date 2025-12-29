@@ -43,70 +43,73 @@ namespace HrmApi.Services
             var employee = await _employeeRepository.GetByCodeAsync(employeeCode)
                            ?? throw new InvalidOperationException("Employee not found");
 
-            // 2. Validate người bàn giao (Tránh lỗi Foreign Key Crash)
+            // 2. Validate người bàn giao
             if (dto.HandoverPersonId.HasValue)
             {
-                var handoverEmp = await _employeeRepository.FindByIdAsync(dto.HandoverPersonId.Value);
+                var handoverEmp = await _employeeRepository.GetByIdAsync(dto.HandoverPersonId.Value);
                 if (handoverEmp == null)
-                {
-                    // Trả về lỗi rõ ràng cho FE thay vì lỗi 500 DB
-                    throw new ArgumentException($"Nhân viên bàn giao với ID {dto.HandoverPersonId} không tồn tại.");
-                }
+                    throw new ArgumentException($"Nhân viên bàn giao ID {dto.HandoverPersonId} không tồn tại.");
+                
                 if (handoverEmp.Id == employee.Id)
-                {
-                    throw new ArgumentException("Không thể bàn giao công việc cho chính mình.");
-                }
+                    throw new ArgumentException("Không thể bàn giao cho chính mình.");
             }
 
-            // 3. Xử lý File Upload (Đã sửa lỗi đường dẫn)
+            // 3. Xử lý File Upload (BASE64) - Sửa đoạn này để hết lỗi dto.File
             string? savedFilePath = null;
-            if (dto.File != null && dto.File.Length > 0)
+            if (!string.IsNullOrEmpty(dto.AttachmentsBase64))
             {
-                var fileName = $"{Guid.NewGuid()}_{dto.File.FileName}";
-                
-                // FIX: Lấy đường dẫn gốc chuẩn, tránh lặp 'wwwroot'
-                string rootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-                var uploadFolder = Path.Combine(rootPath, "uploads");
-
-                if (!Directory.Exists(uploadFolder)) Directory.CreateDirectory(uploadFolder);
-                
-                var filePath = Path.Combine(uploadFolder, fileName);
-                
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                try 
                 {
-                    await dto.File.CopyToAsync(stream);
+                    // Convert Base64 -> Byte Array
+                    var fileBytes = Convert.FromBase64String(dto.AttachmentsBase64);
+                    
+                    // Tạo tên file ngẫu nhiên (vì Base64 ko có tên gốc, ta tự đặt đuôi .png/.jpg/.pdf hoặc mặc định)
+                    // Ở đây mình để mặc định là bin hoặc bạn có thể check header base64 để đoán đuôi.
+                    // Để đơn giản, mình giả định là file ảnh hoặc doc.
+                    var fileName = $"{Guid.NewGuid()}_attachment.dat"; 
+                    
+                    string rootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                    var uploadFolder = Path.Combine(rootPath, "uploads");
+
+                    if (!Directory.Exists(uploadFolder)) Directory.CreateDirectory(uploadFolder);
+                    
+                    var filePath = Path.Combine(uploadFolder, fileName);
+                    
+                    // Ghi file xuống đĩa
+                    await File.WriteAllBytesAsync(filePath, fileBytes);
+                    
+                    savedFilePath = $"/uploads/{fileName}";
                 }
-                
-                savedFilePath = $"/uploads/{fileName}";
+                catch (FormatException)
+                {
+                    // Bỏ qua lỗi nếu chuỗi base64 không hợp lệ
+                }
             }
 
-            // 4. Bắt đầu Transaction (Đảm bảo dữ liệu nhất quán)
+            // 4. Transaction (Giữ nguyên)
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // Bước 4.1: Tạo Request (Bảng cha)
                 var request = new Request
                 {
                     EmployeeId  = employee.Id,
                     RequestType = "LEAVE",
                     CreatedAt   = DateTime.UtcNow,
-                    Status      = "Pending",
-                    ApproverId  = null 
+                    Status      = "Pending"
                 };
 
                 await _employeeRequestRepository.AddAsync(request);
-                await _employeeRequestRepository.SaveChangesAsync(); // Lúc này RequestId đã được tạo
+                await _employeeRequestRepository.SaveChangesAsync();
 
-                // Bước 4.2: Tạo LeaveRequest (Bảng con)
                 var entity = new LeaveRequest
                 {
-                    Id                = request.RequestId, // Link ID với bảng cha
+                    Id                = request.RequestId,
                     EmployeeId        = employee.Id,
                     LeaveType         = dto.LeaveType,
                     StartDate         = dto.StartDate,
                     EndDate           = dto.EndDate,
                     Reason            = dto.Reason,
-                    HandoverEmployeeId = dto.HandoverPersonId,
+                    HandoverEmployeeId = dto.HandoverPersonId, // Đã có trong DTO
                     AttachmentPath    = savedFilePath,
                     Status            = RequestStatus.Pending,
                     CreatedAt         = DateTime.UtcNow
@@ -115,12 +118,9 @@ namespace HrmApi.Services
                 await _repository.AddAsync(entity);
                 await _repository.SaveChangesAsync();
 
-                // Nếu cả 2 bước trên thành công thì mới Commit
                 await transaction.CommitAsync();
 
-                // 5. Gửi thông báo (Chỉ gửi khi transaction thành công)
-                // (Logic này giữ nguyên, có thể tách ra hàm riêng nếu muốn gọn code)
-                _ = SendNotificationAsync(employee, request); // Gọi không cần await để trả về response nhanh hơn
+                _ = SendNotificationAsync(employee, request);
 
                 return new LeaveRequestCreatedDto
                 {
@@ -130,9 +130,8 @@ namespace HrmApi.Services
             }
             catch (Exception)
             {
-                // Nếu có lỗi, hoàn tác mọi thay đổi DB trong block này
                 await transaction.RollbackAsync();
-                throw; // Ném lỗi ra để Controller xử lý tiếp
+                throw;
             }
         }
 

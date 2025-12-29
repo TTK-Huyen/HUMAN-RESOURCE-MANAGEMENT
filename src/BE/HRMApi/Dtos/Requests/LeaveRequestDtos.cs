@@ -1,28 +1,40 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Http;
+using System.Text.Json.Serialization;
+
 namespace HrmApi.Dtos.Requests
 {
-    // POST body /leave
     public class CreateLeaveRequestDto
     {
-        public string LeaveType { get; set; } = default!;   // leave_type
-        public DateTime StartDate { get; set; }             // start_date
-        public DateTime EndDate { get; set; }               // end_date
-        public string Reason { get; set; } = default!;      // reason
+        [Required]
+        [JsonPropertyName("leaveType")]
+        public string LeaveType { get; set; } = string.Empty;
 
-        public int? HandoverPersonId { get; set; } 
-        
-        public string? AttachmentsBase64 { get; set; }      // attachments (optional)
+        [Required]
+        [JsonPropertyName("startDate")]
+        public DateTime StartDate { get; set; }
 
-        public IFormFile? File { get; set; }          // handover_person_id
+        [Required]
+        [JsonPropertyName("endDate")]
+        public DateTime EndDate { get; set; }
+
+        [Required]
+        [JsonPropertyName("reason")]
+        public string Reason { get; set; } = string.Empty;
+
+        // --- KHÔI PHỤC CÁC TRƯỜNG BỊ THIẾU ---
+
+        // Map với FE: handoverPersonId
+        [JsonPropertyName("handoverPersonId")] 
+        public int? HandoverPersonId { get; set; }
+
+        // Map với FE: attachmentsBase64 (Frontend gửi chuỗi Base64 chứ không gửi IFormFile)
+        [JsonPropertyName("attachmentsBase64")]
+        public string? AttachmentsBase64 { get; set; }
     }
 
-    // Response 201
     public class LeaveRequestCreatedDto
     {
-        public int RequestId { get; set; }                  // request_id
-        public string Status { get; set; } = default!;      // "Pending"
+        public int RequestId { get; set; }
+        public string Status { get; set; } = default!;
     }
-
-    
 }

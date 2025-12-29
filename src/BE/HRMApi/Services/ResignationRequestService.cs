@@ -53,7 +53,7 @@ namespace HrmApi.Services
             {
                 Id                      = request.RequestId, // Sử dụng RequestId vừa tạo
                 EmployeeId              = employee.Id,       // FK
-                ResignationDate         = dto.ResignationDate,
+                ResignationDate         = dto.ProposedLastWorkingDate,
                 Reason                  = dto.Reason,
                 Status                  = RequestStatus.Pending,
                 CreatedAt               = DateTime.UtcNow

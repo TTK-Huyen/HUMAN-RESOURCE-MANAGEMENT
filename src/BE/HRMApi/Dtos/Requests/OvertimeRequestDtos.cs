@@ -1,14 +1,27 @@
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 namespace HrmApi.Dtos.Requests
 {
     // POST body /overtime
     public class CreateOvertimeRequestDto
     {
-        public DateTime Date { get; set; }          // date
-public string StartTime { get; set; } = default!; 
-        public string EndTime { get; set; } = default!;   
-        
-        public string Reason { get; set; } = default!;
-        public string? ProjectId { get; set; }       // project_id (optional)
+        [Required]
+        [JsonPropertyName("date")] // FE gửi "date"
+        public DateTime OtDate { get; set; }
+
+        [Required]
+        [JsonPropertyName("startTime")]
+        public string StartTime { get; set; } = string.Empty;
+
+        [Required]
+        [JsonPropertyName("endTime")]
+        public string EndTime { get; set; } = string.Empty;
+
+        [JsonPropertyName("reason")] // FE gửi "reason" -> Khớp ở đây
+        public string Reason { get; set; } = string.Empty;
+
+        [JsonPropertyName("projectId")]
+        public string? ProjectId { get; set; }
     }
 
     // 201 Created response
