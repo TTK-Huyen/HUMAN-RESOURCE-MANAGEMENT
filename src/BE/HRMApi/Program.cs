@@ -131,6 +131,9 @@ builder.Services.AddHttpClient<HrmApi.Services.Notifications.INotificationPublis
 builder.Services.AddScoped<ICampaignRepository, CampaignRepository>();
 builder.Services.AddScoped<ICampaignService, CampaignService>();
 
+builder.Services.AddScoped<ICampaignRegistrationRepository, CampaignRegistrationRepository>();
+builder.Services.AddScoped<ICampaignRegistrationService, CampaignRegistrationService>();
+
 var app = builder.Build();
 
 // ===================================================
