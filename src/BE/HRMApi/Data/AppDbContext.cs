@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using HrmApi.Models;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace HrmApi.Data
 {
@@ -28,7 +29,10 @@ namespace HrmApi.Data
         public DbSet<Request> Requests => Set<Request>();
         public DbSet<ProfileUpdateRequest> ProfileUpdateRequests => Set<ProfileUpdateRequest>();
 
-        
+        public DbSet<Campaign> Campaigns => Set<Campaign>();
+        public DbSet<CampaignRegistration> CampaignRegistrations => Set<CampaignRegistration>();
+        public DbSet<CampaignResult> CampaignResults => Set<CampaignResult>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -62,7 +66,33 @@ namespace HrmApi.Data
                 .HasForeignKey(h => h.EmployeeId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Campaign>()
+                .Property(c => c.Status)
+                .HasConversion(new EnumToStringConverter<CampaignStatus>());
 
+            modelBuilder.Entity<CampaignRegistration>()
+                .Property(r => r.Status)
+                .HasConversion(new EnumToStringConverter<RegistrationStatus>());
+
+            // 2. Cấu hình rằng mã Campaign và cặp (Campaign + Employee) là duy nhất
+            modelBuilder.Entity<Campaign>()
+                .HasIndex(c => c.CampaignCode)
+                .IsUnique();
+
+            modelBuilder.Entity<CampaignRegistration>()
+                .HasIndex(cr => new { cr.CampaignId, cr.EmployeeId })
+                .IsUnique();
+
+            modelBuilder.Entity<CampaignResult>()
+                .HasIndex(cr => new { cr.CampaignId, cr.EmployeeId })
+                .IsUnique();
+
+            // 3. Cấu hình số thập phân cho kết quả
+            modelBuilder.Entity<CampaignResult>()
+                .Property(c => c.ResultValue)
+                .HasPrecision(10, 2);
+
+            // 4. Dữ liệu mẫu (Seed Data) cho Campaign
             modelBuilder.Entity<JobTitle>()
                 .HasData(
                 new JobTitle
