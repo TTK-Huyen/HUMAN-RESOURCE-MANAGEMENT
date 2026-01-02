@@ -7,10 +7,12 @@ namespace HrmApi.Models
 {
     public enum CampaignStatus
     {
-        UPCOMING,
-        ONGOING,
-        FINISHED,
-        CANCELLED
+        PENDING,    // Chờ duyệt (Pending Approval)
+        UPCOMING,   // Sắp diễn ra (Active)
+        ONGOING,    // Đang diễn ra
+        FINISHED,   // Kết thúc
+        CANCELLED,  // Hủy
+        DELETED
     }
 
     [Table("campaigns")]

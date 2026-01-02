@@ -127,6 +127,10 @@ builder.Services.AddScoped<IExcelImportService, ExcelImportService>();
 builder.Services.AddHttpClient<HrmApi.Services.Notifications.INotificationPublisher,
                               HrmApi.Services.Notifications.NotificationPublisher>();
 
+// Campaign
+builder.Services.AddScoped<ICampaignRepository, CampaignRepository>();
+builder.Services.AddScoped<ICampaignService, CampaignService>();
+
 var app = builder.Build();
 
 // ===================================================
