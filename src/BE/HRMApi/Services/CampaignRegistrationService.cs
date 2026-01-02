@@ -34,17 +34,23 @@ namespace HrmApi.Services
             if (DateTime.Now > campaign.EndDate)
                 throw new Exception("Registration expired.");
 
-            // 3) Find employee
+            // 3) Check max participants
+            if (campaign.MaxParticipants.HasValue &&
+                campaign.CurrentParticipants >= campaign.MaxParticipants.Value)
+            {
+                throw new Exception("Campaign is full.");
+            }
+            // 4) Find employee
             var employee = await _employeeRepo.GetByCodeAsync(employeeCode);
             if (employee == null)
                 throw new Exception("Employee not found.");
 
-            // 4) Only once
+            // 5) Only once
             var existed = await _registrationRepo.ExistsAsync(campaign.CampaignId, employee.Id);
             if (existed)
                 throw new Exception("Employee can only register once per campaign.");
 
-            // 5) Create registration
+            // 6) Create registration
             var reg = new CampaignRegistration
             {
                 CampaignId = campaign.CampaignId,
@@ -55,7 +61,16 @@ namespace HrmApi.Services
 
             try
             {
-                return await _registrationRepo.AddAsync(reg);
+                // 7) Insert registration
+                await _registrationRepo.AddAsync(reg);
+
+                // 8) UPDATE current_participants
+                campaign.CurrentParticipants += 1;
+
+                // 9) Save campaign change
+                await _campaignRepo.UpdateAsync(campaign);
+
+                return reg;
             }
             catch (DbUpdateException)
             {

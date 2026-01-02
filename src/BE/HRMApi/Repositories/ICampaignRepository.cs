@@ -16,6 +16,7 @@ namespace HrmApi.Repositories
         // Tìm theo mã code (để xóa)
         Task<Campaign?> GetByCodeAsync(string code);
         
+        Task UpdateAsync(Campaign campaign);
         // Lưu thay đổi (dùng cho xóa/update)
         Task SaveChangesAsync();
     }

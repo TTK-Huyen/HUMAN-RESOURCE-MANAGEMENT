@@ -38,6 +38,12 @@ namespace HrmApi.Repositories
             return await _context.Campaigns.FirstOrDefaultAsync(c => c.CampaignCode == code);
         }
 
+        public async Task UpdateAsync(Campaign campaign)
+        {
+            _context.Campaigns.Update(campaign);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
