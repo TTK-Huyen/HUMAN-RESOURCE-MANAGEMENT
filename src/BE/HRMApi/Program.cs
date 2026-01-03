@@ -133,6 +133,7 @@ builder.Services.AddScoped<ICampaignService, CampaignService>();
 
 builder.Services.AddScoped<ICampaignRegistrationRepository, CampaignRegistrationRepository>();
 builder.Services.AddScoped<ICampaignRegistrationService, CampaignRegistrationService>();
+builder.Services.AddScoped<ICampaignDetailService, CampaignDetailService>();
 
 var app = builder.Build();
 
