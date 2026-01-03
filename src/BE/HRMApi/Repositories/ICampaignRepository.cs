@@ -19,5 +19,6 @@ namespace HrmApi.Repositories
         Task UpdateAsync(Campaign campaign);
         // Lưu thay đổi (dùng cho xóa/update)
         Task SaveChangesAsync();
+        Task<List<Campaign>> GetCampaignsAsync();
     }
 }

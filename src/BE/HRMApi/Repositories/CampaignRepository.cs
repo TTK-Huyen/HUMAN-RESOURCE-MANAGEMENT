@@ -48,5 +48,12 @@ namespace HrmApi.Repositories
         {
             await _context.SaveChangesAsync();
         }
+
+        public async Task<List<Campaign>> GetCampaignsAsync()
+        {
+            return await _context.Campaigns
+                .Where(c => c.Status != CampaignStatus.DELETED)
+                .ToListAsync();
+        }
     }
 }
