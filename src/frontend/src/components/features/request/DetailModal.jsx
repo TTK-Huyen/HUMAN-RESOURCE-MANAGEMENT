@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Clock, CheckCircle, XCircle, FileText, Paperclip, AlertTriangle, ExternalLink, Briefcase, Calendar } from 'lucide-react';
-import ConfirmDialog from './ConfirmDialog';
+import ConfirmDialog from '../../common/ConfirmDialog';
 
 const API_BASE = "/api/v1"; 
 const BACKEND_DOMAIN = "http://localhost:5291"; 

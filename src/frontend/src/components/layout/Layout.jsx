@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { LayoutDashboard, History, LogOut, FileText } from "lucide-react"; 
 import NavItem from "../common/NavItem.jsx";
 import "./Layout.css"; 
-import NotificationBell from "../components/NotificationBell";
+import NotificationBell from "../../components/NotificationBell";
 
 export default function Layout({ children }) {
   // --- STATE MỚI: QUẢN LÝ USER & POPUP LOGOUT ---

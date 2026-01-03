@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { FileText, History, User, LogOut } from "lucide-react";
 import "./Layout.css";
-import NotificationBell from "../components/NotificationBell";
+import NotificationBell from "../../components/NotificationBell";
 
 export default function EmployeeLayout({ children }) {
   const [user, setUser] = useState({ name: "Employee", code: "", id: null });
