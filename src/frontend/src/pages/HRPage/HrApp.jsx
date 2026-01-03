@@ -1,90 +1,63 @@
 import React from "react";
-import {
-  Routes,
-  Route,
-  NavLink,
-  Navigate,
-  useLocation,
-} from "react-router-dom";
-import "../../index.css";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+import { FileText, Users, UserPlus, Upload, CheckSquare } from "lucide-react";
+import Layout2 from "../../components/layout/Layout2.jsx";
+import HrProfileUpdateRequestListPage from "./HrProfileUpdateRequestListPage.jsx";
+import HrProfileUpdateRequestDetailPage from "./HrProfileUpdateRequestDetailPage.jsx";
+import HRDirectoryPage from "./HRDirectoryPage.jsx";
+import HRAddEmployeePage from "./HRAddEmployeePage.jsx";
+import HRUploadExcelPage from "./HRUploadExcelPage.jsx";
+import HRViewProfilePage from "./HRViewProfilePage.jsx";
 
-import HrProfileUpdateRequestListPage from "./HrProfileUpdateRequestListPage";
-import HrProfileUpdateRequestDetailPage from "./HrProfileUpdateRequestDetailPage";
 
-function HrHeader() {
-  const { pathname } = useLocation();
-  const onRequests = pathname.startsWith("/hr/profile-requests");
+const HrAppContent = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Định nghĩa menu map với các route
+  const menuItems = [
+    { to: "/hr/profile-requests", label: "Yêu cầu hồ sơ", icon: <FileText size={18} /> },
+    { to: "/hr/directory", label: "Danh bạ nhân viên", icon: <Users size={18} /> },
+    { to: "/hr/directory/add", label: "Thêm nhân viên", icon: <UserPlus size={18} /> },
+    { to: "/hr/directory/import", label: "Import Excel", icon: <Upload size={18} /> },
+    { to: "/hr/approvals", label: "Phê duyệt", icon: <CheckSquare size={18} /> },
+  ];
 
   return (
-    <header className="emp-header shadow-soft fade-in-down">
-      <div className="container bar">
-        <div className="brand">
-          <div className="logo" />
-          <div className="brand-text">
-            <strong>HR Console</strong>
-            <span className="brand-sub">Manage employee profiles</span>
-          </div>
-        </div>
-
-        <nav className="tabs" aria-label="HR navigation">
-          <NavLink
-            to="/hr/profile-requests"
-            className={`tab ${onRequests ? "active" : ""}`}
-          >
-            Profile update requests
-          </NavLink>
-          {/* Bạn có thể thêm các tab HR khác ở đây sau này */}
-        </nav>
-
-        <div className="userbox">
-          <div className="avatar" />
-          <div className="user-meta">
-            <span className="user-name">HR Admin</span>
-            <span className="user-code">HR01</span>
-          </div>
-        </div>
-      </div>
-    </header>
+    <Layout2
+      title="HR Console"
+      subtitle="Manage employee data"
+      menuItems={menuItems}
+      activePath={location.pathname}
+      onNavigate={(path) => navigate(path)}
+      userInfo={{ 
+        name: localStorage.getItem('employeeName') || 'HR Admin', 
+        code: localStorage.getItem('employeeCode') || 'HR01' 
+      }}
+      onLogout={() => {
+        localStorage.clear();
+        alert("Đăng xuất thành công!");
+        // Quay về trang chủ hoặc login (giả định route gốc là /)
+        navigate("/"); 
+      }}
+    >
+      <Routes>
+        <Route path="/" element={<Navigate to="profile-requests" replace />} />
+        <Route path="profile-requests" element={<HrProfileUpdateRequestListPage />} />
+        <Route path="profile-requests/:requestId" element={<HrProfileUpdateRequestDetailPage />} />
+        
+        <Route path="directory" element={<HRDirectoryPage />} />
+        <Route path="directory/add" element={<HRAddEmployeePage />} />
+        <Route path="directory/import" element={<HRUploadExcelPage />} />
+        <Route path="profile/:employeeCode" element={<HRViewProfilePage />} />
+ 
+        
+        <Route path="*" element={<Navigate to="profile-requests" replace />} />
+      </Routes>
+    </Layout2>
   );
-}
+};
 
 export default function HrApp() {
-  return (
-    <div className="app">
-      <HrHeader />
-
-      <main
-        className="container"
-        style={{
-          marginTop: 24,
-          marginBottom: 32,
-          display: "flex",
-          flexDirection: "column",
-          gap: 24,
-        }}
-      >
-        <Routes>
-          <Route
-            path="/"
-            element={<Navigate to="/hr/profile-requests" replace />}
-          />
-          <Route
-            path="/profile-requests"
-            element={<HrProfileUpdateRequestListPage />}
-          />
-          <Route
-            path="/profile-requests/:requestId"
-            element={<HrProfileUpdateRequestDetailPage />}
-          />
-
-          
-          <Route path="*" element={<Navigate to="/hr" replace />} />
-        </Routes>
-      </main>
-
-      <footer className="fade-in-up-delayed">
-        <div className="container">© 2025 EMS – HR</div>
-      </footer>
-    </div>
-  );
+  return <HrAppContent />;
 }

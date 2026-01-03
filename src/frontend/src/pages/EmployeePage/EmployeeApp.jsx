@@ -1,5 +1,5 @@
 import { Routes, Route, NavLink, Navigate, useLocation } from "react-router-dom";
-import EmployeeLayout from "../../components/EmployeeLayout";
+import EmployeeLayout from "../../components/layout/EmployeeLayout";
 
 // Import các trang cũ
 import LeaveRequestPage from "./LeaveRequestPage";

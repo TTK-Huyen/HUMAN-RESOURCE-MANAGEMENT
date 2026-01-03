@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import ViolationBanner from "../../components/ViolationBanner";
-import { FormRow } from "../../components/FormRow";
+import ViolationBanner from "../../components/common/ViolationBanner";
+import { FormRow } from "../../components/common/FormRow";
 import { createLeaveRequest, fetchEmployeeProfile } from "../../Services/requests";
 import "./RequestForm.css";
 

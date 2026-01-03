@@ -1,5 +1,5 @@
 import React from "react";
-import { FormRow } from "./FormRow";
+import { FormRow } from "../../common/FormRow.jsx";
 
 const ProfileView = ({ profile }) => {
   if (!profile)

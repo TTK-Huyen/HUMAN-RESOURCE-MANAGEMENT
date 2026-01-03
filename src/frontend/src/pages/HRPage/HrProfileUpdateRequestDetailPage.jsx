@@ -4,7 +4,7 @@ import {
   hrFetchProfileUpdateRequestDetail,
   hrUpdateProfileUpdateRequestStatus,
 } from "../../Services/requests";
-import ViolationBanner from "../../components/ViolationBanner";
+import ViolationBanner from "../../components/common/ViolationBanner";
 
 const SENSITIVE_FIELDS = [
   "citizen_id",

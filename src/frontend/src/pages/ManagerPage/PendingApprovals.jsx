@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Eye, Calendar, Clock, LogOut, FileText } from 'lucide-react';
 import './PendingApprovals.css';
-import Layout from '../../components/Layout'; 
-import StatsGrid from '../../components/StatsGrid';
-import FilterBar from '../../components/FilterBar';
-import DetailModal from '../../components/DetailModal';
-import Pagination from '../../components/Pagination'; 
-import StatusBadge from '../../components/StatusBadge'; 
+import Layout from '../../components/layout/Layout'; 
+import StatsGrid from '../../components/common/StatsGrid';
+import FilterBar from '../../components/common/FilterBar';
+import DetailModal from '../../components/features/request/DetailModal';
+import Pagination from '../../components/common/Pagination'; 
+import StatusBadge from '../../components/common/StatusBadge'; 
 
 const API_BASE = "/api/v1";
 const PAGE_SIZE = 10;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { AlertTriangle, Info } from 'lucide-react';
-import '../pages/ManagerPage/PendingApprovals.css'; // Đảm bảo import CSS
+// import '../pages/ManagerPage/PendingApprovals.css'; // Đảm bảo import CSS
 
 const ConfirmDialog = ({ isOpen, title, message, onConfirm, onCancel, type = 'info' }) => {
     if (!isOpen) return null;
