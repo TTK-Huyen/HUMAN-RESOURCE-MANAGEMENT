@@ -15,11 +15,20 @@ The system aims to digitalize HR processes, reduce manual work, and improve tran
 ---
 
 ## ⚙️ Functional Requirements
-
+dotnet run
 ### 1. Employee Profile Management
+#### 1.1. Login (All users) : Đăng nhập bằng username và mật khẩu, phân quyền theo role (EMPLOYEE, HR, MANAGER)
+#### 1.2. View employee profile (HR, Employee): Nhân viên xem thông tin chi tiết của bản thân, HR xem chi tiết hồ sơ các nhân viên
+#### 1.3. Send update profile request (Employee): Nhân viên gửi yêu cầu cập nhật thông tin hồ sơ
+#### 1.4. Approve update profile request (HR): HR xem và chấp nhận yêu cầu cập nhật thông tin hồ sơ của nhân viên
+#### 1.5. View employee directory (HR): HR xem bảng danh sách nhân viên 
+#### 1.6. Add employee (HR): HR thêm nhân viên
+#### 1.7. Add employee via Excel (HR): HR thêm nhân viên bằng file excel
 ### 2. Employee Requests Management
+
 ### 3. Employee Activities Management
 ### 4. Reward Management
+
 
 ---
 
@@ -32,7 +41,7 @@ Hướng dẫn chạy backend lần đầu trên **Windows (PowerShell)**.
 
 ## 1️ Yêu cầu môi trường
 
-- MySQL hoặc MariaDB đang chạy  
+- MySQL đang chạy  
 - PowerShell  
 - .NET SDK phù hợp (target **.NET 9.0**)
 
@@ -167,14 +176,6 @@ POST /api/v1/employees/{employeeCode}/profile-update-requests
 
 ---
 
-## Ghi chú
-
-
-- Không commit password thật vào Git
-- Production nên dùng biến môi trường hoặc secret manager
-
-
----
 
 ## 👥 Team Members & Responsibilities
 

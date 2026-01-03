@@ -66,4 +66,36 @@ export const HRService = {
     );
     // data: { request_id, request_status }
   },
+
+  // 6. HR lấy tất cả nhân viên
+  fetchAllEmployees: (params) => { // <--- 1. Thêm tham số params vào hàm
+    return api
+      .get("/employees", { 
+        params: params, // <--- 2. Truyền params vào cấu hình của axios
+        headers: { Accept: "application/json, text/plain, */*" } 
+      })
+      .then((response) => response.data);
+  },
+
+  // 7. HR xem hồ sơ nhân viên theo mã
+  fetchEmployeeProfileByCode: (employeeCode) => {
+    return api
+      .get(`/employees/${employeeCode}/profile`, { headers: { Accept: "application/json, text/plain, */*" } })
+      .then((response) => response.data);
+  },
+
+  // 8. HR thêm nhân viên mới
+  addNewEmployee: (employeeData) => {
+    return api
+      .post("/employees", employeeData, { headers: { Accept: "application/json, text/plain, */*" } })
+      .then((response) => response.data);
+  },   
+  // 9. HR nhập danh sách nhân viên từ file Excel
+  importEmployeesFromExcel: (formData) => {
+    return api  
+      .post("/employees/import-excel", formData, { headers: { 'Content-Type': 'multipart/form-data', Accept: "application/json, text/plain, */*" } })
+      .then((response) => response.data);
+  }
 };
+
+  

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchEmployeeProfile } from "../../Services/requests";
-import ProfileView from "../../components/ProfileView";
+import ProfileView from "../../components/features/employee/ProfileView";
 
 const CURRENT_EMPLOYEE_CODE = "EMP001";
 

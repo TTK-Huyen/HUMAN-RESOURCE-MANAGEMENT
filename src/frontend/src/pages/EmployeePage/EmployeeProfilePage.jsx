@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchEmployeeProfile } from "../../services/requestApi";
-import { FormRow } from "../../components/FormRow";
-import ViolationBanner from "../../components/ViolationBanner";
+import { FormRow } from "../../components/common/FormRow";
+import ViolationBanner from "../../components/common/ViolationBanner";
 
 const CURRENT_EMPLOYEE_CODE = "EMP001"; // TODO: lấy từ auth sau này
 

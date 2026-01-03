@@ -5,8 +5,8 @@ import {
   fetchEmployeeProfile,
   sendProfileUpdateRequest,
 } from "../../Services/requests";
-import { FormRow } from "../../components/FormRow";
-import ViolationBanner from "../../components/ViolationBanner";
+import { FormRow } from "../../components/common/FormRow";
+import ViolationBanner from "../../components/common/ViolationBanner";
 
 export default function ProfileUpdateRequestPage() {
   const navigate = useNavigate();

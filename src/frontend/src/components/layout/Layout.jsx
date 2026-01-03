@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { LayoutDashboard, History, LogOut, FileText } from "lucide-react"; 
-import NavItem from "./NavItem";
+import NavItem from "../common/NavItem.jsx";
 import "./Layout.css"; 
 
 export default function Layout({ children }) {
