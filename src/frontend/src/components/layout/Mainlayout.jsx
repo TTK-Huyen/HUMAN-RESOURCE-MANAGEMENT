@@ -9,10 +9,10 @@ import {
   Menu,
   ShieldCheck,
   Users,
-  UserPlus,
-  Upload
+  Gift,      
+  Settings   
 } from "lucide-react"; 
-import "./Layout.css"; // Sử dụng lại file CSS bạn đã có
+import "./Layout.css"; 
 
 // --- CẤU HÌNH MENU CHO TỪNG ROLE ---
 const MENU_CONFIG = {
@@ -24,6 +24,8 @@ const MENU_CONFIG = {
       { to: "/employee/create", label: "Create Request", icon: FileText },
       { to: "/employee/status", label: "Request Status", icon: History },
       { to: "/employee/profile", label: "My Profile", icon: User },
+      // [SỬA LẠI] Đường dẫn đúng khớp với App.jsx (bỏ /employee ở đầu)
+      { to: "/rewards/my-wallet", label: "My Rewards", icon: Gift },
     ]
   },
   // Menu cho Quản lý
@@ -31,7 +33,8 @@ const MENU_CONFIG = {
     title: "Manager Console",
     subtitle: "Approval System",
     items: [
-      { to: "/manager", label: "Dashboard", icon: LayoutDashboard }
+      { to: "/manager", label: "Dashboard", icon: LayoutDashboard },
+      { to: "/manager/rewards/give", label: "Give Bonus", icon: Gift },
     ]
   },
   // Menu cho HR
@@ -39,8 +42,9 @@ const MENU_CONFIG = {
     title: "HR Administration",
     subtitle: "System Management",
     items: [
-      { to: "/hr/profile-requests", label: "Yêu cầu hồ sơ", icon: FileText }, // Khớp với route
-      { to: "/hr/directory", label: "Danh bạ nhân viên", icon: Users },      // Khớp với route
+      { to: "/hr/profile-requests", label: "Yêu cầu hồ sơ", icon: FileText },
+      { to: "/hr/directory", label: "Danh bạ nhân viên", icon: Users },
+      { to: "/hr/rewards/config", label: "Reward Config", icon: Settings },
     ]
   },
   // Menu mặc định (Khách)
@@ -65,11 +69,12 @@ export default function MainLayout({ children }) {
   useEffect(() => {
     const name = localStorage.getItem("employeeName") || "Guest User";
     const code = localStorage.getItem("employeeCode") || "---";
-    const role = localStorage.getItem("role") || "GUEST"; // EMP, MANAGER, HR
+    // Lấy Role và chuyển về chữ hoa để so sánh chính xác với MENU_CONFIG
+    const role = (localStorage.getItem("role") || "GUEST").toUpperCase();
 
     setUser({ name, code, role });
 
-    // Chọn cấu hình menu dựa trên Role, nếu không khớp thì fallback về GUEST
+    // Chọn cấu hình menu, nếu role không khớp thì fallback về GUEST
     const config = MENU_CONFIG[role] || MENU_CONFIG.GUEST;
     setLayoutConfig(config);
   }, []);
@@ -77,7 +82,7 @@ export default function MainLayout({ children }) {
   // --- ACTION: Đăng xuất ---
   const handleLogout = () => {
     localStorage.clear();
-    window.location.href = "/login";
+    window.location.href = "/"; // Về trang Login
   };
 
   return (
@@ -88,7 +93,6 @@ export default function MainLayout({ children }) {
         {/* Header */}
         <div className="sidebar-header">
           <div className="logo-icon">
-             {/* Icon thay đổi theo Role */}
              {user.role === 'MANAGER' ? <ShieldCheck size={20} color="white"/> : <Menu size={20} color="white"/>}
           </div>
           <div className="brand-text">
@@ -104,7 +108,7 @@ export default function MainLayout({ children }) {
               key={index} 
               to={item.to} 
               className={({ isActive }) => isActive ? "active" : ""}
-              end // Thêm end để active chính xác route con
+              end // Giữ end để highlight đúng link chính xác
             >
               <item.icon size={18} /> 
               {item.label}
@@ -116,7 +120,7 @@ export default function MainLayout({ children }) {
         <div className="sidebar-footer">
           <div className="user-card">
             <div className="user-avatar" style={{
-                backgroundColor: user.role === 'MANAGER' ? '#ec4899' : '#2563eb', // Màu khác nhau cho Manager/Emp
+                backgroundColor: user.role === 'MANAGER' ? '#ec4899' : '#2563eb', 
                 color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', 
                 fontWeight: 'bold', fontSize: '1.2rem', backgroundImage: 'none'
             }}>
