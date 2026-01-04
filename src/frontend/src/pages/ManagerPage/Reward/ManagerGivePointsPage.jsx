@@ -1,98 +1,92 @@
-// src/frontend/src/pages/ManagerPage/Reward/ManagerGivePointsPage.jsx
 import React, { useState, useEffect } from 'react';
-import Layout from '../../../components/layout/Layout'; // Hoặc LayoutManager tùy cấu trúc
+import { FormRow } from '../../../components/common/FormRow'; 
 import Button from '../../../components/common/Button';
 import Toast from '../../../components/common/Toast';
 import { givePoints } from '../../../Services/rewardService';
-import { getEmployees } from '../../../Services/employees'; // Giả định đã có service này
+import { HRService } from '../../../Services/employees'; // Lấy service nhân viên có sẵn
 
 const ManagerGivePointsPage = () => {
     const [employees, setEmployees] = useState([]);
-    const [formData, setFormData] = useState({
-        employeeId: '',
-        points: '',
-        reason: ''
-    });
+    const [formData, setFormData] = useState({ employeeId: '', points: '', reason: '' });
     const [toast, setToast] = useState(null);
 
     useEffect(() => {
-        // Load danh sách nhân viên thuộc team của Manager để chọn
-        const fetchTeam = async () => {
+        const loadData = async () => {
             try {
-                // API giả định lấy danh sách nhân viên
-                const res = await getEmployees(); 
-                setEmployees(res.data?.items || []); // Điều chỉnh tùy theo response của API employees
-            } catch (err) {
-                console.error(err);
+                // Tái sử dụng HRService để lấy danh sách nhân viên
+                const res = await HRService.getAllEmployees({ pageIndex: 1, pageSize: 100 }); 
+                setEmployees(res.data?.items || []); 
+            } catch (error) {
+                console.error("Lỗi tải danh sách nhân viên", error);
             }
         };
-        fetchTeam();
+        loadData();
     }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await givePoints(formData.employeeId, formData.points, formData.reason);
+            await givePoints(formData);
             setToast({ type: 'success', message: 'Đã tặng điểm thành công!' });
-            setFormData({ employeeId: '', points: '', reason: '' }); // Reset form
+            setFormData({ employeeId: '', points: '', reason: '' });
         } catch (error) {
-            setToast({ type: 'error', message: 'Lỗi khi tặng điểm. Vui lòng kiểm tra lại.' });
+            setToast({ type: 'error', message: 'Có lỗi xảy ra. Vui lòng thử lại.' });
         }
     };
 
     return (
-        <Layout>
-            <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-                <h2>Quản lý Khen Thưởng Nhân Viên</h2>
-                <div style={{ background: 'white', padding: '20px', borderRadius: '8px', marginTop: '20px' }}>
-                    <form onSubmit={handleSubmit}>
-                        <div style={{ marginBottom: '15px' }}>
-                            <label style={{ display: 'block', marginBottom: '5px' }}>Chọn Nhân viên:</label>
-                            <select 
-                                style={{ width: '100%', padding: '8px' }}
-                                value={formData.employeeId}
-                                onChange={(e) => setFormData({...formData, employeeId: e.target.value})}
-                                required
-                            >
-                                <option value="">-- Chọn nhân viên --</option>
-                                {employees.map(emp => (
-                                    <option key={emp.employeeId} value={emp.employeeId}>
-                                        {emp.fullName} ({emp.employeeCode})
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+        <div className="p-6 max-w-3xl mx-auto fade-in-up">
+            <h1 className="text-2xl font-bold mb-6 text-gray-800">Tặng Điểm Thưởng (Bonus)</h1>
+            
+            <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <FormRow label="Chọn nhân viên" required>
+                        <select 
+                            className="w-full p-2.5 border border-gray-300 rounded bg-white focus:border-blue-500 outline-none"
+                            value={formData.employeeId}
+                            onChange={e => setFormData({...formData, employeeId: e.target.value})}
+                            required
+                        >
+                            <option value="">-- Chọn nhân viên --</option>
+                            {employees.map(emp => (
+                                <option key={emp.employeeId} value={emp.employeeId}>
+                                    {emp.fullName} - {emp.employeeCode}
+                                </option>
+                            ))}
+                        </select>
+                    </FormRow>
 
-                        <div style={{ marginBottom: '15px' }}>
-                            <label style={{ display: 'block', marginBottom: '5px' }}>Số điểm thưởng:</label>
-                            <input 
-                                type="number" 
-                                style={{ width: '100%', padding: '8px' }}
-                                value={formData.points}
-                                onChange={(e) => setFormData({...formData, points: e.target.value})}
-                                min="1"
-                                placeholder="VD: 100"
-                                required
-                            />
-                        </div>
+                    <FormRow label="Số điểm thưởng" required>
+                        <input 
+                            type="number"
+                            className="w-full p-2.5 border border-gray-300 rounded focus:border-blue-500 outline-none"
+                            value={formData.points}
+                            onChange={e => setFormData({...formData, points: e.target.value})}
+                            min="1"
+                            placeholder="VD: 50"
+                            required
+                        />
+                    </FormRow>
 
-                        <div style={{ marginBottom: '15px' }}>
-                            <label style={{ display: 'block', marginBottom: '5px' }}>Lý do / Lời nhắn:</label>
-                            <textarea 
-                                style={{ width: '100%', padding: '8px', minHeight: '100px' }}
-                                value={formData.reason}
-                                onChange={(e) => setFormData({...formData, reason: e.target.value})}
-                                placeholder="VD: Hoàn thành xuất sắc dự án X..."
-                                required
-                            />
-                        </div>
+                    <FormRow label="Lý do khen thưởng" required>
+                        <textarea 
+                            className="w-full p-2.5 border border-gray-300 rounded h-32 resize-none focus:border-blue-500 outline-none"
+                            value={formData.reason}
+                            onChange={e => setFormData({...formData, reason: e.target.value})}
+                            placeholder="Nhập lý do chi tiết..."
+                            required
+                        />
+                    </FormRow>
 
-                        <Button variant="primary" type="submit">Xác nhận Tặng điểm</Button>
-                    </form>
-                </div>
+                    <div className="flex justify-end pt-4">
+                        <Button type="submit" variant="primary" className="px-6">
+                            Xác nhận Tặng
+                        </Button>
+                    </div>
+                </form>
             </div>
             {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
-        </Layout>
+        </div>
     );
 };
 

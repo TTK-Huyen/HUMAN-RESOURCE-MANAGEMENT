@@ -1,11 +1,12 @@
-// src/frontend/src/pages/EmployeePage/RewardPage/MyRewardPage.jsx
 import React, { useState, useEffect } from 'react';
-import Layout from '../../../components/layout/Layout';
-import Table from '../../../components/common/Table'; // Tái sử dụng component Table
-import Button from '../../../components/common/Button'; // Tái sử dụng component Button
-import Toast from '../../../components/common/Toast'; // Tái sử dụng Toast
+import StatsGrid from '../../../components/common/StatsGrid'; 
+import Table from '../../../components/common/Table';
+import Button from '../../../components/common/Button';
+import { FormRow } from '../../../components/common/FormRow'; 
+import StatusBadge from '../../../components/common/StatusBadge';
+import Toast from '../../../components/common/Toast';
 import { getMyWallet, redeemPoints } from '../../../Services/rewardService';
-import './MyRewardPage.css'; // File CSS bên dưới
+import { DollarSign, Gift, Activity } from 'lucide-react'; // Dùng lucide-react
 
 const MyRewardPage = () => {
     const [wallet, setWallet] = useState({ balance: 0, transactions: [] });
@@ -13,118 +14,129 @@ const MyRewardPage = () => {
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState(null);
 
-    useEffect(() => {
-        fetchWalletData();
-    }, []);
+    useEffect(() => { fetchData(); }, []);
 
-    const fetchWalletData = async () => {
+    const fetchData = async () => {
         try {
-            const data = await getMyWallet();
-            // Giả sử API trả về { balance: 1500, transactions: [...] }
-            setWallet(data); 
+            const res = await getMyWallet();
+            setWallet(res.data || { balance: 0, transactions: [] });
         } catch (error) {
-            setToast({ type: 'error', message: 'Không thể tải thông tin ví điểm' });
+            console.error("Lỗi tải dữ liệu ví");
         }
     };
 
-    const handleRedeem = async (e) => {
-        e.preventDefault();
-        if (!redeemAmount || redeemAmount <= 0) {
-            setToast({ type: 'warning', message: 'Vui lòng nhập số điểm hợp lệ' });
+    const handleRedeem = async () => {
+        if (!redeemAmount || parseInt(redeemAmount) < 100) {
+            setToast({ type: 'warning', message: 'Tối thiểu đổi 100 điểm' });
             return;
         }
-        if (redeemAmount > wallet.balance) {
+        if (parseInt(redeemAmount) > wallet.balance) {
             setToast({ type: 'error', message: 'Số điểm không đủ' });
             return;
         }
-
-        if(!window.confirm(`Bạn chắc chắn muốn đổi ${redeemAmount} điểm thành tiền mặt?`)) return;
+        if (!window.confirm(`Xác nhận đổi ${redeemAmount} điểm?`)) return;
 
         setLoading(true);
         try {
-            await redeemPoints(redeemAmount);
-            setToast({ type: 'success', message: 'Đổi điểm thành công! Vui lòng kiểm tra lương tháng tới.' });
+            await redeemPoints({ points: parseInt(redeemAmount), method: 'CASH' });
+            setToast({ type: 'success', message: 'Đổi điểm thành công!' });
             setRedeemAmount('');
-            fetchWalletData(); // Refresh lại số dư
+            fetchData(); 
         } catch (error) {
-            setToast({ type: 'error', message: 'Đổi điểm thất bại. Vui lòng thử lại.' });
+            setToast({ type: 'error', message: 'Đổi điểm thất bại' });
         } finally {
             setLoading(false);
         }
     };
 
-    // Cấu hình cột cho bảng lịch sử (Tương thích với component Table.jsx)
+    // Props input cho Component StatsGrid
+    const stats = [
+        {
+            title: 'Điểm khả dụng',
+            value: wallet.balance?.toLocaleString(),
+            icon: <Gift size={24} />,
+            color: 'blue'
+        },
+        {
+            title: 'Quy đổi VNĐ (Dự kiến)',
+            value: `${(wallet.balance * 1000)?.toLocaleString()} đ`,
+            icon: <DollarSign size={24} />,
+            color: 'green'
+        }
+    ];
+
+    // Props input cho Component Table
     const columns = [
-        { header: 'Ngày giao dịch', accessor: 'createdAt', render: (row) => new Date(row.createdAt).toLocaleDateString('vi-VN') },
-        { header: 'Loại', accessor: 'type' }, // Ví dụ: "EARNED", "REDEEMED"
-        { header: 'Mô tả', accessor: 'description' },
+        { header: 'Ngày', accessor: 'createdAt', render: (row) => new Date(row.createdAt).toLocaleDateString('vi-VN') },
+        { 
+            header: 'Loại GD', 
+            accessor: 'type',
+            render: (row) => {
+                let type = 'default';
+                if (row.type === 'EARN') type = 'success';
+                if (row.type === 'REDEEM') type = 'warning';
+                if (row.type === 'MONTHLY') type = 'info';
+                return <StatusBadge status={row.type} type={type} label={row.type} />
+            }
+        },
+        { header: 'Nội dung', accessor: 'description' },
         { 
             header: 'Số điểm', 
             accessor: 'amount', 
             render: (row) => (
-                <span className={row.amount > 0 ? 'point-plus' : 'point-minus'}>
+                <span className={`font-bold ${row.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {row.amount > 0 ? '+' : ''}{row.amount}
                 </span>
             )
-        },
+        }
     ];
 
     return (
-        <Layout>
-            <div className="reward-page-container">
-                <h2>Ví Điểm Thưởng</h2>
-                
-                {/* Khu vực hiển thị điểm và Đổi quà */}
-                <div className="reward-dashboard">
-                    <div className="balance-card">
-                        <h3>Điểm hiện tại</h3>
-                        <div className="balance-number">{wallet.balance?.toLocaleString()} pts</div>
-                        <div className="balance-vnd">≈ {(wallet.balance * 1000).toLocaleString()} VNĐ</div>
-                    </div>
-
-                    <div className="redeem-card">
-                        <h3>Đổi điểm sang tiền mặt</h3>
-                        <form onSubmit={handleRedeem} className="redeem-form">
-                            <div className="form-group">
-                                <label>Nhập số điểm cần đổi (Tối thiểu 100):</label>
-                                <input 
-                                    type="number" 
-                                    value={redeemAmount}
-                                    onChange={(e) => setRedeemAmount(e.target.value)}
-                                    placeholder="VD: 500"
-                                    min="100"
-                                />
-                            </div>
-                            <Button 
-                                type="submit" 
-                                variant="primary" 
-                                disabled={loading}
-                            >
-                                {loading ? 'Đang xử lý...' : 'Xác nhận đổi'}
-                            </Button>
-                        </form>
-                    </div>
-                </div>
-
-                {/* Khu vực lịch sử giao dịch */}
-                <div className="history-section">
-                    <h3>Lịch sử biến động điểm</h3>
-                    <Table 
-                        columns={columns} 
-                        data={wallet.transactions || []} 
-                        // Nếu Table component có hỗ trợ pagination, truyền thêm props tại đây
-                    />
-                </div>
-
-                {toast && (
-                    <Toast 
-                        type={toast.type} 
-                        message={toast.message} 
-                        onClose={() => setToast(null)} 
-                    />
-                )}
+        <div className="p-6 fade-in-up">
+            <h1 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
+                <Gift className="text-blue-600"/> Ví Thưởng Cá Nhân
+            </h1>
+            
+            <div className="mb-8">
+                <StatsGrid stats={stats} />
             </div>
-        </Layout>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Feature: Form đổi điểm */}
+                <div className="lg:col-span-1 bg-white p-6 rounded-lg shadow-sm border border-gray-100 h-fit">
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <Activity className="text-orange-500" size={20}/> Đổi Tiền Mặt
+                    </h3>
+                    <div className="space-y-4">
+                        <FormRow label="Nhập số điểm (Tỷ lệ 1:1000)">
+                            <input 
+                                type="number" 
+                                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                                value={redeemAmount}
+                                onChange={(e) => setRedeemAmount(e.target.value)}
+                                placeholder="VD: 500"
+                                min="100"
+                            />
+                        </FormRow>
+                        <Button 
+                            variant="primary"
+                            onClick={handleRedeem} 
+                            disabled={loading}
+                            className="w-full justify-center"
+                        >
+                            {loading ? 'Đang xử lý...' : 'Xác nhận Đổi'}
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Feature: Lịch sử */}
+                <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <h3 className="text-lg font-semibold mb-4">Lịch sử biến động</h3>
+                    <Table columns={columns} data={wallet.transactions || []} />
+                </div>
+            </div>
+            {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
+        </div>
     );
 };
 
