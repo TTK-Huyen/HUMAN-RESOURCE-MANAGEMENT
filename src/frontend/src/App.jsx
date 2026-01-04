@@ -14,8 +14,8 @@ import HrApp from "./pages/HRPage/HrApp";
 import LoginPage from "./pages/AuthPage/LoginPage/LoginPage";
 import DashboardManager from "./pages/ManagerPage/PendingApprovals";
 import TestPage from './components/TestComponent';
-import LayoutTestPage from './pages/LayoutTestPage.jsx';
 
+//import Layout from './components/Layout';
 function App() {
   return (
     <Router>
@@ -62,6 +62,7 @@ function App() {
 
         {/* 7. Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/test-component" element={<TestPage />} />
       </Routes>
     </Router>
   );
