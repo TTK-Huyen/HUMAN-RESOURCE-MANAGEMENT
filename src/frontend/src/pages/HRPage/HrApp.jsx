@@ -1,7 +1,8 @@
 import React from "react";
-import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
-import { FileText, Users, UserPlus, Upload, CheckSquare } from "lucide-react";
-import Layout2 from "../../components/layout/Layout2.jsx";
+import { Routes, Route, Navigate } from "react-router-dom";
+
+// --- IMPORT CÁC TRANG CON (SUB-PAGES) ---
+// Đảm bảo bạn đã tạo các file này trong cùng thư mục hoặc chỉnh đường dẫn import cho đúng
 import HrProfileUpdateRequestListPage from "./HrProfileUpdateRequestListPage.jsx";
 import HrProfileUpdateRequestDetailPage from "./HrProfileUpdateRequestDetailPage.jsx";
 import HRDirectoryPage from "./HRDirectoryPage.jsx";
@@ -9,55 +10,38 @@ import HRAddEmployeePage from "./HRAddEmployeePage.jsx";
 import HRUploadExcelPage from "./HRUploadExcelPage.jsx";
 import HRViewProfilePage from "./HRViewProfilePage.jsx";
 
-
-const HrAppContent = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Định nghĩa menu map với các route
-  const menuItems = [
-    { to: "/hr/profile-requests", label: "Yêu cầu hồ sơ", icon: <FileText size={18} /> },
-    { to: "/hr/directory", label: "Danh bạ nhân viên", icon: <Users size={18} /> },
-    { to: "/hr/directory/add", label: "Thêm nhân viên", icon: <UserPlus size={18} /> },
-    { to: "/hr/directory/import", label: "Import Excel", icon: <Upload size={18} /> },
-    { to: "/hr/approvals", label: "Phê duyệt", icon: <CheckSquare size={18} /> },
-  ];
-
-  return (
-    <Layout2
-      title="HR Console"
-      subtitle="Manage employee data"
-      menuItems={menuItems}
-      activePath={location.pathname}
-      onNavigate={(path) => navigate(path)}
-      userInfo={{ 
-        name: localStorage.getItem('employeeName') || 'HR Admin', 
-        code: localStorage.getItem('employeeCode') || 'HR01' 
-      }}
-      onLogout={() => {
-        localStorage.clear();
-        alert("Đăng xuất thành công!");
-        // Quay về trang chủ hoặc login (giả định route gốc là /)
-        navigate("/"); 
-      }}
-    >
-      <Routes>
-        <Route path="/" element={<Navigate to="profile-requests" replace />} />
-        <Route path="profile-requests" element={<HrProfileUpdateRequestListPage />} />
-        <Route path="profile-requests/:requestId" element={<HrProfileUpdateRequestDetailPage />} />
-        
-        <Route path="directory" element={<HRDirectoryPage />} />
-        <Route path="directory/add" element={<HRAddEmployeePage />} />
-        <Route path="directory/import" element={<HRUploadExcelPage />} />
-        <Route path="profile/:employeeCode" element={<HRViewProfilePage />} />
- 
-        
-        <Route path="*" element={<Navigate to="profile-requests" replace />} />
-      </Routes>
-    </Layout2>
-  );
-};
-
 export default function HrApp() {
-  return <HrAppContent />;
+  return (
+    <Routes>
+      {/* ✅ 1. ROUTE MẶC ĐỊNH (INDEX)
+        Khi vào /hr -> Chuyển hướng ngay đến /hr/profile-requests
+        Dùng đường dẫn tuyệt đối "/" ở đầu để tránh lỗi đệ quy.
+      */}
+      <Route index element={<Navigate to="/hr/profile-requests" replace />} />
+
+      {/* ✅ 2. NHÓM QUẢN LÝ YÊU CẦU HỒ SƠ 
+        Path: /hr/profile-requests
+      */}
+      <Route path="profile-requests" element={<HrProfileUpdateRequestListPage />} />
+      <Route path="profile-requests/:requestId" element={<HrProfileUpdateRequestDetailPage />} />
+      
+      {/* ✅ 3. NHÓM QUẢN LÝ DANH BẠ (DIRECTORY)
+        Path: /hr/directory...
+      */}
+      <Route path="directory" element={<HRDirectoryPage />} />
+      <Route path="directory/add" element={<HRAddEmployeePage />} />
+      <Route path="directory/import" element={<HRUploadExcelPage />} />
+      
+      {/* ✅ 4. XEM CHI TIẾT HỒ SƠ NHÂN VIÊN
+        Path: /hr/profile/:employeeCode
+      */}
+      <Route path="profile/:employeeCode" element={<HRViewProfilePage />} />
+      
+      {/* ✅ 5. FALLBACK ROUTE (TRANG 404 CỦA HR)
+        Nếu nhập sai đường dẫn con (ví dụ /hr/xyz123) -> Chuyển về trang danh sách yêu cầu.
+        QUAN TRỌNG: Phải dùng "/hr/profile-requests" (tuyệt đối) chứ không dùng "profile-requests" (tương đối).
+      */}
+      <Route path="*" element={<Navigate to="/hr/profile-requests" replace />} />
+    </Routes>
+  );
 }
