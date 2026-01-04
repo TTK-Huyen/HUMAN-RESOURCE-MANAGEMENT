@@ -1,44 +1,102 @@
 import axios from "axios";
-import api from "./client.js";
+import api from "./client.js"; // Uncomment khi có file client.js thật
 
-export async function login({ username, password }) {
-  const res = await api.post("/auth/login", { username, password });
-  return res.data; // { token, role }
+// ⚡ CỜ CẤU HÌNH: Đặt true để chạy Mock (Test), false để chạy API thật (Prod)
+const USE_MOCK = false; 
+
+/**
+ * Hàm Login chính (Gateway)
+ * Tự động điều hướng sang Mock hoặc Real API dựa vào biến USE_MOCK
+ */
+export async function login(data) {
+    if (USE_MOCK) {
+        console.log("⚠️ Đang chạy chế độ MOCK DATA (Không gọi Server)");
+        return loginMock(data);
+    } else {
+        return loginReal(data);
+    }
 }
 
 /**
- * === MOCK FUNCTION ===
- * Login giả lập (dùng khi chưa có backend thật)
- *
- * API thật:
- * Method: POST
- * URL:    /api/v1/auth/login
- * Request Body:
- *   {
- *     "username": "string",
- *     "password": "string"
- *   }
- * Response Body:
- *   {
- *     "token": "jwt_token_string",
- *     "role": "EMPLOYEE" | "MANAGER" | "HR"
- *   }
- * Status Code: 200 OK (Success) hoặc 401 Unauthorized (Fail)
+ * 1. LOGIN THẬT (Gọi Backend)
  */
-export async function loginMock({ username, password }) {
-  await new Promise(res => setTimeout(res, 500)); // giả lập delay
+async function loginReal({ username, password }) {
+    // Nếu bạn chưa có file client.js, dùng axios trực tiếp
+    const res = await api.post("/auth/login", { username, password });
+    
+    return res.data; 
+}
 
-  if (username === "admin@example.com" && password === "Password123!") {
-    const token = "mocked.jwt.token.123456";
-    const role = "HR"; // trả về role tương ứng: EMPLOYEE | MANAGER | HR
+/**
+ * 2. LOGIN GIẢ LẬP (Mock Data)
+ * Dành cho lúc mất mạng, server sập, hoặc đang dev frontend
+ */
+async function loginMock({ username, password }) {
+    // Giả lập độ trễ mạng 0.8s cho giống thật
+    await new Promise(r => setTimeout(r, 800));
 
-    // ✅ Giả lập lưu thông tin login giống thật
-    localStorage.setItem("token", token);
-    localStorage.setItem("role", role);
+    return new Promise((resolve, reject) => {
+        // Danh sách tài khoản Hard-code để test
+        const validAccounts = {
+            // Tài khoản Employee
+            'employee': { 
+                pass: 'Emp123!@', 
+                role: 'EMP', 
+                name: 'Nguyễn Văn Nhân Viên', 
+                code: 'EMP001' 
+            },
+            // Tài khoản HR
+            'hr': { 
+                pass: 'Hr123!@#', 
+                role: 'HR', 
+                name: 'Phạm Thị Nhân Sự', 
+                code: 'HR001' 
+            },
+            // Tài khoản Manager
+            'manager': { 
+                pass: 'Mgr123!@#', 
+                role: 'MANAGER', 
+                name: 'Trần Văn Quản Lý', 
+                code: 'MGR001' 
+            },
+            // Tài khoản Admin cũ (giữ lại nếu cần)
+            'admin@example.com': {
+                pass: 'Password123!',
+                role: 'HR',
+                name: 'Super Admin',
+                code: 'ADM001'
+            }
+        };
 
-    return { token, role }; // trả về JSON như backend thật
-  }
+        const user = validAccounts[username];
 
-  // ❌ Giả lập lỗi xác thực
-  throw new Error("Invalid username or password");
+        // 1. Check Username
+        if (!user) {
+            reject({ 
+                response: { data: { message: `Tài khoản '${username}' không tồn tại!` } } 
+            });
+            return;
+        }
+
+        // 2. Check Password
+        if (user.pass !== password) {
+            reject({ 
+                response: { data: { message: "Mật khẩu không chính xác!" } } 
+            });
+            return;
+        }
+
+        // 3. Login thành công -> Trả về dữ liệu y hệt Backend thật
+        const responseData = {
+            token: "mock-jwt-token-" + Date.now(), // Token giả
+            role: user.role,
+            employeeCode: user.code,
+            employeeName: user.name
+        };
+
+        // Lưu luôn vào LocalStorage ở đây (hoặc để component lo cũng được)
+        // Nhưng tốt nhất để component lo việc lưu storage để code service được 'pure'
+        
+        resolve(responseData);
+    });
 }

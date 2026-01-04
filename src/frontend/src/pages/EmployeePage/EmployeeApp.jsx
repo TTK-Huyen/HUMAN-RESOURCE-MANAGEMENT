@@ -1,68 +1,112 @@
-import { Routes, Route, NavLink, Navigate, useLocation } from "react-router-dom";
-import EmployeeLayout from "../../components/layout/EmployeeLayout";
+import React from "react";
+import { Routes, Route, NavLink, Navigate } from "react-router-dom";
+import { FileText, Clock, LogOut } from "lucide-react"; // Dùng icon cho đẹp (nếu bạn đã cài lucide-react)
 
-// Import các trang cũ
+// Import các trang chức năng
 import LeaveRequestPage from "./LeaveRequestPage";
 import OTRequestPage from "./OTRequestPage";
 import ResignationRequestPage from "./ResignationRequestPage";
 import RequestStatusPage from "./RequestStatusPage";
-
-// Import các trang Profile mới (Của Ý)
 import MyProfilePage from "./MyProfilePage";
 import ProfileUpdateRequestPage from "./ProfileUpdateRequestPage";
-import "../../index.css";
 
+// --- COMPONENT MENU LƯỚI (DASHBOARD CỦA NHÂN VIÊN) ---
 function CreateGrid() {
   const tiles = [
-    { to: "leave", title: "Leave request", desc: "Xin nghỉ phép", icon: "🏖️" },
-    { to: "ot", title: "Overtime", desc: "Đăng ký OT", icon: "⏱️" },
-    { to: "resignation", title: "Resignation", desc: "Nghỉ việc", icon: "📤" },
+    { to: "leave", title: "Xin nghỉ phép", desc: "Tạo đơn xin nghỉ phép năm, nghỉ ốm...", icon: <FileText size={32} color="#2563eb" /> },
+    { to: "ot", title: "Đăng ký OT", desc: "Đăng ký làm thêm giờ (Overtime)", icon: <Clock size={32} color="#f59e0b" /> },
+    { to: "resignation", title: "Nghỉ việc", desc: "Gửi đơn xin thôi việc", icon: <LogOut size={32} color="#ef4444" /> },
   ];
 
   return (
-    <section className="create-section fade-in-up">
-      <div className="create-header">
-        <h2>Choose a request type</h2>
-        <p>Quick actions for your daily HR tasks</p>
+    <div className="fade-in-up">
+      <div style={{ marginBottom: '24px' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1e293b', marginBottom: '8px' }}>
+            Bạn muốn tạo yêu cầu gì?
+        </h2>
+        <p style={{ color: '#64748b' }}>Chọn loại đơn từ bên dưới để bắt đầu quy trình.</p>
       </div>
 
-      <div className="grid-3">
+      <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
+          gap: '20px' 
+      }}>
         {tiles.map((t) => (
-          <NavLink key={t.to} to={t.to} className="tile-card hover-lift">
-            <div className="tile-head">
-              <span className="tile-emoji" aria-hidden="true">
+          <NavLink 
+            key={t.to} 
+            to={t.to} 
+            style={{ textDecoration: 'none' }}
+          >
+            <div className="tile-card" style={{
+                background: 'white',
+                padding: '24px',
+                borderRadius: '12px',
+                border: '1px solid #e2e8f0',
+                transition: 'all 0.2s',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                cursor: 'pointer',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+            }}
+            onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
+                e.currentTarget.style.borderColor = '#3b82f6';
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.02)';
+                e.currentTarget.style.borderColor = '#e2e8f0';
+            }}
+            >
+              <div style={{ 
+                  width: 50, height: 50, borderRadius: 10, background: '#f8fafc', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center' 
+              }}>
                 {t.icon}
-              </span>
-              <span>{t.title}</span>
+              </div>
+              <div>
+                <h3 style={{ margin: '0 0 4px', fontSize: '1.1rem', color: '#0f172a' }}>{t.title}</h3>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: '#64748b', lineHeight: 1.5 }}>{t.desc}</p>
+              </div>
             </div>
-            <p className="tile-desc">{t.desc}</p>
           </NavLink>
         ))}
       </div>
-    </section>
+    </div>
   );
 }
 
+// --- MAIN EMPLOYEE APP ---
 export default function EmployeeApp() {
   return (
-    <EmployeeLayout>
-      <div className="container" style={{ marginTop: 24, marginBottom: 32 }}>
-        <Routes>
-          <Route index element={<Navigate to="create" replace />} />
+    // ❌ QUAN TRỌNG: Đã xóa <EmployeeLayout> vì App.js đã bọc MainLayout rồi
+    <Routes>
+      {/* Mặc định vào /employee sẽ chuyển hướng đến trang Create */}
+      <Route index element={<Navigate to="create" replace />} />
 
-          <Route path="create" element={<CreateGrid />} />
-          <Route path="create/leave" element={<LeaveRequestPage />} />
-          <Route path="create/ot" element={<OTRequestPage />} />
-          <Route path="create/resignation" element={<ResignationRequestPage />} />
+      {/* 1. Nhóm Trang Tạo Đơn (/employee/create) */}
+      <Route path="create">
+          <Route index element={<CreateGrid />} />          {/* /employee/create */}
+          <Route path="leave" element={<LeaveRequestPage />} /> {/* /employee/create/leave */}
+          <Route path="ot" element={<OTRequestPage />} />       {/* /employee/create/ot */}
+          <Route path="resignation" element={<ResignationRequestPage />} /> {/* /employee/create/resignation */}
+      </Route>
 
-          <Route path="status" element={<RequestStatusPage />} />
+      {/* 2. Trang Xem Trạng Thái (/employee/status) */}
+      <Route path="status" element={<RequestStatusPage />} />
 
-          <Route path="profile" element={<MyProfilePage />} />
-          <Route path="profile/update-request" element={<ProfileUpdateRequestPage />} />
+      {/* 3. Nhóm Trang Profile (/employee/profile) */}
+      <Route path="profile">
+          <Route index element={<MyProfilePage />} />
+          <Route path="update-request" element={<ProfileUpdateRequestPage />} />
+      </Route>
 
-          <Route path="*" element={<Navigate to="create" replace />} />
-        </Routes>
-      </div>
-    </EmployeeLayout>
+      {/* Fallback: Nhập sai link thì về create */}
+      <Route path="*" element={<Navigate to="create" replace />} />
+    </Routes>
   );
 }

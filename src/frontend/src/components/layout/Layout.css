@@ -255,3 +255,30 @@
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+/* --- BỔ SUNG CHO MAIN LAYOUT --- */
+
+/* Style cho NavLink active */
+.sidebar-nav a.active {
+  background-color: #1e293b;
+  color: white;
+  border-left: 3px solid #3b82f6; /* Thêm vạch màu xanh để nổi bật hơn */
+}
+
+/* Fix lỗi hiển thị tên user quá dài */
+.user-info .name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 110px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: white;
+}
+
+/* Đảm bảo Sidebar Footer hiển thị đẹp */
+.sidebar-footer {
+  margin-top: auto; /* Đẩy footer xuống đáy */
+  padding: 1rem;
+  border-top: 1px solid #1e293b;
+  background-color: #0b1120;
+}
