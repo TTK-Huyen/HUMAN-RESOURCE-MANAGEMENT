@@ -1,461 +1,179 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import {
-  hrFetchProfileUpdateRequestDetail,
-  hrUpdateProfileUpdateRequestStatus,
-} from "../../Services/requests";
-import ViolationBanner from "../../components/common/ViolationBanner";
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { ArrowLeft, Mail, Phone, MapPin, Briefcase, User, Calendar, GraduationCap, CreditCard, AlertCircle } from "lucide-react";
+import { HRService } from "../../Services/employees"; 
 
-const SENSITIVE_FIELDS = [
-  "citizen_id",
-  "personal_tax_code",
-  "personal_taxcode",
-  "bank_account",
-  "bank_accounts",
-  "bank_account_number",
-];
+// --- 1. SUB-COMPONENTS (Giữ nguyên) ---
 
-function StatusBadge({ status }) {
-  if (!status) return null;
-  const s = status.toUpperCase();
-  let bg = "#e5e7eb";
-  let color = "#374151";
+const ProfileField = ({ label, value, icon }) => (
+  <div className="mb-4">
+    <div className="flex items-center gap-2 mb-1">
+       {icon && React.cloneElement(icon, { size: 16, className: "text-slate-500" })}
+       <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+         {label}
+       </span>
+    </div>
+    <div className={`text-base font-medium text-slate-800 ${icon ? "pl-6" : ""}`}>
+      {value || <span className="text-slate-400 font-normal italic">--</span>}
+    </div>
+  </div>
+);
 
-  if (s === "PENDING") {
-    bg = "#fef3c7";
-    color = "#92400e";
-  } else if (s === "APPROVED") {
-    bg = "#dcfce7";
-    color = "#166534";
-  } else if (s === "REJECTED") {
-    bg = "#fee2e2";
-    color = "#991b1b";
-  }
+const InfoCard = ({ title, children }) => (
+  <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm h-full">
+    <h3 className="mt-0 mb-5 text-lg font-semibold text-slate-800 border-b border-slate-100 pb-3">
+      {title}
+    </h3>
+    {children}
+  </div>
+);
 
-  return (
-    <span
-      style={{
-        padding: "2px 8px",
-        borderRadius: 999,
-        fontSize: 12,
-        fontWeight: 500,
-        background: bg,
-        color,
-      }}
-    >
-      {s}
-    </span>
-  );
-}
+// --- 2. MAIN PAGE COMPONENT ---
 
-export default function HrProfileUpdateRequestDetailPage() {
-  const { requestId } = useParams();
+export default function HRViewProfilePage() {
+  const { employeeCode } = useParams();
   const navigate = useNavigate();
-
-  const [detail, setDetail] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [submitLoading, setSubmitLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [violations, setViolations] = useState([]);
-  const [rejectReason, setRejectReason] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
+  const [error, setError] = useState(null);
+
+  const IS_DEMO = false; 
 
   useEffect(() => {
-    let cancelled = false;
-    async function load() {
+    const fetchProfile = async () => {
       setLoading(true);
-      setError("");
-      setSuccessMsg("");
+      setError(null);
       try {
-        const data = await hrFetchProfileUpdateRequestDetail(requestId);
-        if (!cancelled) {
-          setDetail(data);
-          setRejectReason(data.reject_reason || "");
+        if (!employeeCode) throw new Error("Không tìm thấy mã nhân viên trên URL");
+
+        if (IS_DEMO) {
+           // ... (Code demo giữ nguyên nếu cần)
+        } else {
+          console.log("Fetching profile for:", employeeCode);
+          const response = await HRService.fetchEmployeeProfileByCode(employeeCode);
+          console.log("API Response:", response);
+
+          // 🛠️ FIX QUAN TRỌNG TẠI ĐÂY: Xử lý cấu trúc { data: [...] }
+          let profileData = null;
+
+          if (response && response.data && Array.isArray(response.data)) {
+            // Trường hợp 1: API trả về { data: [item1, item2] } -> Lấy phần tử đầu tiên
+            profileData = response.data.length > 0 ? response.data[0] : null;
+          } else if (Array.isArray(response)) {
+            // Trường hợp 2: API trả về trực tiếp [item1, item2]
+            profileData = response.length > 0 ? response[0] : null;
+          } else {
+            // Trường hợp 3: API trả về object phẳng { ... }
+            profileData = response;
+          }
+
+          if (profileData) {
+            setProfile(profileData);
+          } else {
+            throw new Error("Dữ liệu nhân viên rỗng hoặc không đúng định dạng");
+          }
         }
       } catch (err) {
-        if (!cancelled) {
-          setError(err.message || "Failed to load request detail.");
-        }
+        console.error("Lỗi tải hồ sơ:", err);
+        setError(err.message || "Không thể tải thông tin nhân viên.");
       } finally {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       }
-    }
-    load();
-    return () => {
-      cancelled = true;
     };
-  }, [requestId]);
 
-  const hasSensitiveChanges = useMemo(() => {
-    if (!detail || !Array.isArray(detail.details)) return false;
-    return detail.details.some((d) =>
-      SENSITIVE_FIELDS.includes((d.field_name || "").toLowerCase())
-    );
-  }, [detail]);
+    fetchProfile();
+  }, [employeeCode]);
 
-  function validateBeforeAction(action) {
-    const v = [];
-    if (!detail) {
-      v.push("Request data is not loaded.");
-    }
-    if (detail && detail.request_status && detail.request_status !== "PENDING") {
-      v.push("Only pending requests can be updated.");
-    }
-    if (action === "REJECTED" && !rejectReason.trim()) {
-      v.push("Reject reason is required when rejecting a request.");
-    }
-    setViolations(v);
-    return v.length === 0;
-  }
-
-  async function handleDecision(action) {
-    // action: "APPROVED" | "REJECTED"
-    if (!validateBeforeAction(action)) return;
-
-    if (action === "APPROVED" && hasSensitiveChanges) {
-      const ok = window.confirm(
-        "This request contains sensitive information (Citizen ID, tax code, bank account). Are you sure you want to approve these changes?"
-      );
-      if (!ok) return;
-    }
-
-    setSubmitLoading(true);
-    setError("");
-    setSuccessMsg("");
-
-    try {
-      const res = await hrUpdateProfileUpdateRequestStatus(requestId, {
-        new_status: action,
-        reject_reason: action === "REJECTED" ? rejectReason.trim() : "",
-      });
-
-      setDetail((prev) =>
-        prev
-          ? {
-              ...prev,
-              request_status: res.request_status || action,
-              reject_reason:
-                action === "REJECTED" ? rejectReason.trim() : prev.reject_reason,
-            }
-          : prev
-      );
-
-      setSuccessMsg(
-        `Request ${requestId} has been ${action.toLowerCase()} successfully.`
-      );
-      setViolations([]);
-    } catch (err) {
-      setError(err.message || "Failed to update request status.");
-    } finally {
-      setSubmitLoading(false);
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="card fade-in-up">
-        <div className="card-header">
-          <h2>Profile update request #{requestId}</h2>
-        </div>
-        <div className="card-body">
-          <p>Loading...</p>
-        </div>
+  // --- Render (Phần hiển thị giữ nguyên) ---
+  if (loading) return (
+      <div className="p-10 text-center text-slate-500 flex flex-col items-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-2"></div>
+        Đang tải hồ sơ nhân viên...
       </div>
-    );
-  }
+  );
 
-  if (error && !detail) {
-    return (
-      <div className="card fade-in-up">
-        <div className="card-header">
-          <h2>Profile update request #{requestId}</h2>
-        </div>
-        <div className="card-body">
-          <p style={{ color: "var(--danger)" }}>{error}</p>
-          <button
-            type="button"
-            className="btn"
-            onClick={() => navigate("/hr/profile-requests")}
-          >
-            Back to list
-          </button>
-        </div>
+  if (error) return (
+      <div className="p-10 text-center text-red-500 bg-red-50 rounded-lg m-6 border border-red-200">
+        <AlertCircle className="mx-auto mb-2" size={32} />
+        <p className="font-semibold">{error}</p>
+        <button onClick={() => navigate(-1)} className="mt-4 text-blue-600 hover:underline">Quay lại</button>
       </div>
-    );
-  }
+  );
+
+  if (!profile) return null;
+
+  // Xử lý hiển thị dữ liệu mảng (Array)
+  const displayPhone = profile.phoneNumbers && profile.phoneNumbers.length > 0 ? profile.phoneNumbers.join(", ") : null;
+  const displayEducation = profile.education && profile.education.length > 0 
+      ? profile.education.map((edu, idx) => <div key={idx} className="mb-1">• {edu}</div>) 
+      : null;
 
   return (
-    <div className="card fade-in-up">
-      <div
-        className="card-header"
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          gap: 12,
-        }}
+    <div className="max-w-6xl mx-auto p-6 fade-in-up">
+      
+      {/* Nút Quay lại */}
+      <button 
+        onClick={() => navigate(-1)} 
+        className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors mb-6 font-medium"
       >
-        <div>
-          <h2 style={{ margin: 0 }}>
-            Profile update request #{detail.request_id}
-          </h2>
-          <p style={{ margin: 0, color: "var(--muted)", fontSize: 14 }}>
-            {detail.full_name} ({detail.employee_code})
-          </p>
+        <ArrowLeft size={18} /> Quay lại danh sách
+      </button>
+
+      {/* Header Profile */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white mb-6 flex flex-col md:flex-row items-center md:items-start gap-6 shadow-lg">
+        <div className="w-24 h-24 rounded-full bg-white text-blue-600 flex items-center justify-center text-3xl font-bold shadow-md shrink-0">
+            {profile.employeeName?.charAt(0) || "U"}
         </div>
-        <div style={{ textAlign: "right" }}>
-          <StatusBadge status={detail.request_status} />
-          <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
-            Created at: {detail.request_date || detail.created_at}
-          </div>
+        <div className="text-center md:text-left">
+            <h1 className="text-3xl font-bold m-0">{profile.employeeName}</h1>
+            <div className="flex flex-wrap gap-3 mt-3 justify-center md:justify-start opacity-90">
+                <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
+                    {profile.employeeCode}
+                </span>
+                <span className={`px-3 py-1 rounded-full text-sm font-bold backdrop-blur-sm ${profile.status === 'Active' ? 'bg-green-500/80' : 'bg-slate-500/80'}`}>
+                    {profile.status}
+                </span>
+            </div>
         </div>
       </div>
 
-      <div className="card-body">
-        <ViolationBanner messages={violations} />
+      {/* Grid Thông tin chi tiết */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        {/* Cột 1: Thông tin công việc */}
+        <InfoCard title="Thông tin công việc">
+            <ProfileField label="Phòng ban" value={profile.department} icon={<Briefcase />} />
+            <ProfileField label="Chức vụ" value={profile.jobTitle} icon={<User />} />
+            <ProfileField label="Ngày bắt đầu HĐ" value={profile.contractStartDate} icon={<Calendar />} />
+            <ProfileField label="Loại hình" value={profile.employmentType} />
+            <ProfileField label="Loại hợp đồng" value={profile.contractType} />
+        </InfoCard>
 
-        {successMsg && (
-          <div
-            style={{
-              marginBottom: 16,
-              padding: 12,
-              borderRadius: 8,
-              background: "#ecfdf3",
-              border: "1px solid #bbf7d0",
-              color: "#14532d",
-              fontSize: 14,
-            }}
-          >
-            {successMsg}
-          </div>
-        )}
-
-        {error && (
-          <p style={{ color: "var(--danger)", marginBottom: 12 }}>{error}</p>
-        )}
-
-        <section style={{ marginBottom: 20 }}>
-          <h3
-            style={{
-              margin: "0 0 8px",
-              fontSize: 15,
-              fontWeight: 600,
-              color: "#0f172a",
-            }}
-          >
-            Request info
-          </h3>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-              gap: 12,
-              fontSize: 14,
-            }}
-          >
-            <div>
-              <div style={{ color: "var(--muted)", fontSize: 12 }}>Employee</div>
-              <div>
-                {detail.full_name} ({detail.employee_code})
-              </div>
+        {/* Cột 2: Thông tin liên hệ & Học vấn */}
+        <InfoCard title="Liên hệ & Học vấn">
+            <ProfileField label="Email công ty" value={profile.companyEmail} icon={<Mail />} />
+            <ProfileField label="Email cá nhân" value={profile.personalEmail} icon={<Mail />} />
+            <ProfileField label="Số điện thoại" value={displayPhone} icon={<Phone />} />
+            <ProfileField label="Địa chỉ hiện tại" value={profile.currentAddress} icon={<MapPin />} />
+            <div className="pt-4 border-t border-slate-100">
+                <ProfileField label="Học vấn" value={displayEducation} icon={<GraduationCap />} />
             </div>
-            <div>
-              <div style={{ color: "var(--muted)", fontSize: 12 }}>
-                Current status
-              </div>
-              <div>
-                <StatusBadge status={detail.request_status} />
-              </div>
-            </div>
-            <div>
-              <div style={{ color: "var(--muted)", fontSize: 12 }}>
-                Created at
-              </div>
-              <div>{detail.request_date || detail.created_at}</div>
-            </div>
-          </div>
+        </InfoCard>
+        
+        {/* Cột 3: Thông tin cá nhân & Pháp lý */}
+        <InfoCard title="Thông tin cá nhân">
+            <ProfileField label="Ngày sinh" value={profile.dateOfBirth} />
+            <ProfileField label="Giới tính" value={profile.gender} />
+            <ProfileField label="Tình trạng hôn nhân" value={profile.maritalStatus} />
+            <ProfileField label="Quốc tịch" value={profile.nationality} />
+            
+            <div className="border-t border-dashed border-slate-200 my-4"></div>
+            
+            <ProfileField label="CCCD/CMND" value={profile.citizenIdNumber} icon={<CreditCard />} />
+            <ProfileField label="Mã số thuế" value={profile.personalTaxCode} />
+            <ProfileField label="BHXH" value={profile.socialInsuranceNumber} />
+        </InfoCard>
 
-          <div style={{ marginTop: 12 }}>
-            <div style={{ color: "var(--muted)", fontSize: 12 }}>Reason</div>
-            <div
-              style={{
-                fontSize: 14,
-                padding: 8,
-                borderRadius: 8,
-                background: "#f9fafb",
-                border: "1px solid #e5e7eb",
-              }}
-            >
-              {detail.reason || <span style={{ color: "#9ca3af" }}>N/A</span>}
-            </div>
-          </div>
-        </section>
-
-        <section style={{ marginBottom: 20 }}>
-          <h3
-            style={{
-              margin: "0 0 8px",
-              fontSize: 15,
-              fontWeight: 600,
-              color: "#0f172a",
-            }}
-          >
-            Changes
-          </h3>
-
-          {!detail.details || detail.details.length === 0 ? (
-            <p style={{ color: "var(--muted)", fontSize: 14 }}>
-              No field changes found in this request.
-            </p>
-          ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  fontSize: 14,
-                }}
-              >
-                <thead>
-                  <tr style={{ textAlign: "left" }}>
-                    <th style={{ padding: "8px 8px" }}>Field</th>
-                    <th style={{ padding: "8px 8px" }}>Old value</th>
-                    <th style={{ padding: "8px 8px" }}>New value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {detail.details.map((d, idx) => {
-                    const isSensitive = SENSITIVE_FIELDS.includes(
-                      (d.field_name || "").toLowerCase()
-                    );
-                    return (
-                      <tr key={idx}>
-                        <td style={{ padding: "8px 8px", whiteSpace: "nowrap" }}>
-                          {d.field_name}
-                          {isSensitive && (
-                            <span
-                              style={{
-                                marginLeft: 6,
-                                fontSize: 11,
-                                padding: "2px 6px",
-                                borderRadius: 999,
-                                background: "#fee2e2",
-                                color: "#991b1b",
-                              }}
-                            >
-                              sensitive
-                            </span>
-                          )}
-                        </td>
-                        <td
-                          style={{
-                            padding: "8px 8px",
-                            borderTop: "1px solid #e5e7eb",
-                          }}
-                        >
-                          {d.old_value || (
-                            <span style={{ color: "#9ca3af" }}>—</span>
-                          )}
-                        </td>
-                        <td
-                          style={{
-                            padding: "8px 8px",
-                            borderTop: "1px solid #e5e7eb",
-                            background: "#ecfeff",
-                          }}
-                        >
-                          {d.new_value || (
-                            <span style={{ color: "#9ca3af" }}>—</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-
-        <section>
-          <h3
-            style={{
-              margin: "0 0 8px",
-              fontSize: 15,
-              fontWeight: 600,
-              color: "#0f172a",
-            }}
-          >
-            Decision
-          </h3>
-
-          <div style={{ marginBottom: 10, fontSize: 13, color: "var(--muted)" }}>
-            When rejecting this request, please provide a clear reason. For
-            sensitive fields (Citizen ID, Tax Code, Bank Account), approval
-            requires extra confirmation.
-          </div>
-
-          <div style={{ marginBottom: 12 }}>
-            <label
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 6,
-                fontSize: 13,
-                color: "#334155",
-              }}
-            >
-              Reject reason (required if rejecting)
-              <textarea
-                rows={3}
-                value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
-                placeholder="Explain why this request is rejected..."
-              />
-            </label>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              gap: 12,
-              flexWrap: "wrap",
-              marginTop: 16,
-            }}
-          >
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => navigate("/hr/profile-requests")}
-            >
-              Back to list
-            </button>
-
-            <div style={{ display: "flex", gap: 12 }}>
-              <button
-                type="button"
-                className="btn danger"
-                disabled={
-                  submitLoading || detail.request_status !== "PENDING"
-                }
-                onClick={() => handleDecision("REJECTED")}
-              >
-                {submitLoading ? "Processing..." : "Reject"}
-              </button>
-              <button
-                type="button"
-                className="btn"
-                disabled={
-                  submitLoading || detail.request_status !== "PENDING"
-                }
-                onClick={() => handleDecision("APPROVED")}
-              >
-                {submitLoading ? "Processing..." : "Approve"}
-              </button>
-            </div>
-          </div>
-        </section>
       </div>
     </div>
   );

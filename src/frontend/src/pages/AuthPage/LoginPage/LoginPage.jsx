@@ -131,15 +131,15 @@ export default function LoginPage() {
             </div>
             <div className="demo-row">
               <span className="demo-label">Employee:</span>
-              <span><span className="demo-code">employee</span> / <span className="demo-code">Emp123!@</span></span>
+              <span><span className="demo-code">EMP001</span> / <span className="demo-code">123456</span></span>
             </div>
             <div className="demo-row">
               <span className="demo-label">HR Admin:</span>
-              <span><span className="demo-code">hr</span> / <span className="demo-code">Hr123!@#</span></span>
+              <span><span className="demo-code">hr</span> / <span className="demo-code">123456</span></span>
             </div>
             <div className="demo-row">
               <span className="demo-label">Manager:</span>
-              <span><span className="demo-code">manager</span> / <span className="demo-code">Mgr123!@#</span></span>
+              <span><span className="demo-code">manager</span> / <span className="demo-code">123456</span></span>
             </div>
           </div>
 

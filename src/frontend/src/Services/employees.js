@@ -1,4 +1,5 @@
 import api from './client.js';
+import axios from 'axios';
 // ============================================================
 // REAL API SETUP (Giữ lại cấu hình này để dùng sau)
 
@@ -32,6 +33,14 @@ export const EmployeeService = {
 };
 
 export const HRService = {
+  // Master data cho Add Employee
+  getEmployeeFormMasterData() {
+    return api
+      .get("/master-data/employee-form", {
+        headers: { Accept: "application/json" },
+      })
+      .then((res) => res.data);
+  },
   // 3. HR lấy danh sách
   // params: { status, employeeCode }
   getUpdateRequests: (params) => {
