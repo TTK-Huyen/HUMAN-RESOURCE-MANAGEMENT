@@ -3,7 +3,20 @@ export default function Table({ columns, data, emptyText = "No data" }) {
 return (
 <div className="card">
 <table className="table">
-<thead><tr>{columns.map((c) => (<th key={c.key || c.title}>{c.title}</th>))}</tr></thead>
+<thead>
+  <tr>
+    {columns.map((c) => (
+      <th 
+        key={c.key || c.title}
+        // 👇 THÊM DÒNG NÀY ĐỂ NHẬN ĐỘ RỘNG 👇
+        style={c.width ? { width: c.width } : {}} 
+        className={c.className || ""}
+      >
+        {c.title}
+      </th>
+    ))}
+  </tr>
+</thead>
 <tbody>
 {data.length === 0 ? (
 <tr><td colSpan={columns.length} style={{ color: "#64748b", padding: 24, textAlign: "center" }}>{emptyText}</td></tr>

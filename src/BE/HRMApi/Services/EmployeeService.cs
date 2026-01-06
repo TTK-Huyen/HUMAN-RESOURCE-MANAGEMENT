@@ -14,7 +14,7 @@ namespace HrmApi.Services
         private readonly IPasswordHasher _passwordHasher;
 
         public EmployeeService(
-            IEmployeeRepository employeeRepository, 
+            IEmployeeRepository employeeRepository,
             IProfileUpdateRequestRepository profileUpdateRequestRepository,
             IUserAccountRepository userAccountRepository,
             IPasswordHasher passwordHasher)
@@ -92,7 +92,8 @@ namespace HrmApi.Services
             if (employee == null || employee.EmployeeCode != employeeCode)
                 return null;
             // Mapping giống GetProfileAsync
-            var dto = new EmployeeProfileDto            {
+            var dto = new EmployeeProfileDto
+            {
                 EmployeeName = employee.FullName,
                 EmployeeCode = employee.EmployeeCode,
                 DateOfBirth = employee.DateOfBirth?.ToString("dd/MM/yyyy"),
@@ -174,26 +175,40 @@ namespace HrmApi.Services
             return await _employeeRepository.SaveChangesAsync() > 0;
         }
 
-        public async Task<bool> CreateEmployeeAsync(CreateEmployeeDto dto)
+        public async Task<CreateEmployeeResponseDto?> CreateEmployeeAsync(CreateEmployeeDto dto)
         {
-            // Kiểm tra EmployeeCode đã tồn tại chưa
-            var existingEmployee = await _employeeRepository.GetProfileByCodeAsync(dto.EmployeeCode);
-            if (existingEmployee != null) return false;
+            // 1) Validate tối thiểu
+            if (string.IsNullOrWhiteSpace(dto.EmployeeName)) return null;
+            if (string.IsNullOrWhiteSpace(dto.CompanyEmail)) return null;
+            if (string.IsNullOrWhiteSpace(dto.CitizenIdNumber)) return null;
 
-            // Kiểm tra Username đã tồn tại chưa
-            var existingUser = await _userAccountRepository.FindAccountByUsernameAsync(dto.Username);
-            if (existingUser != null) return false;
+            var cccdDigits = new string(dto.CitizenIdNumber.Where(char.IsDigit).ToArray());
+            if (cccdDigits.Length != 13) return null;
 
-            // Tạo Employee mới
+            // 2) Generate employeeCode
+            var employeeCode = await GenerateNextEmployeeCodeAsync();
+
+            // 3) username = employeeCode
+            var username = employeeCode;
+
+            // 4) password = EMP + last4 CCCD
+            var rawPassword = $"EMP{cccdDigits[^4..]}";
+
+            // 5) Uniqueness checks
+            var existingUser = await _userAccountRepository.FindAccountByUsernameAsync(username);
+            if (existingUser != null) return null;
+
+            // 6) Create employee
             var employee = new Employee
             {
-                EmployeeCode = dto.EmployeeCode,
+                EmployeeCode = employeeCode,
                 FullName = dto.EmployeeName,
                 DateOfBirth = dto.DateOfBirth,
                 Gender = dto.Gender,
                 Nationality = dto.Nationality ?? "Vietnamese",
                 CompanyEmail = dto.CompanyEmail,
                 PersonalEmail = dto.PersonalEmail,
+                PhoneNumber = dto.PhoneNumber,
                 MaritalStatus = dto.MaritalStatus,
                 HasChildren = dto.HasChildren,
                 CitizenIdNumber = dto.CitizenIdNumber,
@@ -212,11 +227,15 @@ namespace HrmApi.Services
 
             await _employeeRepository.AddAsync(employee);
 
-            // Tạo UserAccount cho Employee
+            // 🔥 bắt buộc save để có employee.Id
+            var saved = await _employeeRepository.SaveChangesAsync();
+            if (saved <= 0) return null;
+
+            // 7) Create user account linked to employee
             var userAccount = new UserAccount
             {
-                Username = dto.Username,
-                PasswordHash = _passwordHasher.HashPassword(dto.Password),
+                Username = username,
+                PasswordHash = _passwordHasher.HashPassword(rawPassword),
                 EmployeeId = employee.Id,
                 RoleId = dto.RoleId,
                 Status = AccountStatus.ACTIVE,
@@ -224,12 +243,51 @@ namespace HrmApi.Services
             };
 
             await _userAccountRepository.AddAsync(userAccount);
-            return true;
+
+            // 🔥 save lần 2
+            var saved2 = await _employeeRepository.SaveChangesAsync();
+            if (saved2 <= 0) return null;
+
+            // 8) Return credentials (chỉ trả về lúc tạo)
+            return new CreateEmployeeResponseDto
+            {
+                EmployeeId = employee.Id,
+                EmployeeCode = employee.EmployeeCode,
+                Username = username,
+                InitialPassword = rawPassword,
+                CompanyEmail = employee.CompanyEmail ?? string.Empty
+            };
         }
+
+        private async Task<string> GenerateNextEmployeeCodeAsync()
+        {
+            // Simple approach: EMP000001, EMP000002...
+            // Implement in repository for better performance if needed.
+            // For now we query using EF Core if repository exposes IQueryable.
+            // If your repository doesn't support it, move this logic into repository.
+
+            // ✅ Fallback: use EF Core context via repository if available
+            // If you have no direct access, implement GetLatestEmployeeCodeAsync() in repository.
+            var all = await _employeeRepository.GetAllEmployeesAsync();
+            var last = all
+                .Select(e => e.EmployeeCode)
+                .Where(c => !string.IsNullOrWhiteSpace(c) && c.StartsWith("EMP"))
+                .OrderByDescending(c => c)
+                .FirstOrDefault();
+
+            int next = 1;
+            if (!string.IsNullOrEmpty(last))
+            {
+                var digits = new string(last.Where(char.IsDigit).ToArray());
+                if (int.TryParse(digits, out var n)) next = n + 1;
+            }
+            return $"EMP{next:000}";
+        }
+
 
         public async Task<IEnumerable<EmployeeProfileDto>> GetAllEmployeesAsync()
         {
-            var employees = await _employeeRepository.GetAllEmployeesAsync();            return employees.Select(emp => new EmployeeProfileDto
+            var employees = await _employeeRepository.GetAllEmployeesAsync(); return employees.Select(emp => new EmployeeProfileDto
             {
                 EmployeeName = emp.FullName,
                 EmployeeCode = emp.EmployeeCode,
@@ -243,7 +301,8 @@ namespace HrmApi.Services
                 CitizenIdNumber = emp.CitizenIdNumber,
                 PersonalTaxCode = emp.PersonalTaxCode,
                 SocialInsuranceNumber = emp.SocialInsuranceNumber,
-                CurrentAddress = emp.CurrentAddress,                Status = emp.Status,
+                CurrentAddress = emp.CurrentAddress,
+                Status = emp.Status,
                 Department = emp.Department?.Name,
                 JobTitle = emp.JobTitle?.Title,
                 DirectManager = emp.DirectManager?.FullName,
@@ -257,7 +316,7 @@ namespace HrmApi.Services
         public async Task<PaginatedEmployeeResponseDto> GetEmployeesWithFilterAsync(EmployeeFilterDto filter)
         {
             var (employees, totalCount) = await _employeeRepository.GetEmployeesWithFilterAsync(filter);
-            
+
             var employeeDtos = employees.Select(emp => new EmployeeProfileDto
             {
                 EmployeeName = emp.EmployeeName,
@@ -273,7 +332,8 @@ namespace HrmApi.Services
                 PersonalTaxCode = emp.PersonalTaxCode,
                 SocialInsuranceNumber = emp.SocialInsuranceNumber,
                 CurrentAddress = emp.CurrentAddress,
-                Status = emp.Status,                Department = emp.Department?.Name,
+                Status = emp.Status,
+                Department = emp.Department?.Name,
                 JobTitle = emp.JobTitle?.Title,
                 DirectManager = emp.DirectManager?.FullName,
                 EmploymentType = emp.EmploymentType,
@@ -294,7 +354,8 @@ namespace HrmApi.Services
                 HasNextPage = filter.Page < totalPages,
                 HasPreviousPage = filter.Page > 1
             };
-        }        public async Task<IEnumerable<EssentialEmployeeDto>> GetEssentialEmployeeInfoAsync(string? employeeCode = null)
+        }
+        public async Task<IEnumerable<EssentialEmployeeDto>> GetEssentialEmployeeInfoAsync(string? employeeCode = null)
         {
             var employees = await _employeeRepository.GetEssentialEmployeeInfoAsync(employeeCode);
 

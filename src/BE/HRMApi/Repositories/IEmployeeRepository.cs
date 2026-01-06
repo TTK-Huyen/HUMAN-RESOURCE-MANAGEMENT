@@ -8,7 +8,9 @@ namespace HrmApi.Repositories
         /// <summary>
         /// Tìm employee theo mã employeeCode (ví dụ: "EMP001").
         /// </summary>
-        
+        Task<bool> ExistsByCompanyEmailAsync(string companyEmail);
+        Task<bool> ExistsByCitizenIdAsync(string citizenIdNumber);
+
         Task<Employee?> GetByCodeAsync(string employeeCode);
 
         Task<Employee?> GetByIdAsync(int id);

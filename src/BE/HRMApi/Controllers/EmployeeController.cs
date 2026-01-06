@@ -57,21 +57,30 @@ namespace HrmApi.Controllers
         {
             try
             {
-                var success = await _employeeService.CreateEmployeeAsync(dto);
-                if (!success)
-                    return BadRequest(new { message = "Employee code or username already exists." });
-                
-                return Ok(new { message = "Employee created successfully." });
+                var result = await _employeeService.CreateEmployeeAsync(dto);
+                return Ok(result);
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                // map field-specific error
+                if (ex.Message == "username")
+                    ModelState.AddModelError("username", "Username already exists.");
+
+                if (ex.Message == "companyEmail")
+                    ModelState.AddModelError("companyEmail", "Company email already exists.");
+
+                if (ex.Message == "citizenIdNumber")
+                    ModelState.AddModelError("citizenIdNumber", "Citizen ID Number already exists.");
+
+                return ValidationProblem(ModelState);
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Internal server error: " + ex.Message });
             }
-        }        /// <summary>
+        }
+
+
         /// Lấy danh sách nhân viên với filter và pagination
         /// </summary>
         [HttpGet]
@@ -99,22 +108,22 @@ namespace HrmApi.Controllers
                 return StatusCode(500, new { message = "Internal server error: " + ex.Message });
             }
         }        /// <summary>
-        /// Lấy danh sách thông tin cơ bản của nhân viên (name, code, dob, gender, citizenID, phone, department, job title)
-        /// </summary>
-        /// <param name="employeeCode">Mã nhân viên cụ thể (optional). Nếu không truyền, trả về tất cả nhân viên</param>
+                 /// Lấy danh sách thông tin cơ bản của nhân viên (name, code, dob, gender, citizenID, phone, department, job title)
+                 /// </summary>
+                 /// <param name="employeeCode">Mã nhân viên cụ thể (optional). Nếu không truyền, trả về tất cả nhân viên</param>
         [HttpGet("essential")]
         public async Task<IActionResult> GetEssentialEmployeeInfo([FromQuery] string? employeeCode = null)
         {
             try
             {
                 var employees = await _employeeService.GetEssentialEmployeeInfoAsync(employeeCode);
-                
+
                 // Nếu tìm kiếm theo employeeCode cụ thể nhưng không tìm thấy
                 if (!string.IsNullOrEmpty(employeeCode) && !employees.Any())
                 {
                     return NotFound(new { message = $"Employee with code '{employeeCode}' not found or is not active." });
                 }
-                
+
                 return Ok(employees);
             }
             catch (Exception ex)

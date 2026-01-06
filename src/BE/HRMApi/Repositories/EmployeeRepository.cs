@@ -18,7 +18,7 @@ namespace HrmApi.Repositories
         public async Task<Employee?> FindByIdAsync(int id)
         {
             return await _context.Employees
-                .FirstOrDefaultAsync(e => e.Id== id);
+                .FirstOrDefaultAsync(e => e.Id == id);
         }
 
         public async Task SaveAsync(Employee employee)
@@ -66,7 +66,7 @@ namespace HrmApi.Repositories
         {
             return await _context.Employees
                 .FirstOrDefaultAsync(e => e.EmployeeCode == employeeCode);
-        } 
+        }
 
         public async Task<LeaveRequest?> GetLeaveRequestByIdAsync(int requestId)
         {
@@ -86,7 +86,7 @@ namespace HrmApi.Repositories
             _context.Employees.Add(employee);
             await _context.SaveChangesAsync();
         }
-        
+
         public async Task<Employee?> GetByIdAsync(int id)
         {
             return await _context.Employees.FirstOrDefaultAsync(e => e.Id == id);
@@ -118,8 +118,8 @@ namespace HrmApi.Repositories
                 .AsQueryable();            // Apply filters
             if (!string.IsNullOrEmpty(filter.SearchKeyword))
             {
-                query = query.Where(e => 
-                    e.FullName.Contains(filter.SearchKeyword) || 
+                query = query.Where(e =>
+                    e.FullName.Contains(filter.SearchKeyword) ||
                     e.EmployeeCode.Contains(filter.SearchKeyword));
             }
 
@@ -183,10 +183,11 @@ namespace HrmApi.Repositories
 
             // Apply sorting
             if (!string.IsNullOrEmpty(filter.SortBy))
-            {                switch (filter.SortBy.ToLower())
+            {
+                switch (filter.SortBy.ToLower())
                 {
                     case "employeename":
-                        query = filter.SortDirection.ToUpper() == "DESC" 
+                        query = filter.SortDirection.ToUpper() == "DESC"
                             ? query.OrderByDescending(e => e.FullName)
                             : query.OrderBy(e => e.FullName);
                         break;
@@ -209,7 +210,8 @@ namespace HrmApi.Repositories
                         query = query.OrderBy(e => e.FullName);
                         break;
                 }
-            }            else
+            }
+            else
             {
                 query = query.OrderBy(e => e.FullName);
             }
@@ -221,7 +223,8 @@ namespace HrmApi.Repositories
                 .ToListAsync();
 
             return (employees, totalCount);
-        }        public async Task<List<Employee>> GetEssentialEmployeeInfoAsync(string? employeeCode = null)
+        }
+        public async Task<List<Employee>> GetEssentialEmployeeInfoAsync(string? employeeCode = null)
         {
             var query = _context.Employees
                 .Include(e => e.Department)
@@ -246,5 +249,18 @@ namespace HrmApi.Repositories
                 .Include(e => e.JobTitle) // Quan trọng: Join bảng Role để lấy tên quyền (Manager/HR)
                 .ToListAsync();
         }
+
+        public async Task<bool> ExistsByCompanyEmailAsync(string companyEmail)
+        {
+            return await _context.Employees
+                .AnyAsync(e => e.CompanyEmail == companyEmail);
+        }
+
+        public async Task<bool> ExistsByCitizenIdAsync(string citizenIdNumber)
+        {
+            return await _context.Employees
+                .AnyAsync(e => e.CitizenIdNumber == citizenIdNumber);
+        }
+
     }
 }
