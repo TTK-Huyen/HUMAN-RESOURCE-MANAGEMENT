@@ -1,15 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchCampaigns } from "../../../Services/campaigns";
+import { fetchCampaigns, registerCampaign } from "../../../Services/campaigns";
 import { PlusCircle, Info, Calendar, Search } from "lucide-react";
 import Loading from "../../../components/common/Loading";
 import EmptyState from "../../../components/common/EmptyState";
 import Pagination from "../../../components/common/Pagination";
+import Button from "../../../components/common/Button";
+import Toast from "../../../components/common/Toast";
 
 export default function CampaignsList() {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // register state & toast
+  const [registeringCode, setRegisteringCode] = useState("");
+  const [toast, setToast] = useState(null);
 
   // pagination (client-side)
   const [currentPage, setCurrentPage] = useState(1);
@@ -44,6 +50,39 @@ export default function CampaignsList() {
       setCampaigns([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // register helper: call API, show toast, refresh list with current filters
+  const handleRegister = async (campaignCode) => {
+    if (!campaignCode) return;
+    // find campaign to check full
+    const c = campaigns.find(x => x.campaignCode === campaignCode);
+    if (!c) return;
+    const max = c.maxParticipants;
+    const current = c.currentParticipants ?? 0;
+    if (max && current >= max) {
+      setToast({ type: 'error', message: 'Chiến dịch đã đầy.' });
+      return;
+    }
+
+    setRegisteringCode(campaignCode);
+    try {
+      const res = await registerCampaign(campaignCode);
+      const msg = res?.message || 'Đăng ký thành công.';
+      setToast({ type: 'success', message: msg });
+      // refresh current filters
+      const filters = {};
+      if (keyword) filters.name = keyword;
+      if (status) filters.status = status;
+      if (startDate) filters.startDate = startDate;
+      if (endDate) filters.endDate = endDate;
+      await load(filters);
+    } catch (ex) {
+      const errMsg = ex?.response?.data?.message || ex?.message || 'Đăng ký thất bại. Vui lòng thử lại.';
+      setToast({ type: 'error', message: errMsg });
+    } finally {
+      setRegisteringCode("");
     }
   };
 
@@ -127,7 +166,9 @@ export default function CampaignsList() {
         <EmptyState message="Không tìm thấy chiến dịch" subMessage="Thử xóa bộ lọc hoặc điều chỉnh tìm kiếm" />
       ) : (
         <>
-          <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
+          {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
             {displayedCampaigns.map(c => (
               <li key={c.campaignCode} className="campaign-card" style={{ border: '1px solid #e6eefc', borderRadius: 12, padding: 18, background: '#fff', boxShadow: '0 6px 18px rgba(15,23,42,0.03)', transition: 'transform 0.18s ease, box-shadow 0.18s ease', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <div>
@@ -151,16 +192,22 @@ export default function CampaignsList() {
                 </div>
 
                 <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                  <button style={{ flex: 1, padding: '10px', background: '#10b981', color: 'white', border: 'none', borderRadius: 8, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                    <PlusCircle size={14} /> Đăng ký
-                  </button>
+                  <Button
+                    variant={c.isRegistered ? 'secondary' : 'primary'}
+                    isLoading={registeringCode === c.campaignCode}
+                    disabled={Boolean(c.isRegistered || (c.maxParticipants && c.currentParticipants >= c.maxParticipants))}
+                    onClick={() => handleRegister(c.campaignCode)}
+                  >
+                    <PlusCircle size={14} /> {c.isRegistered ? 'Đã đăng ký' : 'Đăng ký'}
+                  </Button>
                   <Link to={`/employee/campaigns/${c.campaignCode}`} style={{ flex: 1, padding: '10px', background: '#64748b', color: 'white', border: 'none', borderRadius: 8, textAlign: 'center', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                     <Info size={14} /> Chi tiết
                   </Link>
                 </div>
+                <style>{`.campaign-card .btn { transition: transform 0.12s, box-shadow 0.12s; } .campaign-card .btn:hover { transform: translateY(-2px); }`}</style>
               </li>
             ))}
-          </ul>
+          </div>
 
           {/* card hover styles */}
           <style>{`.campaign-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 18px 40px rgba(15,23,42,0.12); } .campaign-card:active { transform: translateY(-2px) scale(1.0); }`}</style>

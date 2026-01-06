@@ -51,6 +51,8 @@ function normalizeListItem(item) {
     maxParticipants: item.MaxParticipants ?? item.maxParticipants ?? null,
     currentParticipants: item.CurrentParticipants ?? item.currentParticipants ?? 0,
     createdAt: item.CreatedAt ?? item.createdAt ?? null,
+    // Flag indicating whether current employee already registered (support various backend naming)
+    isRegistered: item.IsRegistered ?? item.isRegistered ?? item.IsRegisteredByCurrentEmployee ?? item.registered ?? false,
   };
 }
 
@@ -84,4 +86,12 @@ export async function fetchCampaignDetail(campaignCode) {
   const data = res.data?.campaign ?? res.data ?? null;
   if (!data) return null;
   return normalizeDetail(data);
+}
+
+// --- NEW: Register for a campaign as employee ---
+export async function registerCampaign(campaignCode, employeeCode) {
+  // payload per backend: { employeeCode }
+  const payload = { EmployeeCode: employeeCode || localStorage.getItem('employeeCode') || '' };
+  const res = await api.post(`/employee/campaigns/${campaignCode}/register`, payload);
+  return res.data; // CampaignRegisterResponseDto
 }
