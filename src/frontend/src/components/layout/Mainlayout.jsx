@@ -24,7 +24,7 @@ const MENU_CONFIG = {
       { to: "/employee/create", label: "Create Request", icon: FileText },
       { to: "/employee/status", label: "Request Status", icon: History },
       { to: "/employee/profile", label: "My Profile", icon: User },
-      // [SỬA LẠI] Đường dẫn đúng khớp với App.jsx (bỏ /employee ở đầu)
+      { to: "/employee/campaigns", label: "Campaigns", icon: Gift },
       { to: "/rewards/my-wallet", label: "My Rewards", icon: Gift },
     ]
   },

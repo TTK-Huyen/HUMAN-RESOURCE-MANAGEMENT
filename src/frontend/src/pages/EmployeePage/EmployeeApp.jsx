@@ -9,6 +9,8 @@ import ResignationRequestPage from "./ResignationRequestPage";
 import RequestStatusPage from "./RequestStatusPage";
 import MyProfilePage from "./MyProfilePage";
 import ProfileUpdateRequestPage from "./ProfileUpdateRequestPage";
+import CampaignsList from "./Campaigns/CampaignsList";
+import CampaignDetail from "./Campaigns/CampaignDetail";
 
 // --- COMPONENT MENU LƯỚI (DASHBOARD CỦA NHÂN VIÊN) ---
 function CreateGrid() {
@@ -103,6 +105,12 @@ export default function EmployeeApp() {
       <Route path="profile">
           <Route index element={<MyProfilePage />} />
           <Route path="update-request" element={<ProfileUpdateRequestPage />} />
+      </Route>
+
+      {/* 4. Nhóm Trang Chiến Dịch (/employee/campaigns) */}
+      <Route path="campaigns">
+        <Route index element={<CampaignsList />} />
+        <Route path=":id" element={<CampaignDetail />} />
       </Route>
 
       {/* Fallback: Nhập sai link thì về create */}
