@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { fetchCampaignDetail, registerCampaign } from "../../../Services/campaigns";
+import { fetchCampaignDetail, registerCampaign, getRegistrationStatus } from "../../../Services/campaigns";
 import Loading from "../../../components/common/Loading";
 import StatusBadge from "../../../components/common/StatusBadge";
 import Button from "../../../components/common/Button";
@@ -12,9 +12,36 @@ export default function CampaignDetail() {
   const [campaign, setCampaign] = useState(null);
   const [isRegistering, setIsRegistering] = useState(false);
   const [toast, setToast] = useState(null);
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [registrationInfo, setRegistrationInfo] = useState(null);
 
   useEffect(() => {
-    fetchCampaignDetail(campaignCode).then(setCampaign).catch(() => setCampaign(null));
+    let mounted = true;
+    (async () => {
+      try {
+        const detail = await fetchCampaignDetail(campaignCode);
+        if (!mounted) return;
+        setCampaign(detail);
+
+        // Check registration status for current employee
+        const employeeCode = localStorage.getItem('employeeCode') || '';
+        if (employeeCode) {
+          try {
+            const st = await getRegistrationStatus(campaignCode, employeeCode);
+            if (!mounted) return;
+            setIsRegistered(Boolean(st?.registered));
+            setRegistrationInfo(st ?? null);
+          } catch (e) {
+            // ignore status check error
+          }
+        }
+      } catch (err) {
+        if (!mounted) return;
+        setCampaign(null);
+      }
+    })();
+
+    return () => { mounted = false; };
   }, [campaignCode]);
 
   const fmt = (d) => {
@@ -40,6 +67,12 @@ export default function CampaignDetail() {
       // Refresh detail to reflect new participant count
       const updated = await fetchCampaignDetail(campaign.campaignCode);
       setCampaign(updated);
+      // mark registered
+      setIsRegistered(true);
+      // update registrationInfo if response contains it
+      if (res?.registrationDate || res?.Status || res?.status) {
+        setRegistrationInfo(res);
+      }
     } catch (ex) {
       const errMsg = ex?.response?.data?.message || ex?.message || 'Đăng ký thất bại. Vui lòng thử lại.';
       setToast({ type: 'error', message: errMsg });
@@ -57,9 +90,16 @@ export default function CampaignDetail() {
         </Link>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           <StatusBadge status={campaign.status} />
-          <Button variant="primary" onClick={handleRegister} disabled={isFull} isLoading={isRegistering}>
-            {isFull ? 'Đã đầy' : 'Đăng ký'}
+          <Button
+            className="detail-register-btn"
+            variant={isRegistered ? 'secondary' : 'primary'}
+            onClick={handleRegister}
+            disabled={Boolean(isRegistered || isFull)}
+            isLoading={isRegistering}
+          >
+            {isRegistered ? 'Đã đăng ký' : (isFull ? 'Đã đầy' : 'Đăng ký')}
           </Button>
+          <style>{`.detail-register-btn:hover { transform: translateY(-2px); } .detail-register-btn:disabled { opacity: 0.75; cursor: not-allowed; }`}</style>
         </div>
       </div>
 

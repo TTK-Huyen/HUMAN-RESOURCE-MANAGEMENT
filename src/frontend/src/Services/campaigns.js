@@ -95,3 +95,16 @@ export async function registerCampaign(campaignCode, employeeCode) {
   const res = await api.post(`/employee/campaigns/${campaignCode}/register`, payload);
   return res.data; // CampaignRegisterResponseDto
 }
+
+// --- NEW: Check registration status for a campaign by employee code ---
+export async function getRegistrationStatus(campaignCode, employeeCode) {
+  if (USE_MOCK) {
+    // Mock: none registered
+    return { status: 'NOT_REGISTERED', registered: false };
+  }
+
+  const res = await api.get(`/employee/campaigns/${campaignCode}/status`, { params: { employee_code: employeeCode } });
+  // res.data example: { campaignCode, employeeCode, status, registrationDate, ... }
+  const dto = res.data;
+  return { status: dto?.status ?? null, registered: (dto?.status ?? '').toUpperCase() === 'REGISTERED' };
+}

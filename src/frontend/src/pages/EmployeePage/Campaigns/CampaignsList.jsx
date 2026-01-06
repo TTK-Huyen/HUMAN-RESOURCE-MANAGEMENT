@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchCampaigns, registerCampaign } from "../../../Services/campaigns";
+import { fetchCampaigns, registerCampaign, getRegistrationStatus } from "../../../Services/campaigns";
 import { PlusCircle, Info, Calendar, Search } from "lucide-react";
 import Loading from "../../../components/common/Loading";
 import EmptyState from "../../../components/common/EmptyState";
@@ -41,7 +41,21 @@ export default function CampaignsList() {
     setError(null);
     try {
       const data = await fetchCampaigns(filters);
-      setCampaigns(data || []);
+      const list = data || [];
+      // Enrich each item with isRegistered for current employee
+      const employeeCode = localStorage.getItem('employeeCode') || '';
+      if (employeeCode && list.length > 0) {
+        try {
+          const statuses = await Promise.all(list.map(it => getRegistrationStatus(it.campaignCode, employeeCode)));
+          const merged = list.map((it, idx) => ({ ...it, isRegistered: statuses[idx]?.registered ?? false }));
+          setCampaigns(merged);
+        } catch (e) {
+          // If status check fails, fallback to raw list
+          setCampaigns(list);
+        }
+      } else {
+        setCampaigns(list);
+      }
       // if loaded data changes, ensure current page is valid
       setCurrentPage(1);
     } catch (ex) {

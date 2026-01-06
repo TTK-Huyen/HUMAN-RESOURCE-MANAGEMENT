@@ -78,5 +78,42 @@ namespace HrmApi.Services
                 throw new Exception("Employee can only register once per campaign.");
             }
         }
+
+        // New: Get registration status
+        public async Task<HrmApi.Dtos.Campaigns.CampaignRegistrationStatusResponseDto> GetRegistrationStatusAsync(string campaignCode, string employeeCode)
+        {
+            if (string.IsNullOrWhiteSpace(employeeCode))
+                throw new Exception("Employee_code is required.");
+
+            var campaign = await _campaignRepo.GetByCodeAsync(campaignCode);
+            if (campaign == null)
+                throw new Exception("Campaign not found.");
+
+            var employee = await _employeeRepo.GetByCodeAsync(employeeCode);
+            if (employee == null)
+                throw new Exception("Employee not found.");
+
+            // Try find registration (any status)
+            var reg = await _registrationRepo.FindByCampaignAndEmployeeAsync(campaign.CampaignId, employee.Id);
+
+            var dto = new HrmApi.Dtos.Campaigns.CampaignRegistrationStatusResponseDto
+            {
+                CampaignCode = campaignCode,
+                EmployeeCode = employeeCode
+            };
+
+            if (reg == null)
+            {
+                dto.Status = "NotRegistered";
+                return dto;
+            }
+
+            dto.Status = reg.Status.ToString();
+            dto.RegistrationDate = reg.RegistrationDate;
+            dto.CancelDate = reg.CancelDate;
+            dto.CancelReason = reg.CancelReason;
+
+            return dto;
+        }
     }
 }

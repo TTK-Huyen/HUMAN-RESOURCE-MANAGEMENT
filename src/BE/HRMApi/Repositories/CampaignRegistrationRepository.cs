@@ -27,5 +27,12 @@ namespace HrmApi.Repositories
             await _context.SaveChangesAsync();
             return registration;
         }
+
+        // New: find registration by campaign and employee
+        public async Task<CampaignRegistration?> FindByCampaignAndEmployeeAsync(int campaignId, int employeeId)
+        {
+            return await _context.CampaignRegistrations
+                .FirstOrDefaultAsync(r => r.CampaignId == campaignId && r.EmployeeId == employeeId);
+        }
     }
 }

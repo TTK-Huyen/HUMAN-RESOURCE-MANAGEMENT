@@ -40,5 +40,22 @@ namespace HrmApi.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        // New: GET api/v1/employee/campaigns/{campaignCode}/status?employee_code=E001
+        [HttpGet("{campaignCode}/status")]
+        public async Task<IActionResult> GetRegistrationStatus(
+            [FromRoute] string campaignCode,
+            [FromQuery(Name = "employee_code")] string employeeCode)
+        {
+            try
+            {
+                var result = await _service.GetRegistrationStatusAsync(campaignCode, employeeCode);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }
