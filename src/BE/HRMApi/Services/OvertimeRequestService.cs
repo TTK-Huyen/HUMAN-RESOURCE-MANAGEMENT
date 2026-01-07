@@ -5,6 +5,8 @@ using HrmApi.Dtos.Notifications;
 using HrmApi.Services.Notifications;
 using System;
 using System.Threading.Tasks;
+using HrmApi.Messaging;
+using HrmApi.Events.Requests;
 
 namespace HrmApi.Services
 {
@@ -14,17 +16,18 @@ namespace HrmApi.Services
         private readonly IEmployeeRepository _employeeRepo;
         private readonly IEmployeeRequestRepository _requestRepo;
         private readonly INotificationPublisher _noti;
+        private readonly IEventBus _eventBus;
 
         public OvertimeRequestService(
             IOvertimeRequestRepository repository,
             IEmployeeRepository employeeRepo,
             IEmployeeRequestRepository requestRepo,
-            INotificationPublisher noti)
+            IEventBus eventBus)
         {
             _repository = repository;
             _employeeRepo = employeeRepo;
             _requestRepo = requestRepo;
-            _noti = noti;
+            _eventBus = eventBus;
         }
 
         public async Task<OvertimeRequestCreatedDto> CreateAsync(string employeeCode, CreateOvertimeRequestDto dto)
@@ -58,7 +61,7 @@ namespace HrmApi.Services
             
             await _requestRepo.AddAsync(request);
             await _requestRepo.SaveChangesAsync(); // Save để lấy RequestId
-
+            
             // 4. Tạo Overtime Request chi tiết (Bảng con)
             var otRequest = new OvertimeRequest
             {
@@ -81,8 +84,27 @@ namespace HrmApi.Services
             await _repository.AddAsync(otRequest);
             await _repository.SaveChangesAsync();
 
-            // 5. Gửi Notification (Chạy ngầm không chặn luồng chính)
-            _ = SendNotificationAsync(employee, request);
+            Employee? manager = null;
+            if (employee.DirectManagerId.HasValue)
+            {
+                manager = await _employeeRepo.GetManagerByIdAsync(employee.DirectManagerId.Value);
+            }
+
+            var ev = new RequestSubmittedEvent
+            {
+                RequestId = request.RequestId,
+                RequestType = "OT", // giữ đúng như bạn đang lưu RequestType = "OT"
+                ActorUserId = employee.Id,
+                ActorName = employee.FullName,
+                ManagerUserId = employee.DirectManagerId,
+                ManagerEmail = manager?.PersonalEmail,
+                RequesterEmail = employee.PersonalEmail,
+                Status = "Pending",
+                Message = $"Nhân viên {employee.FullName} đã gửi yêu cầu tăng ca mới."
+            };
+
+            await _eventBus.PublishAsync(ev, "request.submitted.OT");
+
 
             // 6. Trả về kết quả
             return new OvertimeRequestCreatedDto
@@ -93,7 +115,7 @@ namespace HrmApi.Services
         }
 
         // Hàm tách riêng logic gửi thông báo để code gọn hơn
-        private async Task SendNotificationAsync(Employee employee, Request request)
+        /*private async Task SendNotificationAsync(Employee employee, Request request)
         {
             try
             {
@@ -130,6 +152,6 @@ namespace HrmApi.Services
                 // Log lỗi nếu cần thiết, không throw exception để tránh làm lỗi API tạo đơn
                 Console.WriteLine($"Failed to send notification: {ex.Message}");
             }
-        }
+        }*/
     }
 }
