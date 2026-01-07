@@ -92,6 +92,6 @@ docker ps
 }
 
 ```
-
+Cài: dotnet add package RabbitMQ.Client
 
 
