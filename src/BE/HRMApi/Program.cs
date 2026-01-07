@@ -4,6 +4,9 @@ using HrmApi.Services;
 using HrmApi.Services.Notifications;
 using HrmApi.Security;
 using Microsoft.EntityFrameworkCore;
+using HrmApi.Messaging;
+using HrmApi.Messaging.RabbitMq;
+using HrmApi.Consumers.Requests;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 var builder = WebApplication.CreateBuilder(args);
@@ -60,6 +63,11 @@ builder.Services.AddScoped<ICampaignService, CampaignService>();
 builder.Services.AddScoped<ICampaignRegistrationService, CampaignRegistrationService>();
 builder.Services.AddScoped<ICampaignDetailService, CampaignDetailService>();
 builder.Services.AddScoped<ICampaignListService, CampaignListService>();
+builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection("RabbitMq"));
+builder.Services.AddSingleton<IEventBus, RabbitMqEventBus>();
+
+// consumer chạy nền
+builder.Services.AddHostedService<RequestSubmittedNotificationConsumer>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
