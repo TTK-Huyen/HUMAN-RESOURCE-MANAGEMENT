@@ -192,10 +192,10 @@ export default function CampaignDetail() {
             <div style={{ marginTop: 6 }}><StatusBadge status={campaign.status} /></div>
           </div>
 
-          <div style={{ background: '#fff', padding: 12, borderRadius: 8, boxShadow: '0 4px 12px rgba(2,6,23,0.03)' }}>
+          {/* <div style={{ background: '#fff', padding: 12, borderRadius: 8, boxShadow: '0 4px 12px rgba(2,6,23,0.03)' }}>
             <div style={{ color: '#6b7280', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.8px' }}>Ngày tạo</div>
             <div style={{ fontWeight: 700, marginTop: 6 }}>{fmt(campaign.createdAt)}</div>
-          </div>
+          </div> */}
         </aside>
       </div>
 

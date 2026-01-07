@@ -384,8 +384,204 @@ if (app.Environment.IsDevelopment())
             RoleId = 3, // HR
             Status = AccountStatus.ACTIVE,
             LastLoginAt = null
-        });
+        });        db.SaveChanges();
+    }
 
+    // Seed Campaigns
+    if (!db.Campaigns.Any())
+    {
+        var employees = db.Employees.ToList();
+        var createdBy = employees.First().Id; // Employee đầu tiên là người tạo
+
+        db.Campaigns.AddRange(
+            // Campaign 1
+            new Campaign
+            {
+                CampaignCode = "CAM001",
+                CampaignName = "Annual Marathon 2026",
+                Description = "Company-wide marathon event for promoting health and fitness",
+                AnnouncementDate = new DateTime(2026, 1, 1),
+                StartDate = new DateTime(2026, 2, 1),
+                EndDate = new DateTime(2026, 2, 28),
+                RegistrationRules = "Employees must be in good health. Medical check required. No previous serious injuries.",
+                RewardsDescription = "Top 3 finishers: Gold/Silver/Bronze medals + cash prizes",
+                Status = CampaignStatus.UPCOMING,
+                MaxParticipants = 150,
+                CurrentParticipants = 0,
+                CreatedById = createdBy,
+                CreatedAt = DateTime.Now
+            },
+            // Campaign 2
+            new Campaign
+            {
+                CampaignCode = "CAM002",
+                CampaignName = "Tech Innovation Challenge",
+                Description = "Showcase your tech skills and innovation. Submit your best project ideas.",
+                AnnouncementDate = new DateTime(2026, 1, 5),
+                StartDate = new DateTime(2026, 2, 15),
+                EndDate = new DateTime(2026, 3, 31),
+                RegistrationRules = "IT department employees only. Teams of 2-4 members.",
+                RewardsDescription = "Winning teams: Bonus + paid leave + equipment upgrade",
+                Status = CampaignStatus.UPCOMING,
+                MaxParticipants = 50,
+                CurrentParticipants = 0,
+                CreatedById = createdBy,
+                CreatedAt = DateTime.Now
+            },
+            // Campaign 3
+            new Campaign
+            {
+                CampaignCode = "CAM003",
+                CampaignName = "Environmental Cleanup Drive",
+                Description = "Join us in cleaning up the local community and promoting sustainability",
+                AnnouncementDate = new DateTime(2025, 12, 28),
+                StartDate = new DateTime(2026, 1, 25),
+                EndDate = new DateTime(2026, 2, 15),
+                RegistrationRules = "All employees welcome. Comfortable clothes and closed shoes required.",
+                RewardsDescription = "Participation certificates + recognition + company merchandise",
+                Status = CampaignStatus.ONGOING,
+                MaxParticipants = 200,
+                CurrentParticipants = 45,
+                CreatedById = createdBy,
+                CreatedAt = DateTime.Now
+            },
+            // Campaign 4
+            new Campaign
+            {
+                CampaignCode = "CAM004",
+                CampaignName = "Annual Sports Day",
+                Description = "Inter-department sports competition featuring multiple events and activities",
+                AnnouncementDate = new DateTime(2026, 1, 10),
+                StartDate = new DateTime(2026, 3, 15),
+                EndDate = new DateTime(2026, 3, 20),
+                RegistrationRules = "Teams must have at least 8 members. One team captain per department.",
+                RewardsDescription = "Winning department: Trophy + team lunch + extra holidays",
+                Status = CampaignStatus.UPCOMING,
+                MaxParticipants = 100,
+                CurrentParticipants = 0,
+                CreatedById = createdBy,
+                CreatedAt = DateTime.Now
+            },
+            // Campaign 5
+            new Campaign
+            {
+                CampaignCode = "CAM005",
+                CampaignName = "Charity Fundraiser - Children Hospital",
+                Description = "Help raise funds for the local children's hospital through various activities",
+                AnnouncementDate = new DateTime(2026, 1, 8),
+                StartDate = new DateTime(2026, 02, 20),
+                EndDate = new DateTime(2026, 03, 10),
+                RegistrationRules = "All employees can participate. Minimum donation: 100,000 VND recommended.",
+                RewardsDescription = "Donor recognition + charity certificate + company donation match",
+                Status = CampaignStatus.UPCOMING,
+                MaxParticipants = 300,
+                CurrentParticipants = 0,
+                CreatedById = createdBy,
+                CreatedAt = DateTime.Now
+            },
+            // Campaign 6
+            new Campaign
+            {
+                CampaignCode = "CAM006",
+                CampaignName = "Professional Development Workshop Series",
+                Description = "Enhance your skills with expert-led workshops on latest technologies and methodologies",
+                AnnouncementDate = new DateTime(2026, 1, 12),
+                StartDate = new DateTime(2026, 03, 01),
+                EndDate = new DateTime(2026, 04, 30),
+                RegistrationRules = "First 40 registrants per workshop accepted. Priority to relevant department employees.",
+                RewardsDescription = "Certificate of completion + skills recognition on employee profile",
+                Status = CampaignStatus.UPCOMING,
+                MaxParticipants = 120,
+                CurrentParticipants = 0,
+                CreatedById = createdBy,
+                CreatedAt = DateTime.Now
+            },
+            // Campaign 7
+            new Campaign
+            {
+                CampaignCode = "CAM007",
+                CampaignName = "Youth Mentoring Program",
+                Description = "Senior employees mentoring junior staff to accelerate career growth",
+                AnnouncementDate = new DateTime(2026, 1, 15),
+                StartDate = new DateTime(2026, 02, 01),
+                EndDate = new DateTime(2026, 05, 31),
+                RegistrationRules = "Senior mentors: 5+ years experience. Juniors: Less than 2 years in company.",
+                RewardsDescription = "Mentor recognition award + career advancement boost + mentor stipend",
+                Status = CampaignStatus.PENDING,
+                MaxParticipants = 80,
+                CurrentParticipants = 0,
+                CreatedById = createdBy,
+                CreatedAt = DateTime.Now
+            },
+            // Campaign 8
+            new Campaign
+            {
+                CampaignCode = "CAM008",
+                CampaignName = "Fitness Challenge - 30 Days",
+                Description = "Track your fitness journey with daily workouts, nutrition tracking, and team competitions",
+                AnnouncementDate = new DateTime(2026, 1, 18),
+                StartDate = new DateTime(2026, 02, 15),
+                EndDate = new DateTime(2026, 03, 16),
+                RegistrationRules = "All employees welcome. Self-tracking via fitness app or manual log.",
+                RewardsDescription = "Fitness gear + nutrition consultation + gym membership discount",
+                Status = CampaignStatus.UPCOMING,
+                MaxParticipants = 250,
+                CurrentParticipants = 0,
+                CreatedById = createdBy,
+                CreatedAt = DateTime.Now
+            },
+            // Campaign 9
+            new Campaign
+            {
+                CampaignCode = "CAM009",
+                CampaignName = "Employee Recognition Awards",
+                Description = "Celebrate outstanding achievements and contributions from our valued employees",
+                AnnouncementDate = new DateTime(2026, 01, 20),
+                StartDate = new DateTime(2026, 03, 01),
+                EndDate = new DateTime(2026, 03, 31),
+                RegistrationRules = "Anyone can nominate colleagues. Self-nomination not allowed. Include specific achievements.",
+                RewardsDescription = "Award ceremony recognition + trophy + bonus + reserved parking spot",
+                Status = CampaignStatus.PENDING,
+                MaxParticipants = null, // No limit
+                CurrentParticipants = 0,
+                CreatedById = createdBy,
+                CreatedAt = DateTime.Now
+            },
+            // Campaign 10
+            new Campaign
+            {
+                CampaignCode = "CAM010",
+                CampaignName = "Cultural Festival Celebration",
+                Description = "Celebrate Vietnamese culture through traditional performances, food, and activities",
+                AnnouncementDate = new DateTime(2026, 01, 22),
+                StartDate = new DateTime(2026, 02, 10),
+                EndDate = new DateTime(2026, 02, 12),
+                RegistrationRules = "All employees welcome. Perform, cook, or participate as audience.",
+                RewardsDescription = "Performers: Recognition + prizes + company merchandise. Audience: Food + entertainment",
+                Status = CampaignStatus.UPCOMING,
+                MaxParticipants = 500,
+                CurrentParticipants = 0,
+                CreatedById = createdBy,
+                CreatedAt = DateTime.Now
+            },
+            // Campaign 11
+            new Campaign
+            {
+                CampaignCode = "CAM011",
+                CampaignName = "Coding Competition - HackathonX",
+                Description = "48-hour intensive coding competition. Build innovative solutions for real-world problems.",
+                AnnouncementDate = new DateTime(2026, 01, 25),
+                StartDate = new DateTime(2026, 04, 01),
+                EndDate = new DateTime(2026, 04, 03),
+                RegistrationRules = "Teams of 3-5. At least 2 members must have coding experience. Cross-department teams encouraged.",
+                RewardsDescription = "1st Place: 5M VND + trophy. 2nd: 3M VND. 3rd: 1.5M VND + tech gear",
+                Status = CampaignStatus.PENDING,
+                MaxParticipants = 60,
+                CurrentParticipants = 0,
+                CreatedById = createdBy,
+                CreatedAt = DateTime.Now
+            }
+        );
         db.SaveChanges();
     }
 

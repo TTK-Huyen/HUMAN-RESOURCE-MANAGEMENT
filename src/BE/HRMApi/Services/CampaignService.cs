@@ -34,9 +34,7 @@ namespace HrmApi.Services
             }
 
             // 3. Sinh mã Code tự động (Logic: Lấy mã cũ + 1)
-            string nextCode = await GenerateNextCode();
-
-            // 4. Tạo Entity
+            string nextCode = await GenerateNextCode();            // 4. Tạo Entity
             var campaign = new Campaign
             {
                 CampaignCode = nextCode,
@@ -45,6 +43,7 @@ namespace HrmApi.Services
                 StartDate = dto.StartDate,
                 EndDate = dto.EndDate,
                 AnnouncementDate = dto.AnnouncementDate,
+                RegistrationRules = dto.RegistrationRules,
                 RewardsDescription = dto.RewardDescription,
                 CreatedById = dto.CreatedBy,
                 MaxParticipants = dto.MaxParticipants,
