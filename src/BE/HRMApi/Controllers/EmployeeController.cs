@@ -76,7 +76,9 @@ namespace HrmApi.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Internal server error: " + ex.Message });
+                // Get inner exception message if available
+                var errorMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "Internal server error: " + errorMessage });
             }
         }
 

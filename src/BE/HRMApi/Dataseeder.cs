@@ -19,37 +19,39 @@ namespace HrmApi.Data
                 return;
             }
 
-            Console.WriteLine("--> Bắt đầu tạo dữ liệu (1 Manager, 1 HR, 30 Employees)...");
+            Console.WriteLine("--> Bắt đầu tạo dữ liệu (33 Employees: 1 Manager, 1 HR, 31 Staff)...");
             Randomizer.Seed = new Random(12345); // Seed cố định
 
             // --- A. TẠO DANH MỤC (JobTitles, Departments, Roles) ---
             var jobTitles = new List<JobTitle>
             {
-                new JobTitle { Title = "Giám đốc (CEO)", Level = "C-Level" },
-                new JobTitle { Title = "Trưởng phòng (Manager)", Level = "Manager" },
-                new JobTitle { Title = "HR Specialist", Level = "Senior" },
-                new JobTitle { Title = "Senior Developer", Level = "Senior" },
-                new JobTitle { Title = "Junior Developer", Level = "Junior" },
-                new JobTitle { Title = "Tester/QC", Level = "Junior" },
-                new JobTitle { Title = "Intern", Level = "Intern" }
+                new JobTitle { Title = "Giám đốc (CEO)", Level = "Giám đốc" },
+                new JobTitle { Title = "Trưởng phòng (Manager)", Level = "Quản lý" },
+                new JobTitle { Title = "HR Specialist", Level = "Chuyên viên" },
+                new JobTitle { Title = "Senior Developer", Level = "Chuyên viên" },
+                new JobTitle { Title = "Junior Developer", Level = "Nhân viên" },
+                new JobTitle { Title = "Tester/QC", Level = "Nhân viên" },
+                new JobTitle { Title = "Intern", Level = "Thực tập sinh" }
             };
             context.JobTitles.AddRange(jobTitles);
 
             var departments = new List<Department>
             {
                 new Department { DepartmentCode = "BGD", Name = "Ban Giám Đốc" },
-                new Department { DepartmentCode = "IT", Name = "Phòng IT" },
+                new Department { DepartmentCode = "IT", Name = "Phòng Công nghệ Thông tin" },
                 new Department { DepartmentCode = "HR", Name = "Phòng Nhân Sự" },
-                new Department { DepartmentCode = "SALE", Name = "Phòng Kinh Doanh" }
+                new Department { DepartmentCode = "SALE", Name = "Phòng Kinh Doanh" },
+                new Department { DepartmentCode = "ACC", Name = "Phòng Kế toán" },
+                new Department { DepartmentCode = "ADMIN", Name = "Phòng Hành chính" }
             };
             context.Departments.AddRange(departments);
 
             var roles = new List<Role>
             {
-                new Role { RoleCode = "ADMIN", RoleName = "Administrator" },   // ID 1
-                new Role { RoleCode = "HR", RoleName = "Human Resource" },     // ID 2
-                new Role { RoleCode = "MANAGER", RoleName = "Manager" },       // ID 3
-                new Role { RoleCode = "EMP", RoleName = "Employee" }           // ID 4
+                new Role { RoleCode = "ADMIN", RoleName = "Quản trị viên" },      // ID 1
+                new Role { RoleCode = "HR", RoleName = "Nhân sự" },              // ID 2
+                new Role { RoleCode = "MANAGER", RoleName = "Quản lý" },         // ID 3
+                new Role { RoleCode = "EMP", RoleName = "Nhân viên" }            // ID 4
             };
             context.Roles.AddRange(roles);
             context.SaveChanges(); // Lưu để lấy ID
@@ -71,17 +73,20 @@ namespace HrmApi.Data
             // 1. TẠO MANAGER (Cố định)
             var manager = new Employee
             {
-                EmployeeCode = "MNG001",
+                EmployeeCode = "EMP001",
                 FullName = "Trần Văn Quản Lý",
                 PersonalEmail = "manager@hrm.com",
                 PhoneNumber = "0901234567",
                 DepartmentId = deptIT.Id,
                 JobTitleId = jobTitles.First(j => j.Title.Contains("Manager")).Id,
-                Status = "ACTIVE",
-                Nationality = "Vietnamese",
-                ContractType = "Indefinite",
+                Status = "Đang làm việc",
+                Nationality = "Việt Nam",
+                ContractType = "Vĩnh viễn",
                 DateOfBirth = new DateTime(1985, 1, 1),
-                CurrentAddress = "TP.HCM"
+                CurrentAddress = "TP.HCM",
+                CitizenIdNumber = "0851001234567", // 13 chữ số
+                PersonalTaxCode = "0851001234",    // 10 chữ số
+                SocialInsuranceNumber = "8501001234" // 10 chữ số
             };
             context.Employees.Add(manager);
             context.SaveChanges(); // Lưu ngay để lấy ID làm sếp cho nhân viên
@@ -98,17 +103,20 @@ namespace HrmApi.Data
             // 2. TẠO HR (Cố định)
             var hr = new Employee
             {
-                EmployeeCode = "HR001",
+                EmployeeCode = "EMP002",
                 FullName = "Nguyễn Thị Nhân Sự",
                 PersonalEmail = "hr@hrm.com",
                 PhoneNumber = "0909888777",
                 DepartmentId = deptHR.Id,
                 JobTitleId = jobTitles.First(j => j.Title.Contains("HR")).Id,
-                Status = "ACTIVE",
-                Nationality = "Vietnamese",
-                ContractType = "Indefinite",
+                Status = "Đang làm việc",
+                Nationality = "Việt Nam",
+                ContractType = "Vĩnh viễn",
                 DateOfBirth = new DateTime(1990, 5, 5),
-                CurrentAddress = "Hà Nội"
+                CurrentAddress = "Hà Nội",
+                CitizenIdNumber = "0901005678901", // 13 chữ số
+                PersonalTaxCode = "0901005678",    // 10 chữ số
+                SocialInsuranceNumber = "9001005678" // 10 chữ số
             };
             context.Employees.Add(hr);
             context.SaveChanges();
@@ -122,24 +130,24 @@ namespace HrmApi.Data
                 Status = AccountStatus.ACTIVE
             });
             
-            // 3. TẠO 1 EMP001 (CỐ ĐỊNH – DÙNG ĐỂ TEST)
+            // 3. TẠO 1 EMP003 (CỐ ĐỊNH – DÙNG ĐỂ TEST)
             var testEmp = new Employee
             {
-                EmployeeCode = "EMP001",
+                EmployeeCode = "EMP003",
                 FullName = "Trần Nhân Viên Test",
                 PersonalEmail = "emp001@hrm.com",
                 PhoneNumber = "0909888779",
                 DepartmentId = deptIT.Id,
                 JobTitleId = jobTitles.First(j => j.Title.Contains("Developer")).Id,
                 DirectManagerId = manager.Id,
-                Status = "ACTIVE",
-                Nationality = "Vietnamese",
-                ContractType = "Indefinite",
+                Status = "Đang làm việc",
+                Nationality = "Việt Nam",
+                ContractType = "Vĩnh viễn",
                 DateOfBirth = new DateTime(1998, 6, 15),
                 CurrentAddress = "Hà Nội",
-
-                // CCCD bắt buộc để sinh password
-                CitizenIdNumber = "0790981234567"
+                CitizenIdNumber = "0790981234567", // 13 chữ số
+                PersonalTaxCode = "0790981234",    // 10 chữ số
+                SocialInsuranceNumber = "7909812345" // 10 chữ số
             };
 
             context.Employees.Add(testEmp);
@@ -148,7 +156,7 @@ namespace HrmApi.Data
 
             context.UserAccounts.Add(new UserAccount
             {
-                Username = "EMP001",
+                Username = "EMP003",
                 PasswordHash = passwordHash,
                 EmployeeId = testEmp.Id,
                 RoleId = roleEmp.RoleId,
@@ -158,20 +166,35 @@ namespace HrmApi.Data
             context.SaveChanges();
             // 3. TẠO 30 NHÂN VIÊN (Còn lại là Employee hết)
             var staffList = new List<Employee>();
+            
+            // ===== ĐỊNH NGHĨA MIỀN GIÁ TRỊ (TIẾNG VIỆT) =====
+            var genderValues = new[] { "Nam", "Nữ", "Khác" };
+            var maritalStatuses = new[] { "Độc thân", "Kết hôn", "Ly hôn", "Góa" };
+            var employmentTypes = new[] { "Toàn thời gian", "Bán thời gian", "Theo hợp đồng", "Tạm thời" };
+            var contractTypes = new[] { "Vĩnh viễn", "Có thời hạn" };
+            var leaveTypes = new[] { "Phép năm", "Phép bệnh", "Phép cá nhân", "Nghỉ không lương", "Phép thai sản" };
+            
             var empFaker = new Faker<Employee>("vi")
                 .RuleFor(e => e.FullName, f => f.Name.FullName())
                 .RuleFor(e => e.PhoneNumber, f => f.Phone.PhoneNumber("09########"))
                 .RuleFor(e => e.PersonalEmail, (f, e) => RemoveSign(e.FullName).ToLower().Replace(" ", "") + "@hrm.com")
                 .RuleFor(e => e.DateOfBirth, f => f.Date.Past(25, DateTime.Now.AddYears(-22)))
                 .RuleFor(e => e.CurrentAddress, f => f.Address.City())
-                .RuleFor(e => e.Nationality, f => "Vietnamese")
-                .RuleFor(e => e.Status, f => "ACTIVE")
-                .RuleFor(e => e.ContractType, f => f.PickRandom("Indefinite", "Fixed-term"));
+                .RuleFor(e => e.CitizenIdNumber, f => f.Random.ReplaceNumbers("#############")) // 13 chữ số
+                .RuleFor(e => e.PersonalTaxCode, f => f.Random.ReplaceNumbers("##########")) // 10 chữ số
+                .RuleFor(e => e.SocialInsuranceNumber, f => f.Random.ReplaceNumbers("##########")) // 10 chữ số
+                .RuleFor(e => e.Gender, f => f.PickRandom(genderValues)) // Nam, Nữ, Khác
+                .RuleFor(e => e.MaritalStatus, f => f.PickRandom(maritalStatuses)) // Độc thân, Kết hôn, Ly hôn, Góa
+                .RuleFor(e => e.EmploymentType, f => f.PickRandom(employmentTypes)) // Toàn thời gian, Bán thời gian, Theo hợp đồng, Tạm thời
+                .RuleFor(e => e.ContractType, f => f.PickRandom(contractTypes)) // Vĩnh viễn, Có thời hạn
+                .RuleFor(e => e.Nationality, f => "Việt Nam")
+                .RuleFor(e => e.Status, f => "Đang làm việc") // Đang làm việc, Nghỉ việc, Tạm dừng, Từ chức
+                .RuleFor(e => e.HasChildren, f => f.Random.Bool(0.5f)); // 50% có con, 50% không
 
-            for (int i = 2; i <= 31; i++)
+            for (int i = 4; i <= 33; i++)
             {
                 var emp = empFaker.Generate();
-                emp.EmployeeCode = $"EMP{i:000}"; // NV001, NV002...
+                emp.EmployeeCode = $"EMP{i:000}"; // EMP004, EMP005...
                 emp.DepartmentId = deptIT.Id; // Cho hết vào phòng IT để Manager quản lý
                 emp.JobTitleId = jobTitles.First(j => j.Title.Contains("Developer")).Id;
                 emp.DirectManagerId = manager.Id; // Tất cả báo cáo cho ông Manager ở trên
@@ -184,10 +207,10 @@ namespace HrmApi.Data
                 string rawPassword = GeneratePassword(emp);
                 string empPasswordHash = passwordHasher.HashPassword(rawPassword);
 
-                // Tạo UserAccount tương ứng: user1, user2...
+                // Tạo UserAccount tương ứng: EMP004, EMP005...
                 context.UserAccounts.Add(new UserAccount
                 {
-                    Username = $"EMP{i:000}", // user1, user2...
+                    Username = $"EMP{i:000}", // EMP004, EMP005...
                     PasswordHash = empPasswordHash,
                     EmployeeId = emp.Id,
                     RoleId = roleEmp.RoleId, // Role Employee
@@ -198,6 +221,8 @@ namespace HrmApi.Data
 
             // --- C. TẠO REQUEST (Dữ liệu mẫu để test) ---
             Console.WriteLine("--> Tạo Requests ngẫu nhiên...");
+
+            var leaveTypeList = new[] { "Phép năm", "Phép bệnh", "Phép cá nhân", "Nghỉ không lương", "Phép thai sản" };
 
             // Tạo 15 đơn xin nghỉ phép (10 Pending, 5 Approved)
             for (int i = 0; i < 15; i++)
@@ -221,7 +246,7 @@ namespace HrmApi.Data
                 {
                     Id = req.RequestId,
                     EmployeeId = emp.Id,
-                    LeaveType = "Annual",
+                    LeaveType = new Faker().PickRandom(leaveTypeList), // Phép năm, Phép bệnh, Phép cá nhân, Nghỉ không lương, Phép thai sản
                     StartDate = DateTime.Now.AddDays(new Random().Next(2, 10)),
                     EndDate = DateTime.Now.AddDays(new Random().Next(11, 15)),
                     Reason = "Nghỉ phép cá nhân",

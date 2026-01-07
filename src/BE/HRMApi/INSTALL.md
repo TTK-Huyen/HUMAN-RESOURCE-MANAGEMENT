@@ -9,7 +9,7 @@ Các bước tối thiểu để chạy project `HRMApi` lần đầu trên Wind
 1. Tạo môi trường ảo  
    Chỉ tạo lần đầu.
 
-   Di chuyển vào thư mục backend và chạy:
+   Di chuyển vào thư mục backend `cd src\BE\HRMApi`và chạy:
    Window: `py -m venv env`
    MacOS: `python3 -m venv env`
 

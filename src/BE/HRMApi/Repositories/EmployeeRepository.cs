@@ -84,7 +84,6 @@ namespace HrmApi.Repositories
         public async Task AddAsync(Employee employee)
         {
             _context.Employees.Add(employee);
-            await _context.SaveChangesAsync();
         }
 
         public async Task<Employee?> GetByIdAsync(int id)
@@ -262,5 +261,15 @@ namespace HrmApi.Repositories
                 .AnyAsync(e => e.CitizenIdNumber == citizenIdNumber);
         }
 
+        public async Task AddPhoneNumberAsync(EmployeePhoneNumber phoneNumber)
+        {
+            await _context.EmployeePhoneNumbers.AddAsync(phoneNumber);
+        }
+
+        public async Task AddBankAccountAsync(EmployeeBankAccount bankAccount)
+        {
+            await _context.EmployeeBankAccounts.AddAsync(bankAccount);
+        }
     }
 }
+

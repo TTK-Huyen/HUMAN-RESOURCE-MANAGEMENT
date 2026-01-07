@@ -21,7 +21,20 @@ namespace HrmApi.Dtos.Employee
         [EmailAddress]
         public string? PersonalEmail { get; set; }
 
-        public string? PhoneNumber { get; set; }
+        // Phone numbers (max 2)
+        public List<PhoneNumberInfo> PhoneNumbers { get; set; } = new();
+
+        // Birth place (required)
+        [Required]
+        public AddressInfo BirthPlace { get; set; } = new();
+
+        // Current address (required)
+        [Required]
+        public AddressInfo CurrentAddress { get; set; } = new();
+
+        // Bank account info (required)
+        [Required]
+        public BankAccountInfo BankAccount { get; set; } = new();
 
         public string? MaritalStatus { get; set; }
 
@@ -32,7 +45,6 @@ namespace HrmApi.Dtos.Employee
 
         public string? PersonalTaxCode { get; set; }
         public string? SocialInsuranceNumber { get; set; }
-        public string? CurrentAddress { get; set; }
 
         [Required]
         public int? DepartmentId { get; set; }
@@ -55,4 +67,26 @@ namespace HrmApi.Dtos.Employee
         [Required]
         public int RoleId { get; set; } // UI đã gửi roleId
     }
+
+    public class PhoneNumberInfo
+    {
+        public string PhoneNumber { get; set; } = string.Empty;
+        public string Description { get; set; } = "Personal"; // Personal, Emergency, Work
+    }
+
+    public class AddressInfo
+    {
+        [Required]
+        public string Province { get; set; } = string.Empty;
+        [Required]
+        public string District { get; set; } = string.Empty;
+    }
+
+    public class BankAccountInfo
+    {
+        [Required]
+        public string BankName { get; set; } = string.Empty;
+        [Required]
+        public string AccountNumber { get; set; } = string.Empty;
+    } 
 }

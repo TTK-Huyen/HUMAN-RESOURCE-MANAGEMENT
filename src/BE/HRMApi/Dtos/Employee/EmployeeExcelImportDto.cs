@@ -55,6 +55,21 @@ namespace HrmApi.Dtos.Employee
         public string? PersonalTaxCode { get; set; }
         public string? SocialInsuranceNumber { get; set; }
 
+        // New fields for enhanced employee data
+        // Phone numbers (tối đa 2 số)
+        public string? PhoneNumber1 { get; set; }
+        public string? PhoneNumber1Description { get; set; }
+        public string? PhoneNumber2 { get; set; }
+        public string? PhoneNumber2Description { get; set; }
+
+        // Birth place (nơi sinh)
+        public string? BirthPlaceProvince { get; set; }
+        public string? BirthPlaceDistrict { get; set; }
+
+        // Bank account (tài khoản ngân hàng)
+        public string? BankName { get; set; }
+        public string? BankAccountNumber { get; set; }
+
         // Row number for error reporting
         public int RowNumber { get; set; }
     }

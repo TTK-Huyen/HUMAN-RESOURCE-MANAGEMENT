@@ -80,7 +80,7 @@ const DetailModal = ({ req, typeConfig, onClose, onRefresh }) => {
     if (type.includes('leave')) {
         // Leave request vẫn giữ nguyên /manager/ nếu API yêu cầu
         url = `${API_BASE}/manager/leave-requests/${requestId}`;
-    } else if (type.includes('overtime')) {
+    } else if (type.includes('overtime') || type === 'ot') {
         // OT: Bỏ /manager/, dùng requestId
         url = `${API_BASE}/getdetail-overtime-requests/${requestId}`;
     } else if (type.includes('resignation')) {
@@ -199,7 +199,7 @@ const DetailModal = ({ req, typeConfig, onClose, onRefresh }) => {
       }
 
       // CASE 2: OVERTIME
-      if (type.includes('overtime')) {
+      if (type.includes('overtime') || type === 'ot') {
         return (
             <div className="info-box">
                 <div className="info-row"><span className="info-label">Project</span><span className="info-val fw-600" style={{color:'#d97706'}}><Briefcase size={14} style={{marginRight:'5px'}}/> {detailData.project}</span></div>

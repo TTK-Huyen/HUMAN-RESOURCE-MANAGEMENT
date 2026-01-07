@@ -31,6 +31,7 @@ namespace HrmApi.Services
             if (employee == null) return null;            // Mapping từ Employee sang EmployeeProfileDto
             var dto = new EmployeeProfileDto
             {
+                Id = employee.Id,
                 EmployeeName = employee.FullName,
                 EmployeeCode = employee.EmployeeCode,
                 DateOfBirth = employee.DateOfBirth?.ToString("dd/MM/yyyy"),
@@ -61,7 +62,6 @@ namespace HrmApi.Services
                 {
                     BankName = b.BankName,
                     AccountNumber = b.AccountNumber,
-                    AccountHolderName = b.AccountHolderName,
                     IsPrimary = b.IsPrimary
                 }).ToList(),
                 Education = employee.Education.Select(ed => new EmployeeEducationDto
@@ -94,6 +94,7 @@ namespace HrmApi.Services
             // Mapping giống GetProfileAsync
             var dto = new EmployeeProfileDto
             {
+                Id = employee.Id,
                 EmployeeName = employee.FullName,
                 EmployeeCode = employee.EmployeeCode,
                 DateOfBirth = employee.DateOfBirth?.ToString("dd/MM/yyyy"),
@@ -124,7 +125,6 @@ namespace HrmApi.Services
                 {
                     BankName = b.BankName,
                     AccountNumber = b.AccountNumber,
-                    AccountHolderName = b.AccountHolderName,
                     IsPrimary = b.IsPrimary
                 }).ToList(),
                 Education = employee.Education.Select(ed => new EmployeeEducationDto
@@ -175,63 +175,141 @@ namespace HrmApi.Services
             return await _employeeRepository.SaveChangesAsync() > 0;
         }
 
-        public async Task<CreateEmployeeResponseDto?> CreateEmployeeAsync(CreateEmployeeDto dto)
+        public async Task<CreateEmployeeResponseDto> CreateEmployeeAsync(CreateEmployeeDto dto)
         {
-            // 1) Validate tối thiểu
-            if (string.IsNullOrWhiteSpace(dto.EmployeeName)) return null;
-            if (string.IsNullOrWhiteSpace(dto.CompanyEmail)) return null;
-            if (string.IsNullOrWhiteSpace(dto.CitizenIdNumber)) return null;
+            // 1) Validate tối thiểu phía service (để chắc chắn dù UI có bug)
+            if (string.IsNullOrWhiteSpace(dto.EmployeeName))
+                throw new ArgumentException("employeeName");
 
+            if (string.IsNullOrWhiteSpace(dto.CompanyEmail))
+                throw new ArgumentException("companyEmail");
+
+            if (string.IsNullOrWhiteSpace(dto.CitizenIdNumber))
+                throw new ArgumentException("citizenIdNumber");
+
+            // CCCD must be 13 digits
             var cccdDigits = new string(dto.CitizenIdNumber.Where(char.IsDigit).ToArray());
-            if (cccdDigits.Length != 13) return null;
+            if (cccdDigits.Length != 13)
+                throw new ArgumentException("citizenIdNumber");
 
-            // 2) Generate employeeCode
+            // 2) Generate employeeCode -> username = employeeCode
             var employeeCode = await GenerateNextEmployeeCodeAsync();
-
-            // 3) username = employeeCode
             var username = employeeCode;
 
-            // 4) password = EMP + last4 CCCD
+            // 3) password = EMP + last4 CCCD
             var rawPassword = $"EMP{cccdDigits[^4..]}";
 
-            // 5) Uniqueness checks
+            // 4) Uniqueness checks (AC-05)
+            // 4.1 username
             var existingUser = await _userAccountRepository.FindAccountByUsernameAsync(username);
-            if (existingUser != null) return null;
+            if (existingUser != null)
+                throw new ArgumentException("username");
 
-            // 6) Create employee
+            // 4.2 companyEmail
+            // ✅ cần implement method ExistsByCompanyEmailAsync trong EmployeeRepository
+            if (!string.IsNullOrWhiteSpace(dto.CompanyEmail))
+            {
+                var dupEmail = await _employeeRepository.ExistsByCompanyEmailAsync(dto.CompanyEmail);
+                if (dupEmail)
+                    throw new ArgumentException("companyEmail");
+            }
+
+            // 4.3 citizenIdNumber
+            // ✅ cần implement method ExistsByCitizenIdAsync trong EmployeeRepository
+            var dupCitizen = await _employeeRepository.ExistsByCitizenIdAsync(cccdDigits);
+            if (dupCitizen)
+                throw new ArgumentException("citizenIdNumber");
+
+            // 5) Create employee
             var employee = new Employee
             {
                 EmployeeCode = employeeCode,
                 FullName = dto.EmployeeName,
+
                 DateOfBirth = dto.DateOfBirth,
                 Gender = dto.Gender,
                 Nationality = dto.Nationality ?? "Vietnamese",
+
                 CompanyEmail = dto.CompanyEmail,
                 PersonalEmail = dto.PersonalEmail,
-                PhoneNumber = dto.PhoneNumber,
                 MaritalStatus = dto.MaritalStatus,
                 HasChildren = dto.HasChildren,
-                CitizenIdNumber = dto.CitizenIdNumber,
+
+                CitizenIdNumber = cccdDigits,          // store digits only (recommended)
                 PersonalTaxCode = dto.PersonalTaxCode,
                 SocialInsuranceNumber = dto.SocialInsuranceNumber,
-                CurrentAddress = dto.CurrentAddress,
+                
+                // Birth place
+                BirthPlaceProvince = dto.BirthPlace?.Province,
+                BirthPlaceDistrict = dto.BirthPlace?.District,
+                
+                // Address
+                CurrentAddress = $"{dto.CurrentAddress?.District}, {dto.CurrentAddress?.Province}",
+
                 Status = "Active",
                 DepartmentId = dto.DepartmentId,
                 JobTitleId = dto.JobTitleId,
                 DirectManagerId = dto.DirectManagerId,
+
                 EmploymentType = dto.EmploymentType,
                 ContractType = dto.ContractType,
                 ContractStartDate = dto.ContractStartDate,
-                ContractEndDate = dto.ContractEndDate
+                ContractEndDate = dto.ContractEndDate   // can be null
             };
 
             await _employeeRepository.AddAsync(employee);
 
-            // 🔥 bắt buộc save để có employee.Id
-            var saved = await _employeeRepository.SaveChangesAsync();
-            if (saved <= 0) return null;
+            // 🔥 Need to save FIRST to get employee.Id for phone/bank/user relationships
+            try
+            {
+                var saved = await _employeeRepository.SaveChangesAsync();
+                if (saved <= 0)
+                    throw new Exception("Failed to save employee.");
+            }
+            catch (Exception ex)
+            {
+                var innerException = ex.InnerException;
+                var fullError = innerException?.Message ?? ex.Message;
+                
+                // Traverse all inner exceptions
+                while (innerException?.InnerException != null)
+                {
+                    innerException = innerException.InnerException;
+                    fullError = $"{fullError} -> {innerException.Message}";
+                }
+                
+                throw new Exception($"Failed to save employee: {fullError}");
+            }
 
-            // 7) Create user account linked to employee
+            // 6) Create phone numbers
+            var phoneNumbers = new List<EmployeePhoneNumber>();
+            if (dto.PhoneNumbers != null && dto.PhoneNumbers.Any())
+            {
+                foreach (var phone in dto.PhoneNumbers.Where(p => !string.IsNullOrWhiteSpace(p.PhoneNumber)))
+                {
+                    phoneNumbers.Add(new EmployeePhoneNumber
+                    {
+                        EmployeeId = employee.Id,
+                        PhoneNumber = phone.PhoneNumber,
+                        Description = phone.Description ?? "Personal"
+                    });
+                }
+            }
+
+            // 7) Create bank account (primary account for salary)
+            var bankAccount = new EmployeeBankAccount();
+            if (dto.BankAccount != null && !string.IsNullOrWhiteSpace(dto.BankAccount.AccountNumber))
+            {
+                bankAccount = new EmployeeBankAccount
+                {
+                    EmployeeId = employee.Id,
+                    BankName = dto.BankAccount.BankName,
+                    AccountNumber = dto.BankAccount.AccountNumber,
+                    IsPrimary = true
+                };
+            }
+
+            // 8) Create user account linked to employee
             var userAccount = new UserAccount
             {
                 Username = username,
@@ -242,13 +320,33 @@ namespace HrmApi.Services
                 LastLoginAt = null
             };
 
-            await _userAccountRepository.AddAsync(userAccount);
+            // 🔥 Add all remaining entities and save ONCE (transaction)
+            try
+            {
+                foreach (var phone in phoneNumbers)
+                {
+                    await _employeeRepository.AddPhoneNumberAsync(phone);
+                }
 
-            // 🔥 save lần 2
-            var saved2 = await _employeeRepository.SaveChangesAsync();
-            if (saved2 <= 0) return null;
+                if (bankAccount.AccountNumber != null)
+                {
+                    await _employeeRepository.AddBankAccountAsync(bankAccount);
+                }
 
-            // 8) Return credentials (chỉ trả về lúc tạo)
+                await _userAccountRepository.AddAsync(userAccount);
+
+                // Save all at once - if any fails, none are saved
+                var savedAll = await _employeeRepository.SaveChangesAsync();
+                if (savedAll <= 0)
+                    throw new Exception("Failed to save phone numbers, bank account, and user account.");
+            }
+            catch (Exception ex)
+            {
+                var dbError = ex.InnerException?.Message ?? ex.Message;
+                throw new Exception($"Failed to save phone numbers, bank account, or user account: {dbError}");
+            }
+
+            // 9) Return credentials (chỉ trả về lúc tạo)
             return new CreateEmployeeResponseDto
             {
                 EmployeeId = employee.Id,
@@ -258,6 +356,7 @@ namespace HrmApi.Services
                 CompanyEmail = employee.CompanyEmail ?? string.Empty
             };
         }
+
 
         private async Task<string> GenerateNextEmployeeCodeAsync()
         {
@@ -319,6 +418,7 @@ namespace HrmApi.Services
 
             var employeeDtos = employees.Select(emp => new EmployeeProfileDto
             {
+                Id = emp.Id,
                 EmployeeName = emp.EmployeeName,
                 EmployeeCode = emp.EmployeeCode,
                 DateOfBirth = emp.DateOfBirth?.ToString("dd/MM/yyyy"),

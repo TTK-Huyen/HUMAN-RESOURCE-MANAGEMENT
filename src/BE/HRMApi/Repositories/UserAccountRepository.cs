@@ -29,7 +29,6 @@ namespace HrmApi.Repositories
         public async Task AddAsync(UserAccount userAccount)
         {
             _context.UserAccounts.Add(userAccount);
-            await _context.SaveChangesAsync();
         }
 
         public async Task<List<UserAccount>> GetAllAccountsAsync()

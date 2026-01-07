@@ -4,7 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { fetchEmployeeProfile } from "../../Services/requests";
 import ProfileView from "../../components/features/employee/ProfileView";
 
-const CURRENT_EMPLOYEE_CODE = "EMP001";
+// Read employee code from auth-localStorage; do not hardcode EMP001
+const STORED_EMPLOYEE_CODE =
+  localStorage.getItem("employeeCode") || localStorage.getItem("employee_code") || "";
 
 const MyProfilePage = () => {
   const [profile, setProfile] = useState(null);
@@ -19,8 +21,14 @@ const MyProfilePage = () => {
       setLoading(true);
       setError("");
 
+      if (!STORED_EMPLOYEE_CODE) {
+        setError("Không tìm thấy employee code trong phiên đăng nhập.");
+        setLoading(false);
+        return;
+      }
+
       try {
-        const apiData = await fetchEmployeeProfile(CURRENT_EMPLOYEE_CODE);
+        const apiData = await fetchEmployeeProfile(STORED_EMPLOYEE_CODE);
         console.log("[MyProfilePage] API data:", apiData);
 
         // Giữ nguyên field BE trả về + thêm vài alias cho UI

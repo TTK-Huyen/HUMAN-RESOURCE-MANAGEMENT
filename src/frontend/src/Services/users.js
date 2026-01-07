@@ -43,28 +43,32 @@ async function loginMock({ username, password }) {
                 pass: 'Emp123!@', 
                 role: 'EMP', 
                 name: 'Nguyễn Văn Nhân Viên', 
-                code: 'EMP001' 
+                code: 'EMP001',
+                id: 1
             },
             // Tài khoản HR
             'hr': { 
                 pass: 'Hr123!@#', 
                 role: 'HR', 
                 name: 'Phạm Thị Nhân Sự', 
-                code: 'HR001' 
+                code: 'HR001',
+                id: 2
             },
             // Tài khoản Manager
             'manager': { 
                 pass: 'Mgr123!@#', 
                 role: 'MANAGER', 
                 name: 'Trần Văn Quản Lý', 
-                code: 'MGR001' 
+                code: 'MGR001',
+                id: 3
             },
             // Tài khoản Admin cũ (giữ lại nếu cần)
             'admin@example.com': {
                 pass: 'Password123!',
                 role: 'HR',
                 name: 'Super Admin',
-                code: 'ADM001'
+                code: 'ADM001',
+                id: 4
             }
         };
 
@@ -91,7 +95,8 @@ async function loginMock({ username, password }) {
             token: "mock-jwt-token-" + Date.now(), // Token giả
             role: user.role,
             employeeCode: user.code,
-            employeeName: user.name
+            employeeName: user.name,
+            employeeId: user.id
         };
 
         // Lưu luôn vào LocalStorage ở đây (hoặc để component lo cũng được)

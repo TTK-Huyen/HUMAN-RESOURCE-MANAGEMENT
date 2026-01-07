@@ -66,11 +66,19 @@ function App() {
 }
 
 // --- COMPONENT CHẶN VÒNG LẶP ---
-function RequireAuth({ requiredRole, children }) {
+function RequireAuth({ requiredRole, allowedRoles, children }) {
   const token = localStorage.getItem("token");
   // Lấy role và viết hoa để so sánh chuẩn (tránh lỗi emp != EMP)
   const storedRole = (localStorage.getItem("role") || "").toUpperCase();
   const targetRole = (requiredRole || "").toUpperCase();
+  const normalizedAllowed = Array.isArray(allowedRoles)
+    ? allowedRoles.map((r) => (r || "").toUpperCase())
+    : [];
+
+  // Cho phép kế thừa quyền: EMP có thể truy cập bởi EMP, HR, MANAGER
+  const rolesAllowed = normalizedAllowed.length > 0
+    ? normalizedAllowed
+    : (targetRole === 'EMP' ? ['EMP', 'HR', 'MANAGER'] : [targetRole]);
 
   // 1. Chưa đăng nhập -> Về Login
   if (!token) {
@@ -79,7 +87,7 @@ function RequireAuth({ requiredRole, children }) {
   
   // 2. Đã đăng nhập nhưng SAI ROLE -> KHÔNG về Login, mà về Dashboard của họ
   // (Đây là chỗ chặn đứng vòng lặp)
-  if (targetRole && storedRole !== targetRole) {
+  if (rolesAllowed.length && !rolesAllowed.includes(storedRole)) {
     console.warn(`⛔ Chặn truy cập. Cần: ${targetRole}, Có: ${storedRole}`);
     
     if (storedRole === 'MANAGER') return <Navigate to="/manager" replace />;

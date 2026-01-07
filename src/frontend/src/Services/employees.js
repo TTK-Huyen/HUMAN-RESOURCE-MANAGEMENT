@@ -104,7 +104,59 @@ export const HRService = {
     return api  
       .post("/employees/import-excel", formData, { headers: { 'Content-Type': 'multipart/form-data', Accept: "application/json, text/plain, */*" } })
       .then((response) => response.data);
+  },
+
+  // 10. HR tải file Excel import mẫu
+  downloadEmployeeExcelTemplate: () => {
+  return api
+    .get("/employees/excel-template", {
+      responseType: "blob",
+      headers: { Accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
+    })
+    .then(async (response) => {
+      const contentType = response.headers?.["content-type"] || "";
+
+      // ✅ Nếu backend trả JSON/HTML lỗi (401/500/404...), đừng save thành .xlsx
+      if (!contentType.includes("spreadsheetml")) {
+        // cố đọc message lỗi từ blob
+        let msg = "Không tải được file mẫu. Vui lòng thử lại.";
+        try {
+          const text = await response.data.text();
+          // nếu là JSON {"message": "..."}
+          try {
+            const json = JSON.parse(text);
+            msg = json?.message || msg;
+          } catch {
+            // nếu là HTML hoặc text thường
+            if (text?.trim()) msg = text;
+          }
+        } catch {}
+        throw new Error(msg);
+      }
+
+      // Lấy filename từ header nếu có
+      const disposition = response.headers["content-disposition"] || "";
+      const match = disposition.match(/filename\*=UTF-8''([^;]+)|filename="([^"]+)"/i);
+      const fileName = `employee_import_template_${Date.now()}.xlsx`;
+
+      const blob = new Blob([response.data], { type: contentType });
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+      return true;
+    });
+  },
+
+
+
+
   }
-};
 
   

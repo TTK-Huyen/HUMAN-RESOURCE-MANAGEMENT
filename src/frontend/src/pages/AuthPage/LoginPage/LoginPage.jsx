@@ -10,12 +10,13 @@ export default function LoginPage() {
   const handleLogin = async (data) => {
     try {
       const res = await login(data); 
-      const { token, role, employeeCode, employeeName } = res;
+      const { token, role, employeeCode, employeeName, employeeId } = res;
 
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
       localStorage.setItem("employeeCode", employeeCode);
       localStorage.setItem("employeeName", employeeName);
+      localStorage.setItem("employeeId", employeeId);
 
       if (role === "EMP") navigate("/employee");
       else if (role === "HR") navigate("/hr");

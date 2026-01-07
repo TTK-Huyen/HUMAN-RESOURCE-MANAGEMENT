@@ -221,49 +221,92 @@ namespace HrmApi.Repositories
             int? departmentId,
             string? keyword)
         {
-            // giả sử DbSet là Requests và có navigation Employee
-            var query = _context.Requests
-                                .Include(r => r.Employee)
-                                .AsQueryable();
+            // Query từ các child tables (Leave, OT, Resignation) vì Requests table không chứa tất cả
+            var results = new List<(string Status, int Count)>();
+
+            // --- LEAVE REQUESTS ---
+            var leaveQuery = _context.LeaveRequests
+                .Include(l => l.Request)
+                    .ThenInclude(r => r.Employee)
+                .AsQueryable();
 
             if (departmentId.HasValue)
             {
-                query = query.Where(r => r.Employee.DepartmentId == departmentId.Value);
+                leaveQuery = leaveQuery.Where(l => l.Employee.DepartmentId == departmentId.Value);
             }
 
             if (!string.IsNullOrWhiteSpace(keyword))
             {
-                keyword = keyword.Trim();
-                query = query.Where(r =>
-                    r.Employee.EmployeeCode.Contains(keyword) ||
-                    r.Employee.FullName.Contains(keyword));
+                var kw = keyword.Trim();
+                leaveQuery = leaveQuery.Where(l =>
+                    l.Employee.EmployeeCode.Contains(kw) ||
+                    l.Employee.FullName.Contains(kw));
             }
 
-            // Group theo status để lấy count 1 lần
-            var grouped = await query
-                .GroupBy(r => r.Status)
+            var leaveByStatus = await leaveQuery
+                .GroupBy(l => l.Request.Status)
                 .Select(g => new { Status = g.Key, Count = g.Count() })
                 .ToListAsync();
 
-            var total = grouped.Sum(x => x.Count);
-            int pending = 0, approved = 0, rejected = 0;
+            results.AddRange(leaveByStatus.Select(x => (x.Status, x.Count)));
 
-            foreach (var item in grouped)
+            // --- OVERTIME REQUESTS ---
+            var otQuery = _context.OvertimeRequests
+                .Include(o => o.Request)
+                    .ThenInclude(r => r.Employee)
+                .AsQueryable();
+
+            if (departmentId.HasValue)
             {
-                switch (item.Status)
-                {
-                    case "Pending":
-                        pending = item.Count;
-                        break;
-                    case "Approved":
-                        approved = item.Count;
-                        break;
-                    case "Rejected":
-                        rejected = item.Count;
-                        break;
-                    // CANCELLED vẫn tính vào total nhưng không có thẻ riêng
-                }
+                otQuery = otQuery.Where(o => o.Employee.DepartmentId == departmentId.Value);
             }
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                var kw = keyword.Trim();
+                otQuery = otQuery.Where(o =>
+                    o.Employee.EmployeeCode.Contains(kw) ||
+                    o.Employee.FullName.Contains(kw));
+            }
+
+            var otByStatus = await otQuery
+                .GroupBy(o => o.Request.Status)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            results.AddRange(otByStatus.Select(x => (x.Status, x.Count)));
+
+            // --- RESIGNATION REQUESTS ---
+            var resQuery = _context.ResignationRequests
+                .Include(r => r.Request)
+                    .ThenInclude(r => r.Employee)
+                .AsQueryable();
+
+            if (departmentId.HasValue)
+            {
+                resQuery = resQuery.Where(r => r.Employee.DepartmentId == departmentId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                var kw = keyword.Trim();
+                resQuery = resQuery.Where(r =>
+                    r.Employee.EmployeeCode.Contains(kw) ||
+                    r.Employee.FullName.Contains(kw));
+            }
+
+            var resByStatus = await resQuery
+                .GroupBy(r => r.Request.Status)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            results.AddRange(resByStatus.Select(x => (x.Status, x.Count)));
+
+            // --- AGGREGATE ---
+            var total = results.Sum(x => x.Count);
+            int pending = results.Where(x => x.Status == "Pending").Sum(x => x.Count);
+            int approved = results.Where(x => x.Status == "Approved").Sum(x => x.Count);
+            int rejected = results.Where(x => x.Status == "Rejected").Sum(x => x.Count);
 
             return new RequestDashboardSummary
             {

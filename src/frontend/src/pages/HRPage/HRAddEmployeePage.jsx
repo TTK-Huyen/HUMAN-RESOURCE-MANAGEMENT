@@ -62,6 +62,18 @@ export default function HRAddEmployeePage() {
     "Phần Lan",
     "Khác",
   ];
+
+  // ===== Vietnamese Provinces/Districts Data =====
+  const PROVINCES = [
+    { id: "HN", name: "Hà Nội", districts: ["Ba Đình", "Hoàn Kiếm", "Hai Bà Trưng", "Đống Đa", "Tây Hồ", "Cầu Giấy", "Thanh Xuân", "Hoàng Mai"] },
+    { id: "HCM", name: "TP Hồ Chí Minh", districts: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "Bình Thạnh", "Bình Tân", "Gò Vấp", "Phú Nhuận", "Tân Bình", "Tân Phú"] },
+    { id: "HP", name: "Hải Phòng", districts: ["Hồng Bàng", "Ngô Quyền", "Lê Chân", "Kiến An", "Đô Lương", "An Lão", "Vân Đồn"] },
+    { id: "DN", name: "Đà Nẵng", districts: ["Hải Châu", "Thanh Khê", "Sơn Trà", "Ngũ Hành Sơn", "Liên Chiểu", "Cẩm Lệ"] },
+    { id: "HUE", name: "Thừa Thiên Huế", districts: ["Thành phố Huế", "A Lưới", "Phú Lộc", "Phú Vang", "Quảng Điền"] },
+    { id: "QN", name: "Quảng Ninh", districts: ["Hạ Long", "Móng Cái", "Cẩm Phả", "Uông Bí", "Đông Triều", "Tiên Yên"] },
+    { id: "CT", name: "Cần Thơ", districts: ["Ninh Kiều", "Bình Thủy", "Cái Răng", "Ô Môn", "Thốt Nốt", "Phong Điền"] },
+  ];
+
   // ===== Master data (from DB) =====
   const [master, setMaster] = useState({
     departments: [],
@@ -98,8 +110,21 @@ export default function HRAddEmployeePage() {
     // 3. Contact Info
     companyEmail: "",
     personalEmail: "",
-    phoneNumber: "",
-    currentAddress: "",
+    // Phone numbers (2 fields, but only 1 required)
+    phoneNumbers: [
+      { phoneNumber: "", description: "Personal" },
+      { phoneNumber: "", description: "Emergency" },
+    ],
+    
+    // Address Info
+    birthPlace: { province: "", district: "" },
+    currentAddress: { province: "", district: "" },
+
+    // Bank Account Info
+    bankAccount: {
+      bankName: "",
+      accountNumber: "",
+    },
 
     // 4. Employment
     departmentId: "",
@@ -154,8 +179,10 @@ export default function HRAddEmployeePage() {
 
   // ===== Regex =====
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const phoneRegex = /^[0-9]{10,11}$/;
+  const phoneRegex = /^[0-9]{10,11}$/; // 10-11 digits
   const citizenIdRegex = /^[0-9]{13}$/; // exactly 13 digits
+  const taxCodeRegex = /^[0-9]{10}$/; // exactly 10 digits
+  const socialInsuranceRegex = /^[0-9]{10}$/; // exactly 10 digits
 
   const isValidDate = (v) => {
     if (!v) return false;
@@ -176,10 +203,32 @@ export default function HRAddEmployeePage() {
     if (name === "jobTitleId" && !value) message = "Chọn chức danh";
     if (name === "contractStartDate" && !value) message = "Ngày bắt đầu là bắt buộc";
     if (name === "roleId" && !value) message = "Chọn phân quyền";
+    if (name === "birthPlace" && (!value?.province || !value?.district)) message = "Nơi sinh là bắt buộc";
+    if (name === "currentAddress" && (!value?.province || !value?.district)) message = "Địa chỉ hiện tại là bắt buộc";
+
+    // Check at least 1 phone number
+    if (name === "phoneNumbers" && Array.isArray(value)) {
+      const hasPhone = value.some(p => p.phoneNumber?.trim());
+      if (!hasPhone) message = "Phải nhập ít nhất 1 số điện thoại";
+    }
+
+    // Bank account validation - only bankName and accountNumber are required
+    if (name === "bankAccount" && value) {
+      if (!value.bankName) message = "Tên ngân hàng là bắt buộc";
+      else if (!value.accountNumber) message = "Số tài khoản là bắt buộc";
+    }
 
     // format
     if (!message && name === "citizenIdNumber" && value && !citizenIdRegex.test(value)) {
       message = "CCCD phải đúng 13 chữ số";
+    }
+
+    if (!message && name === "personalTaxCode" && value && !taxCodeRegex.test(value)) {
+      message = "Mã số thuế phải đúng 10 chữ số";
+    }
+
+    if (!message && name === "socialInsuranceNumber" && value && !socialInsuranceRegex.test(value)) {
+      message = "Số sổ BHXH phải đúng 10 chữ số";
     }
 
     if (!message && (name === "companyEmail" || name === "personalEmail") && value && !emailRegex.test(value)) {
@@ -187,12 +236,7 @@ export default function HRAddEmployeePage() {
     }
 
     if (!message && name === "phoneNumber" && value && !phoneRegex.test(value)) {
-      message = "SĐT không hợp lệ";
-    }
-
-    // date logic
-    if (!message && name === "dateOfBirth" && value) {
-      if (new Date(value) >= new Date()) message = "Ngày sinh không hợp lệ";
+      message = "SĐT phải từ 10-11 chữ số";
     }
 
     // date logic
@@ -208,7 +252,6 @@ export default function HRAddEmployeePage() {
     if (!message && name === "contractEndDate" && value) {
       if (!isValidDate(value)) message = "Ngày kết thúc không hợp lệ";
     }
-
 
     // cross-field: contract dates (only when end date is provided)
     if (
@@ -245,8 +288,7 @@ export default function HRAddEmployeePage() {
         : "";
     }
 
-
-        // if changing start/end date, re-check end date
+    // if changing start/end date, re-check end date
     if (name === "contractStartDate" || name === "contractEndDate") {
       // Nếu chưa nhập end date → KHÔNG LỖI
       if (!nextForm.contractEndDate) {
@@ -263,8 +305,32 @@ export default function HRAddEmployeePage() {
         setErrors((prev) => ({ ...prev, contractEndDate: null }));
       }
     }
-
   };
+
+  // Phone number handlers
+  const handlePhoneChange = (index, field, value) => {
+    const newPhones = [...form.phoneNumbers];
+    newPhones[index][field] = value;
+    setForm({ ...form, phoneNumbers: newPhones });
+  };
+
+  // Address handlers
+  const handleAddressChange = (addressType, field, value) => {
+    setForm({
+      ...form,
+      [addressType]: { ...form[addressType], [field]: value },
+    });
+  };
+
+  // Bank account handlers
+  const handleBankChange = (field, value) => {
+    setForm({
+      ...form,
+      bankAccount: { ...form.bankAccount, [field]: value },
+    });
+  };
+
+
 
   const handleBlur = (e) => {
     const { name } = e.target;
@@ -307,15 +373,46 @@ export default function HRAddEmployeePage() {
 
     setLoading(true);
     try {
-      // ensure numeric ids for backend if needed
+      // Filter out empty phone numbers and build payload
+      const phoneNumbers = form.phoneNumbers.filter(p => p.phoneNumber?.trim());
+      
       const payload = {
-        ...form,
+        // Personal Info
+        employeeName: form.employeeName,
+        dateOfBirth: form.dateOfBirth || null,
+        gender: form.gender,
+        nationality: form.nationality,
+        maritalStatus: form.maritalStatus,
+        hasChildren: form.hasChildren,
+        
+        // Legal Info
+        citizenIdNumber: form.citizenIdNumber,
+        personalTaxCode: form.personalTaxCode || null,
+        socialInsuranceNumber: form.socialInsuranceNumber || null,
+        
+        // Contact Info
+        companyEmail: form.companyEmail,
+        personalEmail: form.personalEmail || null,
+        phoneNumbers: phoneNumbers,
+        
+        // Address Info
+        birthPlace: form.birthPlace,
+        currentAddress: form.currentAddress,
+        
+        // Bank Account
+        bankAccount: form.bankAccount,
+        
+        // Employment
         departmentId: form.departmentId ? Number(form.departmentId) : null,
         jobTitleId: form.jobTitleId ? Number(form.jobTitleId) : null,
         directManagerId: form.directManagerId ? Number(form.directManagerId) : null,
+        employmentType: form.employmentType,
+        contractType: form.contractType,
+        contractStartDate: form.contractStartDate || null,
+        contractEndDate: form.contractEndDate || null,
+        
+        // System
         roleId: form.roleId ? Number(form.roleId) : null,
-        dateOfBirth: form.dateOfBirth ? form.dateOfBirth : null,
-        contractEndDate: form.contractEndDate ? form.contractEndDate : null,
       };
 
       const response = await HRService.addNewEmployee(payload);
@@ -507,7 +604,7 @@ export default function HRAddEmployeePage() {
                 label="Số CCCD/CMND"
                 required
                 error={touched.citizenIdNumber ? errors.citizenIdNumber : null}
-                helpText="13 chữ số"
+                helpText="Đúng 13 chữ số"
               >
                 <input
                   name="citizenIdNumber"
@@ -517,26 +614,36 @@ export default function HRAddEmployeePage() {
                   className={inputClass("citizenIdNumber")}
                   maxLength={13}
                   placeholder="00109xxxxxxxxx"
+                  inputMode="numeric"
+                  pattern="[0-9]{13}"
                 />
               </FormRow>
 
-              <FormRow label="Mã số thuế cá nhân">
+              <FormRow label="Mã số thuế cá nhân" error={touched.personalTaxCode ? errors.personalTaxCode : null} helpText="10 chữ số">
                 <input
                   name="personalTaxCode"
                   value={form.personalTaxCode}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   className={inputClass("personalTaxCode")}
+                  maxLength={10}
+                  placeholder="0123456789"
+                  inputMode="numeric"
+                  pattern="[0-9]{10}"
                 />
               </FormRow>
 
-              <FormRow label="Số sổ BHXH">
+              <FormRow label="Số sổ BHXH" error={touched.socialInsuranceNumber ? errors.socialInsuranceNumber : null} helpText="10 chữ số">
                 <input
                   name="socialInsuranceNumber"
                   value={form.socialInsuranceNumber}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   className={inputClass("socialInsuranceNumber")}
+                  maxLength={10}
+                  placeholder="0123456789"
+                  inputMode="numeric"
+                  pattern="[0-9]{10}"
                 />
               </FormRow>
             </div>
@@ -545,7 +652,7 @@ export default function HRAddEmployeePage() {
           {/* 3. Contact */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <SectionTitle icon={FileText} title="Thông tin liên hệ" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+            <div className="space-y-4">
               <FormRow label="Email cá nhân" error={touched.personalEmail ? errors.personalEmail : null}>
                 <input
                   name="personalEmail"
@@ -557,26 +664,105 @@ export default function HRAddEmployeePage() {
                 />
               </FormRow>
 
-              <FormRow label="Số điện thoại" error={touched.phoneNumber ? errors.phoneNumber : null}>
-                <input
-                  name="phoneNumber"
-                  value={form.phoneNumber}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  className={inputClass("phoneNumber")}
-                />
-              </FormRow>
+              {/* Phone Numbers - 2 fields, at least 1 required */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Số điện thoại <span className="text-red-500">*</span> (Tối đa 2 số, ít nhất 1 bắt buộc)
+                </label>
+                {touched.phoneNumbers && errors.phoneNumbers && (
+                  <p className="text-xs text-red-500 mb-2">{errors.phoneNumbers}</p>
+                )}
+                {form.phoneNumbers.map((phone, idx) => (
+                  <div key={idx} className="mb-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <input
+                        type="text"
+                        placeholder="VD: 0912345678"
+                        maxLength="10"
+                        value={phone.phoneNumber}
+                        onChange={(e) => handlePhoneChange(idx, "phoneNumber", e.target.value)}
+                        className={inputClass(`phone-${idx}`)}
+                        inputMode="numeric"
+                        pattern="[0-9]{10}"
+                      />
+                      <select
+                        value={phone.description}
+                        onChange={(e) => handlePhoneChange(idx, "description", e.target.value)}
+                        className={inputClass(`phone-desc-${idx}`)}
+                      >
+                        <option value="Personal">Cá nhân</option>
+                        <option value="Emergency">Khẩn cấp</option>
+                        <option value="Work">Công việc</option>
+                      </select>
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-              <div className="md:col-span-2">
-                <FormRow label="Địa chỉ hiện tại">
-                  <input
-                    name="currentAddress"
-                    value={form.currentAddress}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    className={inputClass("currentAddress")}
-                  />
-                </FormRow>
+              {/* Birth Place */}
+              <div className="border-t border-slate-100 pt-4">
+                <label className="block text-sm font-medium text-slate-700 mb-3">
+                  Nơi sinh <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <select
+                    value={form.birthPlace.province}
+                    onChange={(e) => handleAddressChange("birthPlace", "province", e.target.value)}
+                    className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 bg-white"
+                  >
+                    <option value="">-- Chọn tỉnh/thành phố --</option>
+                    {PROVINCES.map((p) => (
+                      <option key={p.id} value={p.name}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={form.birthPlace.district}
+                    onChange={(e) => handleAddressChange("birthPlace", "district", e.target.value)}
+                    className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 bg-white"
+                  >
+                    <option value="">-- Chọn phường/huyện --</option>
+                    {PROVINCES.find((p) => p.name === form.birthPlace.province)?.districts.map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Current Address */}
+              <div className="border-t border-slate-100 pt-4">
+                <label className="block text-sm font-medium text-slate-700 mb-3">
+                  Địa chỉ hiện tại <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <select
+                    value={form.currentAddress.province}
+                    onChange={(e) => handleAddressChange("currentAddress", "province", e.target.value)}
+                    className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 bg-white"
+                  >
+                    <option value="">-- Chọn tỉnh/thành phố --</option>
+                    {PROVINCES.map((p) => (
+                      <option key={p.id} value={p.name}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={form.currentAddress.district}
+                    onChange={(e) => handleAddressChange("currentAddress", "district", e.target.value)}
+                    className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 bg-white"
+                  >
+                    <option value="">-- Chọn phường/huyện --</option>
+                    {PROVINCES.find((p) => p.name === form.currentAddress.province)?.districts.map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
           </div>
@@ -584,7 +770,32 @@ export default function HRAddEmployeePage() {
 
         {/* === RIGHT (1/3) === */}
         <div className="lg:col-span-1 space-y-6">
-          {/* 4. Job/Contract */}
+          {/* 4. Bank Account */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <SectionTitle icon={Briefcase} title="Tài khoản Ngân Hàng" />
+            <div className="space-y-4">
+              <FormRow label="Tên ngân hàng" required>
+                <input
+                  value={form.bankAccount.bankName}
+                  onChange={(e) => handleBankChange("bankName", e.target.value)}
+                  className={inputClass("bankName")}
+                  placeholder="VD: Vietcombank, Techcombank..."
+                />
+              </FormRow>
+
+              <FormRow label="Số tài khoản" required>
+                <input
+                  value={form.bankAccount.accountNumber}
+                  onChange={(e) => handleBankChange("accountNumber", e.target.value)}
+                  className={inputClass("accountNumber")}
+                  placeholder="VD: 123456789"
+                />
+              </FormRow>
+
+            </div>
+          </div>
+
+          {/* 5. Job/Contract */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <SectionTitle icon={Briefcase} title="Vị trí & Hợp đồng" />
             <div className="space-y-4">
@@ -705,7 +916,7 @@ export default function HRAddEmployeePage() {
                 label="Email công ty"
                 required
                 error={touched.companyEmail ? errors.companyEmail : null}
-                helpText="Hệ thống tự cấp theo họ tên"
+                helpText="Hệ thống tự tạo, nếu trùng sẽ thêm số"
               >
                 <div className="flex gap-2">
                   <input

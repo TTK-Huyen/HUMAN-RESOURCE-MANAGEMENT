@@ -10,7 +10,7 @@ import ViolationBanner from "../../components/common/ViolationBanner";
 
 export default function ProfileUpdateRequestPage() {
   const navigate = useNavigate();
-  const currentEmployeeCode = "EMP001"; // đổi lại theo DB
+  const currentEmployeeCode = localStorage.getItem("employeeCode") || "EMP001"; // ✅ Lấy từ localStorage
 
   const [form, setForm] = useState({
     personalEmail: "",

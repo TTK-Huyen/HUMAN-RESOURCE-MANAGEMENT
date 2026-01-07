@@ -109,7 +109,7 @@ export default function ResignationRequestPage() {
     setSubmitting(true);
     try {
       const payload = {
-        resignationDate: f.resignationDate,
+        proposedLastWorkingDate: f.resignationDate, // ✅ Map đúng với backend DTO
         reason: f.reason,
       };
 

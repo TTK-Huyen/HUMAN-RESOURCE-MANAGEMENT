@@ -73,12 +73,12 @@ if (app.Environment.IsDevelopment())
 {
     using (var scope = app.Services.CreateScope())
     {
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         try
         {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             // 1. Đảm bảo database đã được tạo và update mới nhất
-            db.Database.Migrate();
-
+            // db.Database.Migrate(); // Tạm disable nếu có pending migrations
+            
             // 2. GỌI HÀM SEED TỪ CLASS BOGUS BẠN VỪA TẠO
             HrmApi.Data.DataSeeder.Seed(db); 
         }
@@ -87,6 +87,7 @@ if (app.Environment.IsDevelopment())
             Console.WriteLine($"--> Lỗi khi tạo dữ liệu ảo: {ex.Message}");
             Console.WriteLine($"--> Chi tiết lỗi: {ex.InnerException?.Message}");
             Console.WriteLine($"--> Stack trace: {ex.StackTrace}");
+            // Không throw - cho app chạy tiếp
         }
     }
 }

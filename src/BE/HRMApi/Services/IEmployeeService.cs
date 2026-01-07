@@ -37,5 +37,7 @@ namespace HrmApi.Services
         /// </summary>
         /// <param name="employeeCode">Mã nhân viên cụ thể (optional). Nếu null hoặc empty, trả về tất cả nhân viên</param>
         Task<IEnumerable<EssentialEmployeeDto>> GetEssentialEmployeeInfoAsync(string? employeeCode = null);
+
+        
     }
 }

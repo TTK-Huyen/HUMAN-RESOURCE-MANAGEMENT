@@ -16,10 +16,10 @@ namespace HrmApi.Controllers
         }
 
         [HttpPost]
-        [Consumes("multipart/form-data")]
+        [Consumes("application/json")]
         public async Task<ActionResult<LeaveRequestCreatedDto>> CreateLeaveRequest(
             string employeeCode,
-            [FromForm] CreateLeaveRequestDto dto) 
+            [FromBody] CreateLeaveRequestDto dto) 
         {
             try 
             {

@@ -5,6 +5,9 @@ namespace HrmApi.Dtos.Employee
 {
     public class EmployeeProfileDto
     {
+        // Employee.Id (primary key for React list rendering)
+        public int Id { get; set; }
+
         // Map từ Employee.FullName / Employee.EmployeeName (NotMapped)
         public string EmployeeName { get; set; } = string.Empty;
 
@@ -94,9 +97,6 @@ namespace HrmApi.Dtos.Employee
 
         // Map từ EmployeeBankAccount.AccountNumber
         public string AccountNumber { get; set; } = string.Empty;
-
-        // Map từ EmployeeBankAccount.AccountHolderName
-        public string AccountHolderName { get; set; } = string.Empty;
 
         // Map từ EmployeeBankAccount.IsPrimary
         public bool IsPrimary { get; set; }
