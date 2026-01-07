@@ -7,6 +7,7 @@ import EmptyState from "../../../components/common/EmptyState";
 import Pagination from "../../../components/common/Pagination";
 import Button from "../../../components/common/Button";
 import Toast from "../../../components/common/Toast";
+import ConfirmDialog from "../../../components/common/ConfirmDialog";
 
 export default function CampaignsList() {
   const [campaigns, setCampaigns] = useState([]);
@@ -16,6 +17,10 @@ export default function CampaignsList() {
   // register state & toast
   const [registeringCode, setRegisteringCode] = useState("");
   const [toast, setToast] = useState(null);
+
+  // Confirm dialog for registration
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingCampaignCode, setPendingCampaignCode] = useState(null);
 
   // pagination (client-side)
   const [currentPage, setCurrentPage] = useState(1);
@@ -66,7 +71,6 @@ export default function CampaignsList() {
       setLoading(false);
     }
   };
-
   // register helper: call API, show toast, refresh list with current filters
   const handleRegister = async (campaignCode) => {
     if (!campaignCode) return;
@@ -80,9 +84,20 @@ export default function CampaignsList() {
       return;
     }
 
-    setRegisteringCode(campaignCode);
+    // Show confirmation dialog
+    setPendingCampaignCode(campaignCode);
+    setShowConfirmDialog(true);
+  };
+
+  // Confirm registration after user accepts dialog
+  const handleConfirmRegister = async () => {
+    if (!pendingCampaignCode) return;
+    
+    setShowConfirmDialog(false);
+    setRegisteringCode(pendingCampaignCode);
+    
     try {
-      const res = await registerCampaign(campaignCode);
+      const res = await registerCampaign(pendingCampaignCode);
       const msg = res?.message || 'Đăng ký thành công.';
       setToast({ type: 'success', message: msg });
       // refresh current filters
@@ -97,6 +112,7 @@ export default function CampaignsList() {
       setToast({ type: 'error', message: errMsg });
     } finally {
       setRegisteringCode("");
+      setPendingCampaignCode(null);
     }
   };
 
@@ -132,9 +148,22 @@ export default function CampaignsList() {
   // pagination calculations
   const totalPages = Math.max(1, Math.ceil((campaigns.length || 0) / PAGE_SIZE));
   const displayedCampaigns = campaigns.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-
   return (
     <div style={{ maxWidth: 1100, margin: "20px auto", padding: 16 }}>
+      <ConfirmDialog
+        isOpen={showConfirmDialog}
+        title="Xác nhận đăng ký"
+        message={`Bạn có chắc chắn muốn đăng ký cho chiến dịch này?`}
+        warningMessage="Lưu ý: Để hủy đăng ký sau này, bạn cần sự phê duyệt của HR."
+        confirmLabel="Đăng ký"
+        cancelLabel="Hủy"
+        type="info"
+        onConfirm={handleConfirmRegister}
+        onCancel={() => {
+          setShowConfirmDialog(false);
+          setPendingCampaignCode(null);
+        }}
+      />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
         <h1 style={{ margin: 0, color: "#0b1220", fontSize: 24, fontWeight: 800 }}>Chiến dịch</h1>
       </div>

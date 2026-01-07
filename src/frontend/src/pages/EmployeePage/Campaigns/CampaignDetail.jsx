@@ -5,6 +5,7 @@ import Loading from "../../../components/common/Loading";
 import StatusBadge from "../../../components/common/StatusBadge";
 import Button from "../../../components/common/Button";
 import Toast from "../../../components/common/Toast";
+import ConfirmDialog from "../../../components/common/ConfirmDialog";
 import { ArrowLeft, Calendar, Users, Info } from 'lucide-react';
 
 export default function CampaignDetail() {
@@ -14,6 +15,7 @@ export default function CampaignDetail() {
   const [toast, setToast] = useState(null);
   const [isRegistered, setIsRegistered] = useState(false);
   const [registrationInfo, setRegistrationInfo] = useState(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -55,9 +57,14 @@ export default function CampaignDetail() {
   const current = campaign.currentParticipants ?? 0;
   const percent = max ? Math.min(100, Math.round((current / max) * 100)) : null;
   const isFull = max ? current >= max : false;
-
   const handleRegister = async () => {
     if (isFull) return;
+    // Show confirmation dialog instead of registering immediately
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmRegister = async () => {
+    setShowConfirmDialog(false);
     setIsRegistering(true);
     try {
       const res = await registerCampaign(campaign.campaignCode);
@@ -80,10 +87,20 @@ export default function CampaignDetail() {
       setIsRegistering(false);
     }
   };
-
   return (
     <div style={{ maxWidth: 900, margin: '24px auto', background: '#fff', padding: 24, borderRadius: 12, boxShadow: '0 6px 18px rgba(15,23,42,0.06)' }}>
       {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
+      <ConfirmDialog
+        isOpen={showConfirmDialog}
+        title="Xác nhận đăng ký"
+        message={`Bạn có chắc chắn muốn đăng ký cho chiến dịch "${campaign?.campaignName}"?`}
+        warningMessage="Lưu ý: Để hủy đăng ký sau này, bạn cần sự phê duyệt của HR."
+        confirmLabel="Đăng ký"
+        cancelLabel="Hủy"
+        type="info"
+        onConfirm={handleConfirmRegister}
+        onCancel={() => setShowConfirmDialog(false)}
+      />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
         <Link to="/employee/campaigns" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: '#334155' }}>
           <ArrowLeft size={18} /> Quay lại
