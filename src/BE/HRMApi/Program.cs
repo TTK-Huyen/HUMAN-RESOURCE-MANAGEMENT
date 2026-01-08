@@ -108,7 +108,14 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAuthorization();
 
+
 var app = builder.Build();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    ServeUnknownFileTypes = true, // Cho phép tải mọi loại file (kể cả .dat)
+    DefaultContentType = "application/octet-stream"
+});
 
 // --- 3. SEED DATA (Gọi Class DataSeeder) ---
 if (app.Environment.IsDevelopment())
