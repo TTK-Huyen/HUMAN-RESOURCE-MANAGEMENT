@@ -56,11 +56,11 @@ const MENU_CONFIG = {
       
       // 👇 MENU CÓ CON (DROPDOWN) - Đã cấu hình
       { 
-        label: "Chiến dịch", 
+        label: "Campaign", 
         icon: Megaphone,
         children: [ 
-          { to: "/hr/campaigns", label: "Danh sách chiến dịch" },
-          { to: "/hr/campaigns/add", label: "Tạo chiến dịch mới" }
+          { to: "/hr/campaigns", label: "List campaigns" },
+          { to: "/hr/campaigns/add", label: "Add campaign" }
         ]
       },
       
