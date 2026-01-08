@@ -24,7 +24,14 @@ async function loginReal({ username, password }) {
     // Nếu bạn chưa có file client.js, dùng axios trực tiếp
     const res = await api.post("/auth/login", { username, password });
     
-    return res.data; 
+    console.log("✅ Backend Response:", res);
+    console.log("✅ Response Data:", res.data);
+    
+    // ✅ FIX: Handle both response.data and response.data.data
+    const data = res.data?.data || res.data;
+    console.log("✅ Extracted Data:", data);
+    
+    return data;
 }
 
 /**
@@ -65,7 +72,7 @@ async function loginMock({ username, password }) {
             // Tài khoản Admin cũ (giữ lại nếu cần)
             'admin@example.com': {
                 pass: 'Password123!',
-                role: 'HR',
+                role: 'ADMIN',
                 name: 'Super Admin',
                 code: 'ADM001',
                 id: 4

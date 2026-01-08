@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ViolationBanner from "../../components/common/ViolationBanner";
 import { FormRow } from "../../components/common/FormRow";
+import Button from "../../components/common/Button";
+import Toast from "../../components/common/Toast";
 import { createLeaveRequest, fetchEmployeeProfile } from "../../Services/requests";
+import { HRService } from "../../Services/employees.js";
 import "./RequestForm.css";
 
 const LEAVE_TYPES = [
@@ -25,9 +29,11 @@ const INITIAL_FORM = {
 };
 
 export default function LeaveRequestPage() {
+  const navigate = useNavigate();
   const [f, setF] = useState(INITIAL_FORM);
   const [errs, setErrs] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
   (async () => {
@@ -49,14 +55,15 @@ export default function LeaveRequestPage() {
 
     // Gọi API thật để lấy department
     try {
-      const profile = await fetchEmployeeProfile(employeeCode);
+      const profile = await HRService.fetchEmployeeProfileByCode(employeeCode);
 
       setF((prev) => ({
         ...prev,
-        department: profile.department ?? profile.departmentName ?? "",
+        department: profile.departmentName || profile.department || "",
       }));
     } catch (e) {
-      setErrs(["Cannot load employee profile."]);
+      console.error("Error loading employee data:", e);
+      setErrs(["Cannot load employee profile. Please try again."]);
     }
   })();
   }, []);
@@ -119,6 +126,15 @@ export default function LeaveRequestPage() {
     setSubmitting(true);
 
     try {
+      // Kiểm tra employee code có tồn tại không
+      try {
+        await HRService.fetchEmployeeProfileByCode(f.handoverPerson);
+      } catch (err) {
+        setErrs([`Handover person with code "${f.handoverPerson}" does not exist.`]);
+        setSubmitting(false);
+        return;
+      }
+
       // Convert file -> base64 nếu có
       let attachmentBase64 = null;
 
@@ -145,14 +161,9 @@ export default function LeaveRequestPage() {
       // Gọi API thực
       await createLeaveRequest(f.employeeCode, payload);
 
-      alert("Leave request submitted successfully!");
-      setF((prev) => ({
-        ...INITIAL_FORM,
-        employeeName: prev.employeeName,
-        employeeCode: prev.employeeCode,
-        department: prev.department,
-      }));
+      setToast({ message: "Leave request created successfully!", type: "success" });
       setErrs([]);
+      setTimeout(() => navigate(-1), 2000);
 
     } catch (err) {
       setErrs(["Failed to create leave request"]);
@@ -164,13 +175,7 @@ export default function LeaveRequestPage() {
 
 
   function resetForm() {
-    setF((prev) => ({
-    ...INITIAL_FORM,
-    employeeName: prev.employeeName,
-    employeeCode: prev.employeeCode,
-    department: prev.department,
-    }));
-    setErrs([]);
+    navigate(-1);
   }
 
   const attachLabel = ["Sick Leave", "Maternity Leave"].includes(f.leaveType)
@@ -178,99 +183,139 @@ export default function LeaveRequestPage() {
     : "Attachment";
 
   return (
-    <div className="card form-card fade-in-up">
-      <h3>Leave request</h3>
-      <ViolationBanner messages={errs} />
-      <form className="form-grid" onSubmit={submit} noValidate>
-        <FormRow label="Employee Name" required>
-          <input className="input" value={f.employeeName} readOnly />
-        </FormRow>
-        <FormRow label="Employee Code" required>
-          <input className="input" value={f.employeeCode} readOnly />
-        </FormRow>
-        <FormRow label="Department" required>
-          <input className="input" value={f.department} readOnly />
-        </FormRow>
-
-        <FormRow label="Leave Type" required>
-          <select
-            className="select"
-            name="leaveType"
-            value={f.leaveType}
-            onChange={onChange}
-          >
-            <option value="">-- Select --</option>
-            {LEAVE_TYPES.map((x) => (
-              <option key={x}>{x}</option>
-            ))}
-          </select>
-        </FormRow>
-
-        <FormRow label="Start Date" required>
-          <input
-            className="input"
-            type="date"
-            name="startDate"
-            value={f.startDate}
-            onChange={onChange}
-          />
-        </FormRow>
-        <FormRow label="End Date" required>
-          <input
-            className="input"
-            type="date"
-            name="endDate"
-            value={f.endDate}
-            onChange={onChange}
-          />
-        </FormRow>
-
-        <FormRow label="Handover Person" required>
-          <input
-            className="input"
-            name="handoverPerson"
-            value={f.handoverPerson}
-            onChange={onChange}
-            placeholder="Employee ID"
-          />
-        </FormRow>
-
-        <FormRow label={attachLabel}>
-          <input
-            className="input"
-            type="file"
-            name="attachment"
-            onChange={onChange}
-            accept=".pdf,.jpg,.jpeg,.png,.docx"
-          />
-        </FormRow>
-
-        <FormRow label="Reason (1–500 chars)" required full>
-          <textarea
-            className="textarea"
-            name="reason"
-            value={f.reason}
-            onChange={onChange}
-          />
-        </FormRow>
-
+    <div
+      style={{
+        padding: "24px",
+        maxWidth: "1200px",
+        margin: "0 auto",
+      }}
+    >
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      <div className="card form-card fade-in-up">
         <div
-          className="hstack"
-          style={{ gridColumn: "1 / -1", justifyContent: "flex-end", gap: 8 }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "24px",
+            paddingBottom: "16px",
+            borderBottom: "1px solid #e2e8f0",
+          }}
         >
-          <button
-            type="button"
-            className="btn ghost"
-            onClick={resetForm}
-            disabled={submitting}
-          >
-            Cancel
-          </button>
-          <button className="btn primary" type="submit" disabled={submitting}>
-            {submitting ? "Submitting..." : "Create request"}
-          </button>
+          <div>
+            <h2 style={{ margin: "0 0 4px 0", fontSize: "1.5rem", color: "#0f172a" }}>
+              Leave request
+            </h2>
+            <p style={{ margin: 0, fontSize: "0.9rem", color: "#64748b" }}>
+              Submit a leave request for approval
+            </p>
+          </div>
         </div>
-      </form>
+
+        <ViolationBanner messages={errs} />
+
+        <form className="form-grid" onSubmit={submit} noValidate>
+          <FormRow label="Employee Name" required>
+            <input className="input" value={f.employeeName} readOnly />
+          </FormRow>
+          <FormRow label="Employee Code" required>
+            <input className="input" value={f.employeeCode} readOnly />
+          </FormRow>
+          <FormRow label="Department" required>
+            <input className="input" value={f.department} readOnly />
+          </FormRow>
+
+          <FormRow label="Leave Type" required>
+            <select
+              className="select"
+              name="leaveType"
+              value={f.leaveType}
+              onChange={onChange}
+            >
+              <option value="">-- Select --</option>
+              {LEAVE_TYPES.map((x) => (
+                <option key={x}>{x}</option>
+              ))}
+            </select>
+          </FormRow>
+
+          <FormRow label="Start Date" required>
+            <input
+              className="input"
+              type="date"
+              name="startDate"
+              value={f.startDate}
+              onChange={onChange}
+            />
+          </FormRow>
+          <FormRow label="End Date" required>
+            <input
+              className="input"
+              type="date"
+              name="endDate"
+              value={f.endDate}
+              onChange={onChange}
+            />
+          </FormRow>
+
+          <FormRow label="Handover Person" required>
+            <input
+              className="input"
+              name="handoverPerson"
+              value={f.handoverPerson}
+              onChange={onChange}
+              placeholder="Employee Code"
+            />
+          </FormRow>
+
+          <FormRow label={attachLabel}>
+            <input
+              className="input"
+              type="file"
+              name="attachment"
+              onChange={onChange}
+              accept=".pdf,.jpg,.jpeg,.png,.docx"
+            />
+          </FormRow>
+
+          <FormRow label="Reason (1–500 chars)" required full>
+            <textarea
+              className="textarea"
+              name="reason"
+              value={f.reason}
+              onChange={onChange}
+            />
+          </FormRow>
+
+          <div
+            style={{
+              gridColumn: "1 / -1",
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: "12px",
+              marginTop: "16px",
+              paddingTop: "16px",
+              borderTop: "1px solid #e2e8f0",
+            }}
+          >
+            <Button
+              variant="ghost"
+              onClick={resetForm}
+              disabled={submitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={submit}
+              disabled={submitting}
+              isLoading={submitting}
+            >
+              {submitting ? "Submitting..." : "Create request"}
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

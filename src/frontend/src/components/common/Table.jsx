@@ -9,7 +9,7 @@ return (
     {columns.map((c) => (
       <th 
         key={c.key || c.title}
-        // 👇 THÊM DÒNG NÀY ĐỂ NHẬN ĐỘ RỘNG 👇
+        // 👇 ADD THIS LINE TO GET WIDTH 👇
         style={c.width ? { width: c.width } : {}} 
         className={c.className || ""}
       >

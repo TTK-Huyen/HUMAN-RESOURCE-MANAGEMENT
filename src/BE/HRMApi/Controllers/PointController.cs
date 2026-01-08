@@ -82,6 +82,15 @@ namespace HrmApi.Controllers
                 }
 
                 var wallet = await _pointService.GetMyWalletAsync(employee.Id);
+                // Audit: record view of wallet (who, when UTC, and source IP/user-agent)
+                try
+                {
+                    var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    var ua = Request.Headers["User-Agent"].ToString();
+                    _logger.LogInformation($"Wallet viewed by {employee.EmployeeCode} at {DateTime.UtcNow:o} from {ip} | UA: {ua}");
+                }
+                catch { /* swallow logging errors */ }
+
                 return Ok(new { Success = true, Data = wallet });
             }
             catch (Exception ex)

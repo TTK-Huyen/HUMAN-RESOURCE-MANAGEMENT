@@ -16,67 +16,179 @@ import {
   ChevronRight,
 } from "lucide-react";
 import NotificationBell from "../NotificationBell.jsx";
+import ConfirmDialog from "../common/ConfirmDialog.jsx";
 import "./Layout.css";
 
-/* ================= MENU CONFIG THEO ROLE ================= */
+/* ================= MENU CONFIG THEO ROLE (Grouped Sections) ================= */
+// Each role now has `groups` representing: Profile, Request, Campaign, Reward
 const MENU_CONFIG = {
   EMP: {
     title: "Employee Portal",
     subtitle: "Employee Workspace",
-    items: [
-      { to: "/employee/create", label: "Create Request", icon: FileText },
-      { to: "/employee/status", label: "Request Status", icon: History },
-      { to: "/employee/profile", label: "My Profile", icon: User },
-      { to: "/employee/campaigns", label: "Campaigns", icon: Gift },
-      { to: "/rewards/my-wallet", label: "My Rewards", icon: Gift },
+    groups: [
+      {
+        key: "profile",
+        label: "Profile",
+        items: [
+          { to: "/employee/profile", label: "My Profile", icon: User },
+        ],
+      },
+      {
+        key: "request",
+        label: "Request",
+        items: [
+          { to: "/employee/create", label: "Create Request", icon: FileText },
+          { to: "/employee/status", label: "Request Status", icon: History },
+        ],
+      },
+      {
+        key: "campaign",
+        label: "Campaign",
+        items: [
+          { to: "/employee/campaigns", label: "Campaigns", icon: Megaphone },
+        ],
+      },
+      {
+        key: "reward",
+        label: "Reward",
+        items: [
+          { to: "/rewards/my-wallet", label: "My Rewards", icon: Gift },
+        ],
+      },
     ],
   },
 
   MANAGER: {
     title: "Manager Console",
     subtitle: "Approval System",
-    items: [
-      { to: "/manager", label: "Dashboard", icon: LayoutDashboard },
-      { to: "/manager/rewards/give", label: "Give Bonus", icon: Gift },
-      // Employee capabilities
-      { to: "/employee/create", label: "Create Request", icon: FileText },
-      { to: "/employee/status", label: "Request Status", icon: History },
-      { to: "/employee/profile", label: "My Profile", icon: User },
-      { to: "/rewards/my-wallet", label: "My Rewards", icon: Gift },
+    groups: [
+      {
+        key: "profile",
+        label: "Profile",
+        items: [
+          { to: "/employee/profile", label: "My Profile", icon: User },
+        ],
+      },
+      {
+        key: "request",
+        label: "Request",
+        items: [
+          { to: "/manager", label: "Dashboard", icon: LayoutDashboard },
+          { to: "/employee/create", label: "Create Request", icon: FileText },
+          { to: "/employee/status", label: "Request Status", icon: History },
+        ],
+      },
+      {
+        key: "campaign",
+        label: "Campaign",
+        items: [
+          { to: "/employee/campaigns", label: "Campaigns", icon: Megaphone }
+        ],
+      },
+      {
+        key: "reward",
+        label: "Reward",
+        items: [
+          { to: "/manager/rewards/give", label: "Give Bonus", icon: Gift },
+          { to: "/rewards/my-wallet", label: "My Rewards", icon: Gift },
+        ],
+      },
+    ],
+  },
+
+  ADMIN: {
+    title: "Administrator",
+    subtitle: "Full Access",
+    groups: [
+      {
+        key: "profile",
+        label: "Profile",
+        items: [
+          { to: "/employee/profile", label: "View Profile", icon: User },
+          { to: "/hr/profile-requests", label: "Profile Requests", icon: FileText },
+          { to: "/hr/directory", label: "Employee Directory", icon: Users },
+        ],
+      },
+      {
+        key: "request",
+        label: "Request",
+        items: [
+          { to: "/manager", label: "Dashboard", icon: LayoutDashboard },
+          { to: "/employee/create", label: "Create Request", icon: FileText },
+          { to: "/employee/status", label: "Request Status", icon: History },
+        ],
+      },
+      {
+        key: "campaign",
+        label: "Campaign",
+        items: [
+          { to: "/hr/campaigns", label: "Manage Campaigns", icon: Megaphone },
+          { to: "/hr/campaigns/add", label: "Add campaign", icon: Megaphone },
+          { to: "/employee/campaigns", label: "Employee Campaigns", icon: Megaphone },
+        ],
+      },
+      {
+        key: "reward",
+        label: "Reward",
+        items: [
+          { to: "/hr/rewards/config", label: "Reward Config", icon: Settings },
+          { to: "/employee/rewards", label: "Employee Rewards", icon: Gift },
+          { to: "/hr/rewards/redemptions", label: "Redemptions", icon: Gift },
+          { to: "/manager/rewards/give", label: "Give Bonus", icon: Gift },
+        ],
+      },
+      /* System group removed for ADMIN - keep admin pages under other groups */
     ],
   },
 
   HR: {
     title: "HR Administration",
     subtitle: "System Management",
-    items: [
-      { to: "/hr/profile-requests", label: "Profile Requests", icon: FileText },
-      { to: "/hr/directory", label: "Employee Directory", icon: Users },
-      { to: "/hr/rewards/config", label: "Reward Config", icon: Settings },
-      { to: "/hr/rewards/redemptions", label: "Yêu cầu đổi điểm", icon: Gift },
-      
-      // 👇 MENU CÓ CON (DROPDOWN) - Đã cấu hình
-      { 
-        label: "Campaign", 
-        icon: Megaphone,
-        children: [ 
-          { to: "/hr/campaigns", label: "List campaigns" },
-          { to: "/hr/campaigns/add", label: "Add campaign" }
-        ]
+    groups: [
+      {
+        key: "profile",
+        label: "Profile",
+        items: [
+          { to: "/employee/profile", label: "View Profile", icon: User },
+          //{ to: "/hr/profile-requests", label: "Profile Requests", icon: FileText },
+          { to: "/hr/directory", label: "Employee Directory", icon: Users },
+        ],
       },
-      
-      // Employee capabilities
-      { to: "/employee/create", label: "Create Request", icon: FileText },
-      { to: "/employee/status", label: "Request Status", icon: History },
-      { to: "/employee/profile", label: "My Profile", icon: User },
-      { to: "/rewards/my-wallet", label: "My Rewards", icon: Gift },
+      {
+        key: "request",
+        label: "Request",
+        items: [
+          { to: "/employee/create", label: "Create Request", icon: FileText },
+          { to: "/employee/status", label: "Request Status", icon: History },
+        ],
+      },
+      {
+        key: "campaign",
+        label: "Campaign",
+        items: [
+          { to: "/hr/campaigns", label: "List campaigns", icon: Megaphone },
+          { to: "/hr/campaigns/add", label: "Add campaign", icon: Megaphone },
+        ],
+      },
+      {
+        key: "reward",
+        label: "Reward",
+        items: [
+          { to: "/hr/rewards/config", label: "Reward Config", icon: Settings },
+          { to: "/employee/rewards", label: "My Rewards", icon: Gift},
+          { to: "/hr/rewards/redemptions", label: "Redemptions", icon: Gift },
+          { to: "/manager/rewards/give", label: "Give Bonus", icon: Gift },          
+        ],
+      },
     ],
   },
 
   GUEST: {
     title: "HRM System",
     subtitle: "Welcome",
-    items: [{ to: "/login", label: "Login", icon: LogOut }],
+    groups: [
+      { key: "profile", label: "Profile", items: [{ to: "/login", label: "Login", icon: LogOut }] },
+    ],
   },
 };
 
@@ -96,6 +208,7 @@ export default function MainLayout({ children }) {
 
   /* ================= LOAD USER ================= */
   useEffect(() => {
+    const token = localStorage.getItem("token");
     const name = localStorage.getItem("employeeName") || "Guest User";
     const code = localStorage.getItem("employeeCode") || "---";
     const id = Number(localStorage.getItem("employeeId"));
@@ -109,6 +222,9 @@ export default function MainLayout({ children }) {
     });
 
     setMenu(MENU_CONFIG[role] || MENU_CONFIG.GUEST);
+    
+    // ✅ DEBUG: Log user info
+    console.log("📍 MainLayout - User loaded:", { token: !!token, role, code });
   }, []);
 
   /* ================= LOGIC TOGGLE MENU ================= */
@@ -121,7 +237,13 @@ export default function MainLayout({ children }) {
 
   /* ================= LOGOUT ================= */
   const handleLogout = () => {
-    localStorage.clear();
+    console.log("🚪 Logging out...");
+    // ✅ FIX: Clear only auth data, not entire localStorage
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("employeeCode");
+    localStorage.removeItem("employeeName");
+    localStorage.removeItem("employeeId");
     window.location.href = "/login";
   };
 
@@ -144,80 +266,70 @@ export default function MainLayout({ children }) {
           </div>
         </div>
 
-        {/* Navigation */}
+        {/* Navigation - grouped into subsystems */}
         <nav className="sidebar-nav">
-          {menu.items.map((item, idx) => {
-            // --- TRƯỜNG HỢP 1: MENU CÓ CON (DROPDOWN) ---
-            if (item.children) {
-              const isExpanded = expandedMenu[item.label];
-              // Kiểm tra xem có đang ở trang con nào không để highlight menu cha
-              const isActiveParent = item.children.some(child => location.pathname === child.to);
+          {(menu.groups || []).map((section, sIdx) => (
+            <div key={sIdx} className="menu-section">
+              <div className="menu-section-header" style={{padding: '10px 15px', color: '#9fb4ff', fontWeight: 700}}>
+                {section.label}
+              </div>
 
-              return (
-                <div key={idx} className="nav-group">
-                  {/* Menu Cha */}
-                  <div 
-                    className={`nav-item-parent ${isActiveParent ? "active" : ""}`}
-                    onClick={() => toggleSubMenu(item.label)}
-                    style={{
-                      display: "flex", alignItems: "center", padding: "12px 15px", 
-                      cursor: "pointer", 
-                      // 👇 MÀU CHỮ: Active = Xanh sáng, Bình thường = Trắng (để nổi trên nền đen)
-                      color: isActiveParent ? "#60a5fa" : "white", 
-                      fontWeight: isActiveParent ? "600" : "500",
-                      justifyContent: "space-between",
-                      transition: "all 0.2s"
-                    }}
-                  >
-                    <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
-                      <item.icon size={18} />
-                      <span>{item.label}</span>
-                    </div>
-                    {isExpanded ? <ChevronDown size={16}/> : <ChevronRight size={16}/>}
-                  </div>
+              <div className="menu-section-items">
+                {(section.items || []).map((item, idx) => {
+                  if (item.children) {
+                    const labelKey = item.label || `child-${idx}`;
+                    const isExpanded = !!expandedMenu[labelKey];
+                    const isActiveParent = (item.children || []).some(child => location.pathname === child.to);
 
-                  {/* Menu Con */}
-                  {isExpanded && (
-                    <div className="nav-children" style={{paddingLeft: "10px", background: "rgba(0,0,0,0.15)"}}>
-                      {item.children.map((child, cIdx) => (
-                        <NavLink
-                          key={cIdx}
-                          to={child.to}
-                          className={({ isActive }) => (isActive ? "active" : "")}
-                          end
-                          style={({ isActive }) => ({
-                            display: "flex", alignItems: "center", padding: "10px 15px 10px 35px",
-                            textDecoration: "none", fontSize: "0.9rem",
-                            // 👇 MÀU CHỮ CON: Active = Xanh sáng, Bình thường = Xám trắng
-                            color: isActive ? "#60a5fa" : "#e2e8f0"
-                          })}
+                    return (
+                      <div key={idx} className="nav-group">
+                        <div
+                          className={`nav-item-parent ${isActiveParent ? "active" : ""}`}
+                          onClick={() => toggleSubMenu(labelKey)}
+                          style={{display: 'flex', alignItems: 'center', padding: '10px 15px', cursor: 'pointer', justifyContent: 'space-between', color: isActiveParent ? '#60a5fa' : '#e2e8f0'}}
                         >
-                          {child.label}
-                        </NavLink>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            }
+                          <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                            {item.icon && <item.icon size={18} />}
+                            <span>{item.label}</span>
+                          </div>
+                          {isExpanded ? <ChevronDown size={14}/> : <ChevronRight size={14}/>}
+                        </div>
 
-            // --- TRƯỜNG HỢP 2: MENU THƯỜNG (Giữ nguyên nhưng sửa màu) ---
-            return (
-              <NavLink
-                key={idx}
-                to={item.to}
-                className={({ isActive }) => (isActive ? "active" : "")}
-                end
-                style={({ isActive }) => ({
-                    // Đảm bảo menu thường cũng màu trắng khi chưa active
-                    color: isActive ? "#60a5fa" : "white"
+                        {isExpanded && (
+                          <div className="nav-children" style={{paddingLeft: '12px', background: 'rgba(0,0,0,0.08)'}}>
+                            {(item.children || []).map((child, cIdx) => (
+                              <NavLink
+                                key={cIdx}
+                                to={child.to}
+                                className={({ isActive }) => (isActive ? 'active' : '')}
+                                end
+                                style={({ isActive }) => ({display: 'block', padding: '8px 12px', textDecoration: 'none', color: isActive ? '#60a5fa' : '#e2e8f0'})}
+                              >
+                                {child.label}
+                              </NavLink>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <NavLink
+                      key={idx}
+                      to={item.to}
+                      className={({ isActive }) => (isActive ? 'active' : '')}
+                      end
+                      style={({ isActive }) => ({display: 'flex', alignItems: 'center', padding: '10px 15px', textDecoration: 'none', color: isActive ? '#60a5fa' : '#e2e8f0'})}
+                    >
+                      {item.icon && <item.icon size={18} />}
+                      <span style={{marginLeft: 10}}>{item.label}</span>
+                    </NavLink>
+                  );
                 })}
-              >
-                <item.icon size={18} />
-                {item.label}
-              </NavLink>
-            );
-          })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         {/* User Card */}
@@ -254,7 +366,7 @@ export default function MainLayout({ children }) {
                 color: "#cbd5e1", // Sửa màu icon logout cho rõ hơn
                 cursor: "pointer",
               }}
-              title="Đăng xuất"
+              title="Logout"
             >
               <LogOut size={18} />
             </button>
@@ -280,19 +392,17 @@ export default function MainLayout({ children }) {
         </footer>
       </div>
 
-      {/* ================= LOGOUT MODAL ================= */}
-      {showLogoutConfirm && (
-        <div className="logout-overlay">
-          <div className="logout-popup">
-            <h3>Xác nhận</h3>
-            <p>Bạn có chắc chắn muốn đăng xuất?</p>
-            <div className="logout-actions">
-              <button onClick={() => setShowLogoutConfirm(false)}>Hủy</button>
-              <button onClick={handleLogout}>Đăng xuất</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ================= LOGOUT CONFIRM DIALOG ================= */}
+      <ConfirmDialog
+        isOpen={showLogoutConfirm}
+        title="Confirm"
+        message="Are you sure you want to log out?"
+        onConfirm={handleLogout}
+        onCancel={() => setShowLogoutConfirm(false)}
+        type="danger"
+        confirmLabel="Log out"
+        cancelLabel="Cancel"
+      />
     </div>
   );
 }

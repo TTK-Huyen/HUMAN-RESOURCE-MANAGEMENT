@@ -5,68 +5,72 @@ import {
   Trash2, 
   Search, 
   Filter, 
-  Calendar,
-  AlertCircle 
+  Calendar
 } from "lucide-react";
-import { fetchCampaigns, deleteCampaign } from "../../Services/campaigns"; 
-import "../../components/layout/Mainlayout"; // Đảm bảo import CSS layout nếu cần
+import { fetchCampaigns, deleteCampaign } from "../../Services/campaigns";
+import Button from "../../components/common/Button";
+import Toast from "../../components/common/Toast";
+import ConfirmDialog from "../../components/common/ConfirmDialog";
+import EmptyState from "../../components/common/EmptyState";
+import "../../components/layout/Mainlayout"; 
 
 export default function HRCampaignListPage() {
   const navigate = useNavigate();
   
-  // State dữ liệu
+  // State Data
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState({ code: null, name: null });
   
-  // State bộ lọc
+  // State Filters
   const [filters, setFilters] = useState({
     code: "",
     name: ""
   });
 
-  // Biến Key để reload danh sách (giống logic Add form)
   const [reloadKey, setReloadKey] = useState(0);
 
-  // --- 1. HÀM LOAD DỮ LIỆU ---
+  // --- 1. LOAD DATA ---
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       try {
-        // Gọi hàm fetchCampaigns đã có trong service
-        // (Hàm này cần trả về mảng campaign như hình image_696c00.png)
         const data = await fetchCampaigns(); 
         setCampaigns(data || []);
       } catch (error) {
-        console.error("Lỗi tải danh sách:", error);
+        console.error("Error loading campaigns:", error);
       } finally {
         setLoading(false);
       }
     };
     loadData();
-  }, [reloadKey]); // Chạy lại khi reloadKey thay đổi
+  }, [reloadKey]); 
 
-  // --- 2. HÀM XỬ LÝ XÓA (MÀU ĐỎ) ---
+  // --- 2. DELETE HANDLER ---
   const handleDelete = async (campaignCode, campaignName) => {
-    // Confirm trước khi xóa
-    const isConfirmed = window.confirm(`Bạn có chắc muốn xóa chiến dịch: ${campaignName}?`);
-    if (!isConfirmed) return;
+    setPendingDelete({ code: campaignCode, name: campaignName });
+    setShowDeleteConfirm(true);
+  };
 
+  const confirmDelete = async () => {
+    const { code, name } = pendingDelete;
+    setShowDeleteConfirm(false);
+    if (!code) return;
     try {
-      // Gọi API PATCH DELETE
-      await deleteCampaign(campaignCode);
-      
-      alert("Đã xóa thành công!");
-      
-      // 👇 KÍCH HOẠT RELOAD LẠI DANH SÁCH NGAY LẬP TỨC
+      await deleteCampaign(code);
+      setToast({ type: 'success', message: `Deleted campaign: ${name}` });
       setReloadKey(prev => prev + 1);
-
-    } catch (error) {
-      console.error(error);
-      alert("Xóa thất bại. Vui lòng thử lại.");
+    } catch (err) {
+      console.error(err);
+      setToast({ type: 'error', message: err.response?.data?.message || 'Delete failed' });
+    } finally {
+      setPendingDelete({ code: null, name: null });
     }
   };
 
-  // --- 3. LOGIC LỌC DỮ LIỆU TRÊN UI ---
+  // --- 3. FILTER LOGIC ---
   const filteredCampaigns = campaigns.filter((item) => {
     const searchCode = filters.code.toLowerCase();
     const searchName = filters.name.toLowerCase();
@@ -77,55 +81,59 @@ export default function HRCampaignListPage() {
     return itemCode.includes(searchCode) && itemName.includes(searchName);
   });
 
-  // Helper format ngày
+  // Helper: Format Date (Changed to English/GB locale for dd/mm/yyyy format)
   const formatDate = (dateString) => {
     if (!dateString) return "---";
-    return new Date(dateString).toLocaleDateString("vi-VN");
+    return new Date(dateString).toLocaleDateString("en-GB");
   };
 
-  // Helper màu trạng thái
+  // Helper: Status Color
   const getStatusColor = (status) => {
     const s = (status || "").toUpperCase();
-    if (s === "PENDING") return "#f59e0b"; // Vàng
-    if (s === "UPCOMING") return "#3b82f6"; // Xanh dương
-    if (s === "RUNNING" || s === "ACTIVE") return "#10b981"; // Xanh lá
-    if (s === "ENDED" || s === "CLOSED") return "#6b7280"; // Xám
+    if (s === "PENDING") return "#f59e0b"; // Orange
+    if (s === "UPCOMING") return "#3b82f6"; // Blue
+    if (s === "RUNNING" || s === "ACTIVE") return "#10b981"; // Green
+    if (s === "ENDED" || s === "CLOSED") return "#6b7280"; // Gray
     return "#333";
   };
 
   return (
     <div className="page-container fade-in-up" style={{ padding: "20px" }}>
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="Confirm Delete"
+        message={`Are you sure you want to delete campaign: ${pendingDelete.name || ''}?`}
+        onConfirm={confirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+        type="danger"
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+      />
+      {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
       
-      {/* --- HEADER & NÚT TẠO MỚI --- */}
+      {/* --- HEADER --- */}
       <div className="card" style={{ marginBottom: "1.5rem", padding: "15px", background: "#fff", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 2px 4px rgba(0,0,0,0.05)" }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: "1.5rem", color: "#1f2937" }}>Quản lý Chiến Dịch</h2>
-          <p style={{ margin: "4px 0 0", color: "#6b7280", fontSize: "0.9rem" }}>Danh sách các sự kiện nội bộ</p>
+          <h2 style={{ margin: 0, fontSize: "1.5rem", color: "#1f2937" }}>Manage Campaigns</h2>
+          <p style={{ margin: "4px 0 0", color: "#6b7280", fontSize: "0.9rem" }}>Internal events and campaigns</p>
         </div>
-        <button 
-          onClick={() => navigate("/hr/campaigns/add")} // Đường dẫn tới trang Add bạn làm lúc nãy
-          style={{
-            display: "flex", alignItems: "center", gap: "8px",
-            background: "#2563eb", color: "white", border: "none",
-            padding: "10px 20px", borderRadius: "6px", cursor: "pointer", fontWeight: "600"
-          }}
-        >
-          <Plus size={18} /> Tạo mới
-        </button>
+        <Button onClick={() => navigate("/hr/campaigns/add")} variant="primary">
+          <Plus size={16} /> &nbsp; Create
+        </Button>
       </div>
 
-      {/* --- THANH TÌM KIẾM / BỘ LỌC --- */}
+      {/* --- FILTER BAR --- */}
       <div className="card" style={{ marginBottom: "1.5rem", padding: "20px", background: "#fff", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.05)" }}>
         <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
           
-          {/* Lọc theo Mã */}
+          {/* Filter by Code */}
           <div style={{ flex: 1, minWidth: "200px" }}>
-            <label style={{ display: "block", marginBottom: "6px", fontWeight: "600", fontSize: "0.85rem", color: "#374151" }}>Tìm theo Mã</label>
+            <label style={{ display: "block", marginBottom: "6px", fontWeight: "600", fontSize: "0.85rem", color: "#374151" }}>Search by Code</label>
             <div style={{ position: "relative" }}>
               <Search size={16} style={{ position: "absolute", left: "10px", top: "10px", color: "#9ca3af" }} />
               <input 
                 type="text" 
-                placeholder="Ví dụ: CAM001..." 
+                placeholder="Ex: CAM001..." 
                 value={filters.code}
                 onChange={(e) => setFilters(prev => ({...prev, code: e.target.value}))}
                 style={{ width: "100%", padding: "8px 10px 8px 35px", borderRadius: "6px", border: "1px solid #d1d5db", outline: "none" }}
@@ -133,14 +141,14 @@ export default function HRCampaignListPage() {
             </div>
           </div>
 
-          {/* Lọc theo Tên */}
+          {/* Filter by Name */}
           <div style={{ flex: 2, minWidth: "300px" }}>
-            <label style={{ display: "block", marginBottom: "6px", fontWeight: "600", fontSize: "0.85rem", color: "#374151" }}>Tìm theo Tên Chiến Dịch</label>
+            <label style={{ display: "block", marginBottom: "6px", fontWeight: "600", fontSize: "0.85rem", color: "#374151" }}>Search by Campaign Name</label>
             <div style={{ position: "relative" }}>
               <Filter size={16} style={{ position: "absolute", left: "10px", top: "10px", color: "#9ca3af" }} />
               <input 
                 type="text" 
-                placeholder="Ví dụ: Giải cầu lông..." 
+                placeholder="Ex: Badminton Tournament..." 
                 value={filters.name}
                 onChange={(e) => setFilters(prev => ({...prev, name: e.target.value}))}
                 style={{ width: "100%", padding: "8px 10px 8px 35px", borderRadius: "6px", border: "1px solid #d1d5db", outline: "none" }}
@@ -151,36 +159,33 @@ export default function HRCampaignListPage() {
         </div>
       </div>
 
-      {/* --- DANH SÁCH (TABLE) --- */}
+      {/* --- TABLE --- */}
       <div className="card" style={{ background: "#fff", borderRadius: "8px", overflow: "hidden", boxShadow: "0 2px 4px rgba(0,0,0,0.05)" }}>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "800px" }}>
             <thead>
               <tr style={{ background: "#f9fafb", borderBottom: "1px solid #e5e7eb", textAlign: "left" }}>
-                <th style={{ padding: "16px", fontSize: "0.85rem", color: "#6b7280", fontWeight: "600" }}>MÃ</th>
-                <th style={{ padding: "16px", fontSize: "0.85rem", color: "#6b7280", fontWeight: "600" }}>TÊN CHIẾN DỊCH</th>
-                <th style={{ padding: "16px", fontSize: "0.85rem", color: "#6b7280", fontWeight: "600" }}>THỜI GIAN</th>
-                <th style={{ padding: "16px", fontSize: "0.85rem", color: "#6b7280", fontWeight: "600" }}>THAM GIA</th>
-                <th style={{ padding: "16px", fontSize: "0.85rem", color: "#6b7280", fontWeight: "600" }}>TRẠNG THÁI</th>
-                <th style={{ padding: "16px", fontSize: "0.85rem", color: "#6b7280", fontWeight: "600", textAlign: "right" }}>HÀNH ĐỘNG</th>
+                <th style={{ padding: "16px", fontSize: "0.85rem", color: "#6b7280", fontWeight: "600" }}>CODE</th>
+                <th style={{ padding: "16px", fontSize: "0.85rem", color: "#6b7280", fontWeight: "600" }}>CAMPAIGN NAME</th>
+                <th style={{ padding: "16px", fontSize: "0.85rem", color: "#6b7280", fontWeight: "600" }}>DURATION</th>
+                <th style={{ padding: "16px", fontSize: "0.85rem", color: "#6b7280", fontWeight: "600" }}>PARTICIPANTS</th>
+                <th style={{ padding: "16px", fontSize: "0.85rem", color: "#6b7280", fontWeight: "600" }}>STATUS</th>
+                <th style={{ padding: "16px", fontSize: "0.85rem", color: "#6b7280", fontWeight: "600", textAlign: "right" }}>ACTION</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan="6" style={{ padding: "40px", textAlign: "center", color: "#6b7280" }}>Đang tải dữ liệu...</td>
-                </tr>
-              ) : filteredCampaigns.length === 0 ? (
-                <tr>
-                  <td colSpan="6" style={{ padding: "40px", textAlign: "center", color: "#6b7280" }}>
-                    <div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'10px'}}>
-                      <AlertCircle size={30} />
-                      <span>Không tìm thấy chiến dịch nào.</span>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredCampaigns.map((camp, index) => (
+                    <tr>
+                      <td colSpan="6" style={{ padding: "40px", textAlign: "center", color: "#6b7280" }}>Loading campaigns...</td>
+                    </tr>
+                  ) : filteredCampaigns.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" style={{ padding: "40px", textAlign: "center", color: "#6b7280" }}>
+                        <EmptyState message="No campaigns found" subMessage="Try removing filters or adjust your search" />
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredCampaigns.map((camp, index) => (
                   <tr key={index} style={{ borderBottom: "1px solid #f3f4f6" }}>
                     <td style={{ padding: "16px", fontWeight: "600", color: "#374151" }}>
                       {camp.campaignCode}
@@ -200,7 +205,7 @@ export default function HRCampaignListPage() {
                     <td style={{ padding: "16px" }}>
                       <span style={{
                         padding: "4px 10px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: "600",
-                        backgroundColor: `${getStatusColor(camp.status)}20`, // Màu nền nhạt (20% opacity)
+                        backgroundColor: `${getStatusColor(camp.status)}20`, 
                         color: getStatusColor(camp.status),
                         border: `1px solid ${getStatusColor(camp.status)}40`
                       }}>
@@ -208,10 +213,9 @@ export default function HRCampaignListPage() {
                       </span>
                     </td>
                     <td style={{ padding: "16px", textAlign: "right" }}>
-                      {/* 👇 NÚT XÓA MÀU ĐỎ (ADD BUTTON DELETE) */}
                       <button
                         onClick={() => handleDelete(camp.campaignCode, camp.campaignName)}
-                        title="Xóa chiến dịch"
+                        title="Delete Campaign"
                         style={{
                           background: "#fef2f2", 
                           color: "#ef4444", 

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, AlertCircle, CheckCircle } from "lucide-react";
 import CampaignForm from "../../components/features/campaign/CampaignForm"; 
 import { createCampaign } from "../../Services/campaigns"; 
+import Toast from "../../components/common/Toast";
 import "../../components/layout/Mainlayout"; 
 
 export default function HRAddCampaignPage() {
@@ -10,14 +11,14 @@ export default function HRAddCampaignPage() {
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState({ type: "", message: "" });
   
-  // Biến này để hiển thị form. True = hiện, False = ẩn.
+  // Show/hide form when resetting
   const [showForm, setShowForm] = useState(true);
 
-  // Hàm reset form "cứng" (Tắt đi bật lại)
+  // Hard reset form (hide then show to clear internal state)
   const hardResetForm = () => {
-    setShowForm(false); // 1. Ẩn form đi (để xóa sạch dữ liệu cũ và modal kẹt)
+    setShowForm(false); // hide form to clear stale state
     setTimeout(() => {
-      setShowForm(true); // 2. Hiện lại form mới tinh sau 50ms
+      setShowForm(true); // show fresh form after short delay
     }, 50);
   };
 
@@ -30,7 +31,7 @@ export default function HRAddCampaignPage() {
       
       setNotification({
         type: "success",
-        message: `Tạo thành công: ${result.campaignName || formData.campaignName}`
+        message: `Campaign created: ${result.campaignName || formData.campaignName}`
       });
 
       // QUAN TRỌNG: Gọi hàm reset cứng để xóa lớp đen và mở khóa nút
@@ -40,7 +41,7 @@ export default function HRAddCampaignPage() {
       console.error(error);
       setNotification({
         type: "error",
-        message: error.response?.data?.message || error.message || "Có lỗi xảy ra."
+        message: error.response?.data?.message || error.message || "An error occurred."
       });
     } finally {
       setLoading(false); // Đảm bảo luôn tắt loading
@@ -55,44 +56,25 @@ export default function HRAddCampaignPage() {
             <button 
                 className="btn btn-ghost btn-icon-only" 
                 onClick={() => navigate(-1)}
-                title="Quay lại"
+                title="Back"
                 style={{border: "none", background: "transparent", cursor: "pointer"}}
             >
                 <ArrowLeft size={24} color="#333" />
             </button>
             <div>
-              <h2 style={{margin: 0, fontSize: "1.5rem", color: "#1f2937"}}>Tạo Chiến Dịch Mới</h2>
+              <h2 style={{margin: 0, fontSize: "1.5rem", color: "#1f2937"}}>Create New Campaign</h2>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Thông báo */}
       {notification.message && (
-        <div 
-          className="card fade-in-up" 
-          style={{ 
-            marginBottom: "1.5rem", 
-            padding: "1rem",
-            borderRadius: "6px",
-            backgroundColor: notification.type === "success" ? "#f0fdf4" : "#fef2f2",
-            // Đã sửa lỗi dấu \ ở đây
-            border: `1px solid ${notification.type === "success" ? "#bbf7d0" : "#fecaca"}`,
-            display: "flex",
-            alignItems: "center",
-            gap: "0.75rem",
-            color: notification.type === "success" ? "#166534" : "#991b1b"
-          }}
-        >
-          {notification.type === "success" ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
-          <span>{notification.message}</span>
-        </div>
+        <Toast type={notification.type} message={notification.message} onClose={() => setNotification({type:'', message:''})} />
       )}
 
       <div className="card" style={{background: "#fff", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)"}}>
         <div className="card-body" style={{padding: "20px"}}>
-            {/* Logic: Nếu showForm = true thì mới vẽ Form. 
-                Khi reset, nó sẽ biến mất trong tích tắc rồi hiện lại -> Mất sạch lỗi kẹt.*/}
+            {/* Render form only when `showForm` is true. Hiding then showing clears internal form state. */}
             {showForm && (
                 <CampaignForm 
                     onSubmit={handleCreateCampaign} 

@@ -18,6 +18,7 @@ namespace HrmApi.Services
         public async Task<object> GetMyWalletAsync(int employeeId)
         {
             var balance = await GetOrCreateBalanceAsync(employeeId);
+            var employee = await _context.Employees.FindAsync(employeeId);
             var transactions = await _context.PointTransactions
                 .Where(t => t.EmployeeId == employeeId)
                 .OrderByDescending(t => t.CreatedAt)
@@ -39,6 +40,10 @@ namespace HrmApi.Services
                 Balance = balance.CurrentBalance,
                 TotalEarned = balance.TotalEarned,
                 TotalSpent = balance.TotalSpent,
+                LastUpdated = balance.LastUpdated,
+                EmployeeStatus = employee?.Status,
+                EmployeeCode = employee?.EmployeeCode,
+                EmployeeName = employee?.FullName,
                 Transactions = transactions
             };
         }

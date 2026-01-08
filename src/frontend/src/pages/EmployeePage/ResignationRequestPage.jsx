@@ -1,11 +1,14 @@
 // ResignationRequestPage.jsx
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   createResignationRequest,
   fetchEmployeeProfile,
 } from "../../Services/requests";
 import ViolationBanner from "../../components/common/ViolationBanner";
 import { FormRow } from "../../components/common/FormRow";
+import Button from "../../components/common/Button";
+import Toast from "../../components/common/Toast";
 import "./RequestForm.css";
 
 const INITIAL_FORM = {
@@ -31,11 +34,19 @@ function toISODate(mmddyyyy) {
   return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
 }
 
+function formatToMMDDYYYY(dateStr) {
+  // Handle both "MM/DD/YYYY" and "DD/MM/YYYY" formats - return as is since backend sends MM/DD/YYYY
+  if (!dateStr) return "";
+  return dateStr;
+}
+
 
 export default function ResignationRequestPage() {
+  const navigate = useNavigate();
   const [f, setF] = useState(INITIAL_FORM);
   const [errs, setErrs] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
   async function loadProfile() {
@@ -56,9 +67,7 @@ export default function ResignationRequestPage() {
         employeeName: profile.employeeName || localStorage.getItem("employeeName") || "",
         department: profile.department || "",
         position: profile.jobTitle || "",
-
-        // input type="date" cần yyyy-MM-dd, trong swagger contractEndDate có thể null
-        contractEnd: profile.contractEndDate ? toISODate(profile.contractEndDate) : "",
+        contractEnd: profile.contractEndDate || "",
       }));
 
       setErrs([]);
@@ -115,15 +124,8 @@ export default function ResignationRequestPage() {
 
       await createResignationRequest(f.employeeCode, payload);
       setErrs([]);
-      alert("Resignation request submitted. Status = Pending.");
-      setF((prev) => ({
-        ...INITIAL_FORM,
-        employeeCode: prev.employeeCode,
-        employeeName: prev.employeeName,
-        department: prev.department,
-        position: prev.position,
-        contractEnd: prev.contractEnd,
-      }));
+      setToast({ message: "Resignation request submitted successfully!", type: "success" });
+      setTimeout(() => navigate(-1), 2000);
     } catch (err) {
       console.error(err);
       setErrs([
@@ -135,81 +137,110 @@ export default function ResignationRequestPage() {
   }
 
   function resetForm() {
-    setF((prev) => ({
-    ...INITIAL_FORM,
-    employeeCode: prev.employeeCode,
-    employeeName: prev.employeeName,
-    department: prev.department,
-    position: prev.position,
-    contractEnd: prev.contractEnd,
-    }));
-    setErrs([]);
+    navigate(-1);
   }
 
   return (
-    <div className="card form-card fade-in-up">
-      <h3>Resignation request</h3>
-      <ViolationBanner messages={errs} />
-
-      <form className="form-grid" onSubmit={submit} noValidate>
-        {/* Nếu không muốn show lên UI thì xoá mấy FormRow này, state vẫn giữ data */}
-        <FormRow label="Employee Code" required>
-          <input className="input" value={f.employeeCode} readOnly />
-        </FormRow>
-
-        <FormRow label="Employee Name" required>
-          <input className="input" value={f.employeeName} readOnly />
-        </FormRow>
-
-        <FormRow label="Department" required>
-          <input className="input" value={f.department} readOnly />
-        </FormRow>
-
-        <FormRow label="Position" required>
-          <input className="input" value={f.position} readOnly />
-        </FormRow>
-
-        <FormRow label="Contract end date">
-          
-          <input className="input" value={f.contractEnd} readOnly />
-        </FormRow>
-
-        <FormRow label="Resignation date" required>
-          <input
-            className="input"
-            type="date"
-            name="resignationDate"
-            value={f.resignationDate}
-            onChange={onChange}
-          />
-        </FormRow>
-
-        <FormRow label="Resignation reason" required full>
-          <textarea
-            className="textarea"
-            name="reason"
-            value={f.reason}
-            onChange={onChange}
-          />
-        </FormRow>
-
+    <div
+      style={{
+        padding: "24px",
+        maxWidth: "1200px",
+        margin: "0 auto",
+      }}
+    >
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      <div className="card form-card fade-in-up">
         <div
-          className="hstack"
-          style={{ gridColumn: "1 / -1", justifyContent: "flex-end", gap: 8 }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "24px",
+            paddingBottom: "16px",
+            borderBottom: "1px solid #e2e8f0",
+          }}
         >
-          <button
-            type="button"
-            className="btn ghost"
-            onClick={resetForm}
-            disabled={submitting}
-          >
-            Cancel
-          </button>
-          <button className="btn primary" type="submit" disabled={submitting}>
-            {submitting ? "Submitting..." : "Submit"}
-          </button>
+          <div>
+            <h2 style={{ margin: "0 0 4px 0", fontSize: "1.5rem", color: "#0f172a" }}>
+              Resignation request
+            </h2>
+            <p style={{ margin: 0, fontSize: "0.9rem", color: "#64748b" }}>
+              Submit a resignation request for approval
+            </p>
+          </div>
         </div>
-      </form>
+
+        <ViolationBanner messages={errs} />
+
+        <form className="form-grid" onSubmit={submit} noValidate>
+          <FormRow label="Employee Code" required>
+            <input className="input" value={f.employeeCode} readOnly />
+          </FormRow>
+
+          <FormRow label="Employee Name" required>
+            <input className="input" value={f.employeeName} readOnly />
+          </FormRow>
+
+          <FormRow label="Department" required>
+            <input className="input" value={f.department} readOnly />
+          </FormRow>
+
+          <FormRow label="Position" required>
+            <input className="input" value={f.position} readOnly />
+          </FormRow>
+
+          <FormRow label="Contract end date" style={{ opacity: f.contractEnd ? 1 : 0.5 }}>
+            <input className="input" value={f.contractEnd ? formatToMMDDYYYY(f.contractEnd) : "None"} readOnly disabled={!f.contractEnd} />
+          </FormRow>
+
+          <FormRow label="Resignation date" required>
+            <input
+              className="input"
+              type="date"
+              name="resignationDate"
+              value={f.resignationDate}
+              onChange={onChange}
+            />
+          </FormRow>
+
+          <FormRow label="Resignation reason" required full>
+            <textarea
+              className="textarea"
+              name="reason"
+              value={f.reason}
+              onChange={onChange}
+            />
+          </FormRow>
+
+          <div
+            style={{
+              gridColumn: "1 / -1",
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: "12px",
+              marginTop: "16px",
+              paddingTop: "16px",
+              borderTop: "1px solid #e2e8f0",
+            }}
+          >
+            <Button
+              variant="ghost"
+              onClick={resetForm}
+              disabled={submitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={submit}
+              disabled={submitting}
+              isLoading={submitting}
+            >
+              {submitting ? "Submitting..." : "Submit"}
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

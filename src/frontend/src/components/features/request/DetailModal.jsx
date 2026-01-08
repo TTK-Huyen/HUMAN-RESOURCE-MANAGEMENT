@@ -29,6 +29,12 @@ const getAttachmentUrl = (path) => {
     return `${BACKEND_DOMAIN}/${cleanPath}`;
 };
 
+// Normalize various possible timestamp fields returned by different APIs
+const getLogTime = (log) => {
+    if (!log) return null;
+    return log.time || log.timeStamp || log.timestamp || log.approvedAt || log.decidedAt || log.createdAt || log.time_approved || null;
+};
+
 const DetailModal = ({ req, typeConfig, onClose, onRefresh }) => {
   const [detailData, setDetailData] = useState(null);
   const [historyItems, setHistoryItems] = useState([]);
@@ -133,7 +139,10 @@ const DetailModal = ({ req, typeConfig, onClose, onRefresh }) => {
 
           if (response.ok) {
               await response.json(); 
-              showNotification(`Request ${status === 'APPROVED' ? 'Approved' : 'Rejected'} successfully!`, "success");
+              const message = status === 'APPROVED' 
+                ? `✓ Request Approved - ${req.employee?.fullName}'s ${req.requestType} request has been approved.`
+                : `✗ Request Rejected - ${req.employee?.fullName}'s ${req.requestType} request has been rejected.`;
+              showNotification(message, status === 'APPROVED' ? 'success' : 'error');
               setProcessing(false);
               setCurrentStatus(status);
               setShowRejectBox(false);
@@ -249,7 +258,7 @@ const DetailModal = ({ req, typeConfig, onClose, onRefresh }) => {
                                 {decisionLog.status}
                             </div>
                             <div className="actor">By: <b>{decisionLog.full_Name}</b> ({decisionLog.employee_Id})</div>
-                            <div className="date">{formatDate(decisionLog.time, true)}</div>
+                            <div className="date">{formatDate(getLogTime(decisionLog), true)}</div>
                         </>
                     ) : (
                         <div className="status" style={{color:'#94a3b8', fontStyle:'italic'}}>Waiting for decision...</div>
@@ -279,7 +288,7 @@ const DetailModal = ({ req, typeConfig, onClose, onRefresh }) => {
                             ({createdLog ? createdLog.employee_Id : req.employee?.id})
                         </span>
                     </div>
-                    <div className="date">{createdLog ? formatDate(createdLog.time, true) : formatDate(req.submittedDate)}</div>
+                    <div className="date">{createdLog ? formatDate(getLogTime(createdLog), true) : formatDate(req.submittedDate)}</div>
                 </div>
             </div>
         </div>
@@ -344,14 +353,18 @@ const DetailModal = ({ req, typeConfig, onClose, onRefresh }) => {
         )}
       </div>
       
-      <ConfirmDialog 
-        isOpen={confirmAction.show} 
-        title={confirmAction.type === 'APPROVED' ? "Approve Request?" : "Reject Request?"} 
-        message={`Are you sure you want to ${confirmAction.type === 'APPROVED' ? 'APPROVE' : 'REJECT'} this request?`} 
-        onConfirm={executeFinalAction} 
-        onCancel={() => setConfirmAction({ ...confirmAction, show: false })} 
-        type={confirmAction.type === 'REJECTED' ? 'danger' : 'info'} 
-      />
+      <ConfirmDialog
+  isOpen={confirmAction.show}
+  title={null}   // hoặc ""
+  message={`Are you sure you want to ${
+    confirmAction.type === "APPROVED" ? "approve" : "reject"
+  } this request?`}
+  onConfirm={executeFinalAction}
+  onCancel={() =>
+    setConfirmAction((p) => ({ ...p, show: false }))
+  }
+  type={confirmAction.type === "REJECT" ? "danger" : "info"}
+/>
     </div>
   );
 };

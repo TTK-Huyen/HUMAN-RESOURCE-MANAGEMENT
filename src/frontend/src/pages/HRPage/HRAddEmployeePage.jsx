@@ -9,6 +9,7 @@ import { HRService } from "../../Services/employees";
 import { FormRow } from "../../components/common/FormRow";
 import Button from "../../components/common/Button";
 import ViolationBanner from "../../components/common/ViolationBanner";
+import Loading from "../../components/common/Loading";
 
 export default function HRAddEmployeePage() {
   const navigate = useNavigate();
@@ -39,39 +40,39 @@ export default function HRAddEmployeePage() {
     return `${firstName}.${lastName}`; // default: firstname.lastname
   };
 
-  // --- Nationalities (VN - hardcode) ---
+  // --- Nationalities ---
   const NATIONALITIES = [
-    "Việt Nam",
-    "Hoa Kỳ",
-    "Anh",
-    "Pháp",
-    "Đức",
-    "Nhật Bản",
-    "Hàn Quốc",
-    "Trung Quốc",
+    "Vietnam",
+    "United States",
+    "United Kingdom",
+    "France",
+    "Germany",
+    "Japan",
+    "South Korea",
+    "China",
     "Singapore",
-    "Thái Lan",
-    "Úc",
+    "Thailand",
+    "Australia",
     "Canada",
-    "Hà Lan",
-    "Ý",
-    "Tây Ban Nha",
-    "Thụy Điển",
-    "Na Uy",
-    "Đan Mạch",
-    "Phần Lan",
-    "Khác",
+    "Netherlands",
+    "Italy",
+    "Spain",
+    "Sweden",
+    "Norway",
+    "Denmark",
+    "Finland",
+    "Other",
   ];
 
-  // ===== Vietnamese Provinces/Districts Data =====
+  // ===== Vietnam Provinces/Districts Data =====
   const PROVINCES = [
-    { id: "HN", name: "Hà Nội", districts: ["Ba Đình", "Hoàn Kiếm", "Hai Bà Trưng", "Đống Đa", "Tây Hồ", "Cầu Giấy", "Thanh Xuân", "Hoàng Mai"] },
-    { id: "HCM", name: "TP Hồ Chí Minh", districts: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "Bình Thạnh", "Bình Tân", "Gò Vấp", "Phú Nhuận", "Tân Bình", "Tân Phú"] },
-    { id: "HP", name: "Hải Phòng", districts: ["Hồng Bàng", "Ngô Quyền", "Lê Chân", "Kiến An", "Đô Lương", "An Lão", "Vân Đồn"] },
-    { id: "DN", name: "Đà Nẵng", districts: ["Hải Châu", "Thanh Khê", "Sơn Trà", "Ngũ Hành Sơn", "Liên Chiểu", "Cẩm Lệ"] },
-    { id: "HUE", name: "Thừa Thiên Huế", districts: ["Thành phố Huế", "A Lưới", "Phú Lộc", "Phú Vang", "Quảng Điền"] },
-    { id: "QN", name: "Quảng Ninh", districts: ["Hạ Long", "Móng Cái", "Cẩm Phả", "Uông Bí", "Đông Triều", "Tiên Yên"] },
-    { id: "CT", name: "Cần Thơ", districts: ["Ninh Kiều", "Bình Thủy", "Cái Răng", "Ô Môn", "Thốt Nốt", "Phong Điền"] },
+    { id: "HN", name: "Hanoi", districts: ["Ba Dinh", "Hoan Kiem", "Hai Ba Trung", "Dong Da", "Tay Ho", "Cau Giay", "Thanh Xuan", "Hoang Mai"] },
+    { id: "HCM", name: "Ho Chi Minh City", districts: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "Binh Thanh", "Binh Tan", "Go Vap", "Phu Nhuan", "Tan Binh", "Tan Phu"] },
+    { id: "HP", name: "Hai Phong", districts: ["Hong Bang", "Ngo Quyen", "Le Chan", "Kien An", "Do Luong", "An Lao", "Van Don"] },
+    { id: "DN", name: "Da Nang", districts: ["Hai Chau", "Thanh Khe", "Son Tra", "Ngu Hanh Son", "Lien Chieu", "Cam Le"] },
+    { id: "HUE", name: "Thua Thien Hue", districts: ["Hue City", "A Luoi", "Phu Loc", "Phu Vang", "Quang Dien"] },
+    { id: "QN", name: "Quang Ninh", districts: ["Ha Long", "Mong Cai", "Cam Pha", "Uong Bi", "Dong Trieu", "Tien Yen"] },
+    { id: "CT", name: "Can Tho", districts: ["Ninh Kieu", "Binh Thuy", "Cai Rang", "O Mon", "Thot Not", "Phong Dien"] },
   ];
 
   // ===== Master data (from DB) =====
@@ -97,9 +98,9 @@ export default function HRAddEmployeePage() {
     // 1. Personal Info
     employeeName: "",
     dateOfBirth: "",
-    gender: "Nam",
-    nationality: "Việt Nam",
-    maritalStatus: "Độc thân",
+    gender: "Male",
+    nationality: "Vietnam",
+    maritalStatus: "Single",
     hasChildren: false,
 
     // 2. Legal Info
@@ -131,7 +132,7 @@ export default function HRAddEmployeePage() {
     jobTitleId: "",
     directManagerId: "",
     employmentType: "Full-time",
-    contractType: "Indefinite",
+    contractType: "Permanent",
     contractStartDate: "",
     contractEndDate: "",
 
@@ -165,7 +166,7 @@ export default function HRAddEmployeePage() {
         }
       } catch (e) {
         if (!mounted) return;
-        setMasterError("Không tải được danh sách dropdown. Vui lòng reload trang.");
+        setMasterError("Failed to load dropdown lists. Please reload the page.");
       } finally {
         if (mounted) setMasterLoading(false);
       }
@@ -195,62 +196,62 @@ export default function HRAddEmployeePage() {
     let message = null;
 
     // required
-    if (name === "employeeName" && !value) message = "Họ tên là bắt buộc";
-    if (name === "dateOfBirth" && !value) message = "Ngày sinh là bắt buộc";
-    if (name === "citizenIdNumber" && !value) message = "Số CCCD là bắt buộc";
-    if (name === "companyEmail" && !value) message = "Email công ty là bắt buộc";
-    if (name === "departmentId" && !value) message = "Chọn phòng ban";
-    if (name === "jobTitleId" && !value) message = "Chọn chức danh";
-    if (name === "contractStartDate" && !value) message = "Ngày bắt đầu là bắt buộc";
-    if (name === "roleId" && !value) message = "Chọn phân quyền";
-    if (name === "birthPlace" && (!value?.province || !value?.district)) message = "Nơi sinh là bắt buộc";
-    if (name === "currentAddress" && (!value?.province || !value?.district)) message = "Địa chỉ hiện tại là bắt buộc";
+    if (name === "employeeName" && !value) message = "Full name is required";
+    if (name === "dateOfBirth" && !value) message = "Date of birth is required";
+    if (name === "citizenIdNumber" && !value) message = "Citizen ID is required";
+    if (name === "companyEmail" && !value) message = "Company email is required";
+    if (name === "departmentId" && !value) message = "Select a department";
+    if (name === "jobTitleId" && !value) message = "Select a job title";
+    if (name === "contractStartDate" && !value) message = "Start date is required";
+    if (name === "roleId" && !value) message = "Select a role";
+    if (name === "birthPlace" && (!value?.province || !value?.district)) message = "Birth place is required";
+    if (name === "currentAddress" && (!value?.province || !value?.district)) message = "Current address is required";
 
     // Check at least 1 phone number
     if (name === "phoneNumbers" && Array.isArray(value)) {
       const hasPhone = value.some(p => p.phoneNumber?.trim());
-      if (!hasPhone) message = "Phải nhập ít nhất 1 số điện thoại";
+      if (!hasPhone) message = "At least 1 phone number is required";
     }
 
     // Bank account validation - only bankName and accountNumber are required
     if (name === "bankAccount" && value) {
-      if (!value.bankName) message = "Tên ngân hàng là bắt buộc";
-      else if (!value.accountNumber) message = "Số tài khoản là bắt buộc";
+      if (!value.bankName) message = "Bank name is required";
+      else if (!value.accountNumber) message = "Account number is required";
     }
 
     // format
     if (!message && name === "citizenIdNumber" && value && !citizenIdRegex.test(value)) {
-      message = "CCCD phải đúng 13 chữ số";
+      message = "Citizen ID must be exactly 13 digits";
     }
 
     if (!message && name === "personalTaxCode" && value && !taxCodeRegex.test(value)) {
-      message = "Mã số thuế phải đúng 10 chữ số";
+      message = "Tax code must be exactly 10 digits";
     }
 
     if (!message && name === "socialInsuranceNumber" && value && !socialInsuranceRegex.test(value)) {
-      message = "Số sổ BHXH phải đúng 10 chữ số";
+      message = "Social insurance number must be exactly 10 digits";
     }
 
     if (!message && (name === "companyEmail" || name === "personalEmail") && value && !emailRegex.test(value)) {
-      message = "Email không hợp lệ";
+      message = "Invalid email format";
     }
 
     if (!message && name === "phoneNumber" && value && !phoneRegex.test(value)) {
-      message = "SĐT phải từ 10-11 chữ số";
+      message = "Phone must be 10-11 digits";
     }
 
     // date logic
     if (!message && name === "dateOfBirth" && value) {
-      if (!isValidDate(value)) message = "Ngày sinh không hợp lệ";
-      else if (new Date(value) > new Date()) message = "Ngày sinh không được ở tương lai";
+      if (!isValidDate(value)) message = "Invalid date of birth";
+      else if (new Date(value) > new Date()) message = "Date of birth cannot be in the future";
     }
 
     if (!message && name === "contractStartDate" && value) {
-      if (!isValidDate(value)) message = "Ngày bắt đầu không hợp lệ";
+      if (!isValidDate(value)) message = "Invalid start date";
     }
 
     if (!message && name === "contractEndDate" && value) {
-      if (!isValidDate(value)) message = "Ngày kết thúc không hợp lệ";
+      if (!isValidDate(value)) message = "Invalid end date";
     }
 
     // cross-field: contract dates (only when end date is provided)
@@ -264,7 +265,7 @@ export default function HRAddEmployeePage() {
     ) {
       // show error on end date field
       if (name === "contractEndDate" || name === "contractStartDate") {
-        message = "Ngày kết thúc phải sau hoặc bằng ngày bắt đầu";
+        message = "End date must be equal to or after start date";
       }
     }
 
@@ -288,9 +289,19 @@ export default function HRAddEmployeePage() {
         : "";
     }
 
+    // Handle contract type changes for End Date
+    if (name === "contractType") {
+      if (value === "Indefinite") {
+        // Permanent: disable and clear End Date
+        nextForm.contractEndDate = "";
+        setErrors((prev) => ({ ...prev, contractEndDate: null }));
+      }
+      // Fixed-term and Probation: just enable (keep existing end date if any)
+    }
+
     // if changing start/end date, re-check end date
     if (name === "contractStartDate" || name === "contractEndDate") {
-      // Nếu chưa nhập end date → KHÔNG LỖI
+      // If end date not filled yet → NO ERROR
       if (!nextForm.contractEndDate) {
         setErrors((prev) => ({ ...prev, contractEndDate: null }));
       } else if (
@@ -299,7 +310,7 @@ export default function HRAddEmployeePage() {
       ) {
         setErrors((prev) => ({
           ...prev,
-          contractEndDate: "Ngày kết thúc phải sau ngày bắt đầu",
+          contractEndDate: "End date must be after start date",
         }));
       } else {
         setErrors((prev) => ({ ...prev, contractEndDate: null }));
@@ -330,6 +341,25 @@ export default function HRAddEmployeePage() {
     });
   };
 
+  // Helper function to calculate end date based on months
+  const calculateEndDate = (startDate, months) => {
+    if (!startDate) return "";
+    const start = new Date(startDate);
+    const end = new Date(start.getFullYear(), start.getMonth() + months, start.getDate());
+    // Subtract 1 day to get the day before
+    end.setDate(end.getDate() - 1);
+    return end.toISOString().split("T")[0];
+  };
+
+  // Handle quick duration button clicks
+  const handleQuickDuration = (months) => {
+    const endDate = calculateEndDate(form.contractStartDate, months);
+    if (endDate) {
+      setForm({ ...form, contractEndDate: endDate });
+      setErrors((prev) => ({ ...prev, contractEndDate: null }));
+    }
+  };
+
 
 
   const handleBlur = (e) => {
@@ -344,7 +374,7 @@ export default function HRAddEmployeePage() {
         form.contractStartDate &&
         form.contractEndDate &&
         new Date(form.contractEndDate) < new Date(form.contractStartDate)
-          ? "Ngày kết thúc phải sau ngày bắt đầu"
+          ? "End date must be after start date"
           : null;
       setErrors((prev) => ({ ...prev, contractEndDate: endMsg }));
       setTouched((prev) => ({ ...prev, contractEndDate: true }));
@@ -367,7 +397,7 @@ export default function HRAddEmployeePage() {
     setGeneralError("");
 
     if (!validateForm()) {
-      setGeneralError("Vui lòng kiểm tra lại thông tin nhập liệu.");
+      setGeneralError("Please check your input information.");
       return;
     }
 
@@ -418,12 +448,12 @@ export default function HRAddEmployeePage() {
       const response = await HRService.addNewEmployee(payload);
 
       const newCode = response?.employeeCode || "(generated)";
-      const initialPassword = response?.initialPassword || "EMP + 4 số cuối CCCD";
+      const initialPassword = response?.initialPassword || "EMP + last 4 digits of ID";
 
       alert(
-        `Thêm nhân viên thành công!\n` +
-          `Mã nhân viên / Username: ${newCode}\n` +
-          `Mật khẩu khởi tạo: ${initialPassword}`
+        `Employee added successfully!\n` +
+          `Employee Code / Username: ${newCode}\n` +
+          `Initial Password: ${initialPassword}`
       );
 
       navigate("/hr/directory");
@@ -438,7 +468,7 @@ export default function HRAddEmployeePage() {
           mapped[uiKey] = Array.isArray(v) ? v[0] : String(v);
         }
         setErrors((prev) => ({ ...prev, ...mapped }));
-        setGeneralError("Vui lòng kiểm tra lại các trường bị lỗi.");
+        setGeneralError("Please check the fields with errors.");
         return;
       }
 
@@ -469,18 +499,18 @@ export default function HRAddEmployeePage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Thêm nhân viên mới</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Add New Employee</h1>
           <p className="text-slate-500 text-sm">
-            Điền thông tin hồ sơ. <b>Mã nhân viên / Username</b> sẽ được tạo tự động, mật khẩu mặc định là{" "}
-            <b>EMP + 4 số cuối CCCD</b>.
+            Fill in profile information. <b>Employee Code / Username</b> will be generated automatically, default password is{" "}
+            <b>EMP + last 4 digits of ID</b>.
           </p>
         </div>
         <div className="flex gap-3">
           <Button variant="secondary" onClick={() => navigate(-1)} icon={X}>
-            Hủy
+            Cancel
           </Button>
           <Button variant="primary" onClick={handleSubmit} isLoading={loading} icon={Save}>
-            Lưu hồ sơ
+            Save Profile
           </Button>
         </div>
       </div>
@@ -504,25 +534,27 @@ export default function HRAddEmployeePage() {
         </div>
       )}
 
+      {masterLoading && <Loading fullScreen text="Loading form data..." />}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* === LEFT (2/3) === */}
         <div className="lg:col-span-2 space-y-6">
           {/* 1. Personal */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-            <SectionTitle icon={User} title="Thông tin cá nhân" />
+            <SectionTitle icon={User} title="Personal Information" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
-              <FormRow label="Họ và tên" required error={touched.employeeName ? errors.employeeName : null}>
+              <FormRow label="Full Name" required error={touched.employeeName ? errors.employeeName : null}>
                 <input
                   name="employeeName"
                   value={form.employeeName}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   className={inputClass("employeeName")}
-                  placeholder="VD: Nguyễn Văn A"
+                  placeholder="e.g. John Doe"
                 />
               </FormRow>
 
-              <FormRow label="Ngày sinh" required error={touched.dateOfBirth ? errors.dateOfBirth : null}>
+              <FormRow label="Date of Birth" required error={touched.dateOfBirth ? errors.dateOfBirth : null}>
                 <input
                   type="date"
                   name="dateOfBirth"
@@ -533,7 +565,7 @@ export default function HRAddEmployeePage() {
                 />
               </FormRow>
 
-              <FormRow label="Giới tính" required>
+              <FormRow label="Gender" required>
                 <select
                   name="gender"
                   value={form.gender}
@@ -541,13 +573,13 @@ export default function HRAddEmployeePage() {
                   onBlur={handleBlur}
                   className={inputClass("gender")}
                 >
-                  <option value="Male">Nam</option>
-                  <option value="Female">Nữ</option>
-                  <option value="Other">Khác</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
                 </select>
               </FormRow>
 
-              <FormRow label="Quốc tịch" required>
+              <FormRow label="Nationality" required>
                 <select
                   name="nationality"
                   value={form.nationality}
@@ -555,7 +587,7 @@ export default function HRAddEmployeePage() {
                   onBlur={handleBlur}
                   className={inputClass("nationality")}
                 >
-                  <option value="">-- Chọn quốc tịch --</option>
+                  <option value="">-- Select Nationality --</option>
                   {NATIONALITIES.map((n) => (
                     <option key={n} value={n}>
                       {n}
@@ -565,7 +597,7 @@ export default function HRAddEmployeePage() {
               </FormRow>
 
 
-              <FormRow label="Tình trạng hôn nhân">
+              <FormRow label="Marital Status">
                 <select
                   name="maritalStatus"
                   value={form.maritalStatus}
@@ -573,9 +605,9 @@ export default function HRAddEmployeePage() {
                   onBlur={handleBlur}
                   className={inputClass("maritalStatus")}
                 >
-                  <option value="Single">Độc thân</option>
-                  <option value="Married">Đã kết hôn</option>
-                  <option value="Divorced">Đã ly hôn</option>
+                  <option value="Single">Single</option>
+                  <option value="Married">Married</option>
+                  <option value="Divorced">Divorced</option>
                 </select>
               </FormRow>
 
@@ -590,7 +622,7 @@ export default function HRAddEmployeePage() {
                   className="w-4 h-4 text-blue-600"
                 />
                 <label htmlFor="hasChildren" className="text-sm font-medium text-slate-700 cursor-pointer">
-                  Nhân viên đã có con
+                  Employee has children
                 </label>
               </div>
             </div>
@@ -598,13 +630,13 @@ export default function HRAddEmployeePage() {
 
           {/* 2. Legal */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-            <SectionTitle icon={ShieldAlert} title="Thông tin pháp lý" />
+            <SectionTitle icon={ShieldAlert} title="Legal Information" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
               <FormRow
-                label="Số CCCD/CMND"
+                label="Citizen ID"
                 required
                 error={touched.citizenIdNumber ? errors.citizenIdNumber : null}
-                helpText="Đúng 13 chữ số"
+                helpText="Exactly 13 digits"
               >
                 <input
                   name="citizenIdNumber"
@@ -619,7 +651,7 @@ export default function HRAddEmployeePage() {
                 />
               </FormRow>
 
-              <FormRow label="Mã số thuế cá nhân" error={touched.personalTaxCode ? errors.personalTaxCode : null} helpText="10 chữ số">
+              <FormRow label="Tax Code" error={touched.personalTaxCode ? errors.personalTaxCode : null} helpText="10 digits">
                 <input
                   name="personalTaxCode"
                   value={form.personalTaxCode}
@@ -633,7 +665,7 @@ export default function HRAddEmployeePage() {
                 />
               </FormRow>
 
-              <FormRow label="Số sổ BHXH" error={touched.socialInsuranceNumber ? errors.socialInsuranceNumber : null} helpText="10 chữ số">
+              <FormRow label="Social Insurance Number" error={touched.socialInsuranceNumber ? errors.socialInsuranceNumber : null} helpText="10 digits">
                 <input
                   name="socialInsuranceNumber"
                   value={form.socialInsuranceNumber}
@@ -651,9 +683,9 @@ export default function HRAddEmployeePage() {
 
           {/* 3. Contact */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-            <SectionTitle icon={FileText} title="Thông tin liên hệ" />
+            <SectionTitle icon={FileText} title="Contact Information" />
             <div className="space-y-4">
-              <FormRow label="Email cá nhân" error={touched.personalEmail ? errors.personalEmail : null}>
+              <FormRow label="Personal Email" error={touched.personalEmail ? errors.personalEmail : null}>
                 <input
                   name="personalEmail"
                   value={form.personalEmail}
@@ -667,7 +699,7 @@ export default function HRAddEmployeePage() {
               {/* Phone Numbers - 2 fields, at least 1 required */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Số điện thoại <span className="text-red-500">*</span> (Tối đa 2 số, ít nhất 1 bắt buộc)
+                  Phone Numbers <span className="text-red-500">*</span> (Max 2, at least 1 required)
                 </label>
                 {touched.phoneNumbers && errors.phoneNumbers && (
                   <p className="text-xs text-red-500 mb-2">{errors.phoneNumbers}</p>
@@ -677,7 +709,7 @@ export default function HRAddEmployeePage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <input
                         type="text"
-                        placeholder="VD: 0912345678"
+                        placeholder="e.g. 0912345678"
                         maxLength="10"
                         value={phone.phoneNumber}
                         onChange={(e) => handlePhoneChange(idx, "phoneNumber", e.target.value)}
@@ -690,9 +722,9 @@ export default function HRAddEmployeePage() {
                         onChange={(e) => handlePhoneChange(idx, "description", e.target.value)}
                         className={inputClass(`phone-desc-${idx}`)}
                       >
-                        <option value="Personal">Cá nhân</option>
-                        <option value="Emergency">Khẩn cấp</option>
-                        <option value="Work">Công việc</option>
+                        <option value="Personal">Personal</option>
+                        <option value="Emergency">Emergency</option>
+                        <option value="Work">Work</option>
                       </select>
                     </div>
                   </div>
@@ -702,7 +734,7 @@ export default function HRAddEmployeePage() {
               {/* Birth Place */}
               <div className="border-t border-slate-100 pt-4">
                 <label className="block text-sm font-medium text-slate-700 mb-3">
-                  Nơi sinh <span className="text-red-500">*</span>
+                  Birth Place <span className="text-red-500">*</span>
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <select
@@ -710,7 +742,7 @@ export default function HRAddEmployeePage() {
                     onChange={(e) => handleAddressChange("birthPlace", "province", e.target.value)}
                     className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 bg-white"
                   >
-                    <option value="">-- Chọn tỉnh/thành phố --</option>
+                    <option value="">-- Select Province --</option>
                     {PROVINCES.map((p) => (
                       <option key={p.id} value={p.name}>
                         {p.name}
@@ -722,7 +754,7 @@ export default function HRAddEmployeePage() {
                     onChange={(e) => handleAddressChange("birthPlace", "district", e.target.value)}
                     className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 bg-white"
                   >
-                    <option value="">-- Chọn phường/huyện --</option>
+                    <option value="">-- Select District --</option>
                     {PROVINCES.find((p) => p.name === form.birthPlace.province)?.districts.map((d) => (
                       <option key={d} value={d}>
                         {d}
@@ -735,7 +767,7 @@ export default function HRAddEmployeePage() {
               {/* Current Address */}
               <div className="border-t border-slate-100 pt-4">
                 <label className="block text-sm font-medium text-slate-700 mb-3">
-                  Địa chỉ hiện tại <span className="text-red-500">*</span>
+                  Current Address <span className="text-red-500">*</span>
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <select
@@ -743,7 +775,7 @@ export default function HRAddEmployeePage() {
                     onChange={(e) => handleAddressChange("currentAddress", "province", e.target.value)}
                     className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 bg-white"
                   >
-                    <option value="">-- Chọn tỉnh/thành phố --</option>
+                    <option value="">-- Select Province --</option>
                     {PROVINCES.map((p) => (
                       <option key={p.id} value={p.name}>
                         {p.name}
@@ -755,7 +787,7 @@ export default function HRAddEmployeePage() {
                     onChange={(e) => handleAddressChange("currentAddress", "district", e.target.value)}
                     className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-slate-300 bg-white"
                   >
-                    <option value="">-- Chọn phường/huyện --</option>
+                    <option value="">-- Select District --</option>
                     {PROVINCES.find((p) => p.name === form.currentAddress.province)?.districts.map((d) => (
                       <option key={d} value={d}>
                         {d}
@@ -772,23 +804,23 @@ export default function HRAddEmployeePage() {
         <div className="lg:col-span-1 space-y-6">
           {/* 4. Bank Account */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-            <SectionTitle icon={Briefcase} title="Tài khoản Ngân Hàng" />
+            <SectionTitle icon={Briefcase} title="Bank Account" />
             <div className="space-y-4">
-              <FormRow label="Tên ngân hàng" required>
+              <FormRow label="Bank Name" required>
                 <input
                   value={form.bankAccount.bankName}
                   onChange={(e) => handleBankChange("bankName", e.target.value)}
                   className={inputClass("bankName")}
-                  placeholder="VD: Vietcombank, Techcombank..."
+                  placeholder="e.g. Vietcombank, Techcombank..."
                 />
               </FormRow>
 
-              <FormRow label="Số tài khoản" required>
+              <FormRow label="Account Number" required>
                 <input
                   value={form.bankAccount.accountNumber}
                   onChange={(e) => handleBankChange("accountNumber", e.target.value)}
                   className={inputClass("accountNumber")}
-                  placeholder="VD: 123456789"
+                  placeholder="e.g. 123456789"
                 />
               </FormRow>
 
@@ -797,9 +829,9 @@ export default function HRAddEmployeePage() {
 
           {/* 5. Job/Contract */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-            <SectionTitle icon={Briefcase} title="Vị trí & Hợp đồng" />
+            <SectionTitle icon={Briefcase} title="Position & Contract" />
             <div className="space-y-4">
-              <FormRow label="Phòng ban" required error={touched.departmentId ? errors.departmentId : null}>
+              <FormRow label="Department" required error={touched.departmentId ? errors.departmentId : null}>
                 <select
                   name="departmentId"
                   value={form.departmentId}
@@ -808,7 +840,7 @@ export default function HRAddEmployeePage() {
                   className={inputClass("departmentId")}
                   disabled={masterLoading}
                 >
-                  <option value="">{masterLoading ? "Loading..." : "-- Chọn phòng ban --"}</option>
+                  <option value="">{masterLoading ? "Loading..." : "-- Select Department --"}</option>
                   {master.departments.map((d) => (
                     <option key={d.id} value={String(d.id)}>
                       {d.name}
@@ -817,7 +849,7 @@ export default function HRAddEmployeePage() {
                 </select>
               </FormRow>
 
-              <FormRow label="Chức danh" required error={touched.jobTitleId ? errors.jobTitleId : null}>
+              <FormRow label="Job Title" required error={touched.jobTitleId ? errors.jobTitleId : null}>
                 <select
                   name="jobTitleId"
                   value={form.jobTitleId}
@@ -826,7 +858,7 @@ export default function HRAddEmployeePage() {
                   className={inputClass("jobTitleId")}
                   disabled={masterLoading}
                 >
-                  <option value="">{masterLoading ? "Loading..." : "-- Chọn chức danh --"}</option>
+                  <option value="">{masterLoading ? "Loading..." : "-- Select Job Title --"}</option>
                   {master.jobTitles.map((j) => (
                     <option key={j.id} value={String(j.id)}>
                       {j.name}
@@ -835,7 +867,7 @@ export default function HRAddEmployeePage() {
                 </select>
               </FormRow>
 
-              <FormRow label="Quản lý trực tiếp">
+              <FormRow label="Direct Manager">
                 <select
                   name="directManagerId"
                   value={form.directManagerId}
@@ -844,7 +876,7 @@ export default function HRAddEmployeePage() {
                   className={inputClass("directManagerId")}
                   disabled={masterLoading}
                 >
-                  <option value="">{masterLoading ? "Loading..." : "-- (Tuỳ chọn) --"}</option>
+                  <option value="">{masterLoading ? "Loading..." : "-- (Optional) --"}</option>
                   {master.managers.map((m) => (
                     <option key={m.id} value={String(m.id)}>
                       {m.name}
@@ -853,7 +885,7 @@ export default function HRAddEmployeePage() {
                 </select>
               </FormRow>
 
-              <FormRow label="Hình thức làm việc" required>
+              <FormRow label="Employment Type" required>
                 <select
                   name="employmentType"
                   value={form.employmentType}
@@ -861,16 +893,16 @@ export default function HRAddEmployeePage() {
                   onBlur={handleBlur}
                   className={inputClass("employmentType")}
                 >
-                  <option value="Full-time">Toàn thời gian</option>
-                  <option value="Part-time">Bán thời gian</option>
-                  <option value="Remote">Làm việc từ xa</option>
-                  <option value="Internship">Thực tập sinh</option>
+                  <option value="Full-time">Full-time</option>
+                  <option value="Part-time">Part-time</option>
+                  <option value="Remote">Remote</option>
+                  <option value="Internship">Internship</option>
                 </select>
               </FormRow>
 
               <div className="border-t border-slate-100" />
 
-              <FormRow label="Loại hợp đồng">
+              <FormRow label="Contract Type">
                 <select
                   name="contractType"
                   value={form.contractType}
@@ -878,13 +910,13 @@ export default function HRAddEmployeePage() {
                   onBlur={handleBlur}
                   className={inputClass("contractType")}
                 >
-                  <option value="Indefinite">Vô thời hạn</option>
-                  <option value="Fixed-term">Xác định thời hạn</option>
-                  <option value="Probation">Thử việc</option>
+                  <option value="Indefinite">Permanent</option>
+                  <option value="Fixed-term">Fixed-term</option>
+                  <option value="Probation">Probation</option>
                 </select>
               </FormRow>
 
-              <FormRow label="Ngày bắt đầu" required error={touched.contractStartDate ? errors.contractStartDate : null}>
+              <FormRow label="Start Date" required error={touched.contractStartDate ? errors.contractStartDate : null}>
                 <input
                   type="date"
                   name="contractStartDate"
@@ -895,28 +927,95 @@ export default function HRAddEmployeePage() {
                 />
               </FormRow>
 
-              <FormRow label="Ngày kết thúc" error={touched.contractEndDate ? errors.contractEndDate : null}>
-                <input
-                  type="date"
-                  name="contractEndDate"
-                  value={form.contractEndDate}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  className={inputClass("contractEndDate")}
-                />
-              </FormRow>
+              {/* End Date - Conditional rendering based on Contract Type */}
+              {form.contractType === "Indefinite" ? (
+                // Case A: Permanent - Disabled End Date
+                <FormRow label="End Date">
+                  <input
+                    type="date"
+                    name="contractEndDate"
+                    value=""
+                    disabled
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-100 text-slate-500 cursor-not-allowed"
+                    placeholder="Not applicable"
+                  />
+                  <p className="text-xs text-slate-500 mt-1 italic">No applied (Permanent contract)</p>
+                </FormRow>
+              ) : form.contractType === "Fixed-term" ? (
+                // Case B: Fixed-term - Enabled End Date with multiple duration buttons
+                <div>
+                  <FormRow label="End Date" error={touched.contractEndDate ? errors.contractEndDate : null}>
+                    <input
+                      type="date"
+                      name="contractEndDate"
+                      value={form.contractEndDate}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      className={inputClass("contractEndDate")}
+                    />
+                  </FormRow>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <p className="text-xs font-medium text-slate-600 w-full mb-1">Quick duration:</p>
+                    <Button
+                      onClick={() => handleQuickDuration(12)}
+                      disabled={!form.contractStartDate}
+                      variant="secondary"
+                    >
+                      12 months
+                    </Button>
+                    <Button
+                      onClick={() => handleQuickDuration(24)}
+                      disabled={!form.contractStartDate}
+                      variant="secondary"
+                    >
+                      24 months
+                    </Button>
+                    <Button
+                      onClick={() => handleQuickDuration(36)}
+                      disabled={!form.contractStartDate}
+                      variant="secondary"
+                    >
+                      36 months
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                // Case C: Probation - Enabled End Date with 2 months button
+                <div>
+                  <FormRow label="End Date" error={touched.contractEndDate ? errors.contractEndDate : null}>
+                    <input
+                      type="date"
+                      name="contractEndDate"
+                      value={form.contractEndDate}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      className={inputClass("contractEndDate")}
+                    />
+                  </FormRow>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <p className="text-xs font-medium text-slate-600 w-full mb-1">Quick duration:</p>
+                    <Button
+                      onClick={() => handleQuickDuration(2)}
+                      disabled={!form.contractStartDate}
+                      variant="secondary"
+                    >
+                      2 months
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* 5. System settings */}
+          {/* 6. System settings */}
           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-            <SectionTitle icon={Settings} title="Cấu hình hệ thống" />
+            <SectionTitle icon={Settings} title="System Configuration" />
             <div className="space-y-4">
               <FormRow
-                label="Email công ty"
+                label="Company Email"
                 required
                 error={touched.companyEmail ? errors.companyEmail : null}
-                helpText="Hệ thống tự tạo, nếu trùng sẽ thêm số"
+                helpText="System auto-generates, if duplicate will add number"
               >
                 <div className="flex gap-2">
                   <input
@@ -928,19 +1027,18 @@ export default function HRAddEmployeePage() {
                     placeholder="auto-generated"
                     readOnly={emailLocked}
                   />
-                  <button
-                    type="button"
-                    className="px-3 py-2 text-sm border rounded-lg bg-white"
+                  <Button
                     onClick={() => setEmailLocked((v) => !v)}
-                    title={emailLocked ? "Cho phép sửa tay" : "Khóa và tự tạo"}
+                    variant="secondary"
+                    title={emailLocked ? "Enable manual edit" : "Lock and auto-generate"}
                   >
                     {emailLocked ? "Edit" : "Auto"}
-                  </button>
+                  </Button>
                 </div>
               </FormRow>
 
 
-              <FormRow label="Phân quyền (Role)" required error={touched.roleId ? errors.roleId : null}>
+              <FormRow label="Role (Permission)" required error={touched.roleId ? errors.roleId : null}>
                 <select
                   name="roleId"
                   value={form.roleId}
@@ -949,7 +1047,7 @@ export default function HRAddEmployeePage() {
                   className={inputClass("roleId")}
                   disabled={masterLoading}
                 >
-                  <option value="">{masterLoading ? "Loading..." : "-- Chọn phân quyền --"}</option>
+                  <option value="">{masterLoading ? "Loading..." : "-- Select Role --"}</option>
                   {master.roles.map((r) => (
                     <option key={r.id} value={String(r.id)}>
                       {r.name}
@@ -959,7 +1057,7 @@ export default function HRAddEmployeePage() {
               </FormRow>
 
               <div className="text-xs text-slate-500 bg-slate-50 p-3 rounded border border-slate-100">
-                * Hệ thống sẽ tự tạo <b>Username = Mã nhân viên</b> và <b>Mật khẩu = EMP + 4 số cuối CCCD</b>.
+                * System will auto-generate <b>Username = Employee Code</b> and <b>Password = EMP + last 4 digits of ID</b>.
               </div>
             </div>
           </div>

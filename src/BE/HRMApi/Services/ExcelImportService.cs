@@ -37,16 +37,16 @@ namespace HrmApi.Services
         public (bool isValid, string error) ValidateExcelFile(IFormFile file)
         {
             if (file == null || file.Length == 0)
-                return (false, "File không được để trống");
+                return (false, "File cannot be empty");
 
             var allowedExtensions = new[] { ".xlsx", ".xls" };
             var fileExtension = Path.GetExtension(file.FileName).ToLower();
 
             if (!allowedExtensions.Contains(fileExtension))
-                return (false, "Chỉ chấp nhận file Excel (.xlsx, .xls)");
+                return (false, "Only Excel files (.xlsx, .xls) are accepted");
 
             if (file.Length > 10 * 1024 * 1024) // 10MB limit
-                return (false, "Kích thước file không được vượt quá 10MB");
+                return (false, "File size must not exceed 10MB");
 
             return (true, string.Empty);
         }
@@ -107,7 +107,7 @@ namespace HrmApi.Services
             }
             catch (Exception ex)
             {
-                result.Errors.Add(new ExcelImportErrorDto { Row = 0, Error = $"Lỗi xử lý file: {ex.Message}" });
+                result.Errors.Add(new ExcelImportErrorDto { Row = 0, Error = $"File processing error: {ex.Message}" });
             }
 
             return result;
@@ -124,14 +124,14 @@ namespace HrmApi.Services
             var worksheet = package.Workbook.Worksheets.FirstOrDefault(ws => ws.Name == "Employee Template");
 
             if (worksheet == null)
-                throw new ArgumentException("File Excel không có worksheet 'Employee Template'");
+                throw new ArgumentException("Excel file does not have 'Employee Template' worksheet");
 
             var rowCount = worksheet.Dimension?.Rows ?? 0;
             if (rowCount <= 1)
-                throw new ArgumentException("File Excel không có dữ liệu (chỉ có header)");
+                throw new ArgumentException("Excel file has no data (header only)");
 
             // Read data starting from row 2 (skip header)
-            // Cấu trúc mới (không có EmployeeCode, Username, Password, CompanyEmail):
+            // New structure (no EmployeeCode, Username, Password, CompanyEmail):
             // 1=FullName, 2=DateOfBirth, 3=Gender, 4=Nationality, 5=MaritalStatus, 6=HasChildren,
             // 7=CitizenIdNumber, 8=PersonalTaxCode, 9=SocialInsuranceNumber,
             // 10=PersonalEmail,
@@ -151,15 +151,15 @@ namespace HrmApi.Services
                 if (string.IsNullOrEmpty(fullName) && string.IsNullOrEmpty(citizenId))
                     continue;
 
-                // EmployeeCode, Username, Password để trống - server sẽ tự tạo
+                // EmployeeCode, Username, Password left empty - server will auto-generate
                 var employee = new EmployeeExcelImportDto
                 {
                     RowNumber = row,
-                    EmployeeCode = "",  // Sẽ tự động tạo
-                    Username = "",      // Sẽ tự động tạo
-                    Password = "",      // Sẽ tự động tạo từ CCCD
+                    EmployeeCode = "",  // Auto-generated
+                    Username = "",      // Auto-generated
+                    Password = "",      // Auto-generated from CCCD
                     
-                    // Thông tin cá nhân
+                    // Personal information
                     FullName = fullName ?? "",
                     DateOfBirth = ParseDate(GetCellValue(worksheet, row, 2)),
                     Gender = GetCellValue(worksheet, row, 3)?.Trim(),
@@ -167,31 +167,31 @@ namespace HrmApi.Services
                     MaritalStatus = GetCellValue(worksheet, row, 5)?.Trim(),
                     HasChildren = ParseBool(GetCellValue(worksheet, row, 6)),
                     
-                    // Thông tin pháp lý
+                    // Legal information
                     CitizenIdNumber = citizenId,
                     PersonalTaxCode = GetCellValue(worksheet, row, 8)?.Trim(),
                     SocialInsuranceNumber = GetCellValue(worksheet, row, 9)?.Trim(),
                     
-                    // Thông tin liên hệ
-                    CompanyEmail = null, // Sẽ tự động tạo từ tên
+                    // Contact information
+                    CompanyEmail = null, // Auto-generated from name
                     PersonalEmail = GetCellValue(worksheet, row, 10)?.Trim(),
                     PhoneNumber1 = GetCellValue(worksheet, row, 11)?.Trim(),
                     PhoneNumber1Description = GetCellValue(worksheet, row, 12)?.Trim(),
                     PhoneNumber2 = GetCellValue(worksheet, row, 13)?.Trim(),
                     PhoneNumber2Description = GetCellValue(worksheet, row, 14)?.Trim(),
                     
-                    // Địa chỉ
+                    // Address
                     BirthPlaceProvince = GetCellValue(worksheet, row, 15)?.Trim(),
                     BirthPlaceDistrict = GetCellValue(worksheet, row, 16)?.Trim(),
                     CurrentAddressProvince = GetCellValue(worksheet, row, 17)?.Trim(),
                     CurrentAddressDistrict = GetCellValue(worksheet, row, 18)?.Trim(),
-                    CurrentAddress = null, // Sẽ build từ province + district
+                    CurrentAddress = null, // Will be built from province + district
                     
-                    // Ngân hàng
+                    // Bank
                     BankName = GetCellValue(worksheet, row, 19)?.Trim(),
                     BankAccountNumber = GetCellValue(worksheet, row, 20)?.Trim(),
                     
-                    // Công việc
+                    // Job
                     DepartmentCode = GetCellValue(worksheet, row, 21)?.Trim(),
                     JobTitleCode = GetCellValue(worksheet, row, 22)?.Trim(),
                     DirectManagerCode = GetCellValue(worksheet, row, 23)?.Trim(),
@@ -622,66 +622,66 @@ namespace HrmApi.Services
             using var package = new ExcelPackage();
 
             // ===== 1) INSTRUCTIONS SHEET =====
-            var instructions = package.Workbook.Worksheets.Add("Hướng dẫn");
-            instructions.Cells[1, 1].Value = "HƯỚNG DẪN IMPORT NHÂN VIÊN";
+            var instructions = package.Workbook.Worksheets.Add("Instructions");
+            instructions.Cells[1, 1].Value = "EMPLOYEE IMPORT GUIDE";
             instructions.Cells[1, 1].Style.Font.Bold = true;
             instructions.Cells[1, 1].Style.Font.Size = 16;
             instructions.Cells[1, 1].Style.Font.Color.SetColor(Color.DarkBlue);
             
             int instructRow = 3;
-            instructions.Cells[instructRow++, 1].Value = "1. CÁC TRƯỜNG BẮT BUỘC (có dấu *):";
-            instructions.Cells[instructRow++, 1].Value = "   - Họ và tên (FullName)";
-            instructions.Cells[instructRow++, 1].Value = "   - Ngày sinh (DateOfBirth) - Định dạng: YYYY-MM-DD";
-            instructions.Cells[instructRow++, 1].Value = "   - Giới tính (Gender) - Chọn: Nam, Nữ, Khác";
-            instructions.Cells[instructRow++, 1].Value = "   - Số CCCD (CitizenIdNumber) - Đúng 13 chữ số";
-            instructions.Cells[instructRow++, 1].Value = "   - Số điện thoại 1 (PhoneNumber1) - 10-11 chữ số";
-            instructions.Cells[instructRow++, 1].Value = "   - Nơi sinh: Tỉnh/Thành phố (BirthPlaceProvince)";
-            instructions.Cells[instructRow++, 1].Value = "   - Nơi sinh: Quận/Huyện (BirthPlaceDistrict)";
-            instructions.Cells[instructRow++, 1].Value = "   - Địa chỉ hiện tại: Tỉnh/Thành phố (CurrentAddressProvince)";
-            instructions.Cells[instructRow++, 1].Value = "   - Địa chỉ hiện tại: Quận/Huyện (CurrentAddressDistrict)";
-            instructions.Cells[instructRow++, 1].Value = "   - Tên ngân hàng (BankName)";
-            instructions.Cells[instructRow++, 1].Value = "   - Số tài khoản ngân hàng (BankAccountNumber)";
-            instructions.Cells[instructRow++, 1].Value = "   - Mã phòng ban (DepartmentCode) - Xem sheet Lookup";
-            instructions.Cells[instructRow++, 1].Value = "   - Mã chức danh (JobTitleCode) - Xem sheet Lookup";
-            instructions.Cells[instructRow++, 1].Value = "   - Ngày bắt đầu hợp đồng (ContractStartDate) - Định dạng: YYYY-MM-DD";
-            instructions.Cells[instructRow++, 1].Value = "   - Phân quyền (RoleName) - Xem sheet Lookup";
+            instructions.Cells[instructRow++, 1].Value = "1. REQUIRED FIELDS (marked with *):";
+            instructions.Cells[instructRow++, 1].Value = "   - Full Name (FullName)";
+            instructions.Cells[instructRow++, 1].Value = "   - Date of Birth (DateOfBirth) - Format: YYYY-MM-DD";
+            instructions.Cells[instructRow++, 1].Value = "   - Gender - Select: Male, Female, Other";
+            instructions.Cells[instructRow++, 1].Value = "   - Citizen ID Number (CitizenIdNumber) - Exactly 13 digits";
+            instructions.Cells[instructRow++, 1].Value = "   - Phone Number 1 (PhoneNumber1) - 10 digits";
+            instructions.Cells[instructRow++, 1].Value = "   - Birth Place Province (BirthPlaceProvince)";
+            instructions.Cells[instructRow++, 1].Value = "   - Birth Place District (BirthPlaceDistrict)";
+            instructions.Cells[instructRow++, 1].Value = "   - Current Address Province (CurrentAddressProvince)";
+            instructions.Cells[instructRow++, 1].Value = "   - Current Address District (CurrentAddressDistrict)";
+            instructions.Cells[instructRow++, 1].Value = "   - Bank Name (BankName)";
+            instructions.Cells[instructRow++, 1].Value = "   - Bank Account Number (BankAccountNumber)";
+            instructions.Cells[instructRow++, 1].Value = "   - Department Code (DepartmentCode) - See Lookup sheet";
+            instructions.Cells[instructRow++, 1].Value = "   - Job Title Code (JobTitleCode) - See Lookup sheet";
+            instructions.Cells[instructRow++, 1].Value = "   - Contract Start Date (ContractStartDate) - Format: YYYY-MM-DD";
+            instructions.Cells[instructRow++, 1].Value = "   - Role Name (RoleName) - See Lookup sheet";
             instructions.Cells[instructRow++, 1].Value = "";
             
-            instructions.Cells[instructRow++, 1].Value = "2. CÁC TRƯỜNG TÙY CHỌN:";
-            instructions.Cells[instructRow++, 1].Value = "   - Quốc tịch (Nationality) - Mặc định: Việt Nam";
-            instructions.Cells[instructRow++, 1].Value = "   - Tình trạng hôn nhân (MaritalStatus)";
-            instructions.Cells[instructRow++, 1].Value = "   - Có con (HasChildren) - Có/Không";
-            instructions.Cells[instructRow++, 1].Value = "   - Mã số thuế cá nhân (PersonalTaxCode) - 10 chữ số";
-            instructions.Cells[instructRow++, 1].Value = "   - Số sổ BHXH (SocialInsuranceNumber) - 10 chữ số";
-            instructions.Cells[instructRow++, 1].Value = "   - Email cá nhân (PersonalEmail)";
-            instructions.Cells[instructRow++, 1].Value = "   - Mô tả số điện thoại 1 (PhoneNumber1Description) - VD: Cá nhân, Khẩn cấp, Công việc";
-            instructions.Cells[instructRow++, 1].Value = "   - Số điện thoại 2 (PhoneNumber2) - 10-11 chữ số";
-            instructions.Cells[instructRow++, 1].Value = "   - Mô tả số điện thoại 2 (PhoneNumber2Description)";
-            instructions.Cells[instructRow++, 1].Value = "   - Hình thức làm việc (EmploymentType) - Mặc định: Toàn thời gian";
-            instructions.Cells[instructRow++, 1].Value = "     Giá trị: Full-time (Toàn thời gian) | Part-time (Bán thời gian) | Remote (Làm việc từ xa) | Internship (Thực tập)";
-            instructions.Cells[instructRow++, 1].Value = "   - Loại hợp đồng (ContractType) - Mặc định: Vô thời hạn";
-            instructions.Cells[instructRow++, 1].Value = "     Giá trị: Indefinite (Vô thời hạn) | Fixed-term (Xác định thời hạn) | Probation (Thử việc)";
-            instructions.Cells[instructRow++, 1].Value = "   - Ngày kết thúc hợp đồng (ContractEndDate) - Bắt buộc nếu ContractType là 'Fixed-term'";
-            instructions.Cells[instructRow++, 1].Value = "   - Mã quản lý trực tiếp (DirectManagerCode) - Mã nhân viên của manager";
+            instructions.Cells[instructRow++, 1].Value = "2. OPTIONAL FIELDS:";
+            instructions.Cells[instructRow++, 1].Value = "   - Nationality - Default: Vietnam";
+            instructions.Cells[instructRow++, 1].Value = "   - Marital Status - Select: Single, Married, Divorced, Widowed";
+            instructions.Cells[instructRow++, 1].Value = "   - Has Children - Yes/No";
+            instructions.Cells[instructRow++, 1].Value = "   - Personal Tax Code (PersonalTaxCode) - 10 digits";
+            instructions.Cells[instructRow++, 1].Value = "   - Social Insurance Number (SocialInsuranceNumber) - 10 digits";
+            instructions.Cells[instructRow++, 1].Value = "   - Personal Email (PersonalEmail)";
+            instructions.Cells[instructRow++, 1].Value = "   - Phone Number 1 Description (PhoneNumber1Description) - E.g: Personal, Emergency, Work";
+            instructions.Cells[instructRow++, 1].Value = "   - Phone Number 2 (PhoneNumber2) - 10 digits";
+            instructions.Cells[instructRow++, 1].Value = "   - Phone Number 2 Description (PhoneNumber2Description)";
+            instructions.Cells[instructRow++, 1].Value = "   - Employment Type (EmploymentType) - Default: Full-time";
+            instructions.Cells[instructRow++, 1].Value = "     Values: Full-time | Part-time | Contract | Temporary";
+            instructions.Cells[instructRow++, 1].Value = "   - Contract Type (ContractType) - Default: Permanent";
+            instructions.Cells[instructRow++, 1].Value = "     Values: Permanent | Fixed-term";
+            instructions.Cells[instructRow++, 1].Value = "   - Contract End Date (ContractEndDate) - Required if ContractType is 'Fixed-term'";
+            instructions.Cells[instructRow++, 1].Value = "   - Direct Manager Code (DirectManagerCode) - Employee code of the manager";
             instructions.Cells[instructRow++, 1].Value = "";
             
-            instructions.Cells[instructRow++, 1].Value = "3. LƯU Ý QUAN TRỌNG:";
-            instructions.Cells[instructRow++, 1].Value = "   - Mã nhân viên (EmployeeCode) tự động tạo, không cần nhập";
-            instructions.Cells[instructRow++, 1].Value = "   - Tên đăng nhập (Username) tự động = EmployeeCode";
-            instructions.Cells[instructRow++, 1].Value = "   - Mật khẩu mặc định tự động từ CCCD";
-            instructions.Cells[instructRow++, 1].Value = "   - Email công ty (CompanyEmail) tự động tạo từ tên nhân viên";
-            instructions.Cells[instructRow++, 1].Value = "   - CCCD phải đúng 13 chữ số";
-            instructions.Cells[instructRow++, 1].Value = "   - Ngày sinh phải ở quá khứ";
-            instructions.Cells[instructRow++, 1].Value = "   - Email cá nhân (nếu có) phải hợp lệ";
-            instructions.Cells[instructRow++, 1].Value = "   - Giá trị Employment Type và Contract Type phải chính xác (xem danh sách ở trên)";
-            instructions.Cells[instructRow++, 1].Value = "   - Nếu ContractEndDate có giá trị, phải sau ContractStartDate";
+            instructions.Cells[instructRow++, 1].Value = "3. IMPORTANT NOTES:";
+            instructions.Cells[instructRow++, 1].Value = "   - Employee Code (EmployeeCode) is auto-generated, no need to enter";
+            instructions.Cells[instructRow++, 1].Value = "   - Username is auto-generated = EmployeeCode";
+            instructions.Cells[instructRow++, 1].Value = "   - Default password is auto-generated from ID number";
+            instructions.Cells[instructRow++, 1].Value = "   - Company Email (CompanyEmail) is auto-generated from employee name";
+            instructions.Cells[instructRow++, 1].Value = "   - Citizen ID must be exactly 13 digits";
+            instructions.Cells[instructRow++, 1].Value = "   - Date of Birth must be in the past";
+            instructions.Cells[instructRow++, 1].Value = "   - Personal Email (if provided) must be valid format";
+            instructions.Cells[instructRow++, 1].Value = "   - EmploymentType and ContractType values must be exact (see list above)";
+            instructions.Cells[instructRow++, 1].Value = "   - If ContractEndDate is provided, it must be after ContractStartDate";
             instructions.Cells[instructRow++, 1].Value = "";
             
-            instructions.Cells[instructRow++, 1].Value = "4. CÁCH SỬ DỤNG:";
-            instructions.Cells[instructRow++, 1].Value = "   a) Xem sheet 'Lookup' để biết các giá trị hợp lệ (DepartmentCode, JobTitleCode, RoleName,...)";
-            instructions.Cells[instructRow++, 1].Value = "   b) Điền thông tin vào sheet 'Employee Template' (đã có sẵn 1 dòng mẫu)";
-            instructions.Cells[instructRow++, 1].Value = "   c) Sử dụng đúng giá trị từ sheet 'Lookup' để tránh lỗi";
-            instructions.Cells[instructRow++, 1].Value = "   d) Lưu file và upload lên hệ thống";
+            instructions.Cells[instructRow++, 1].Value = "4. HOW TO USE:";
+            instructions.Cells[instructRow++, 1].Value = "   a) View 'Lookup' sheet to see valid values (DepartmentCode, JobTitleCode, RoleName, etc.)";
+            instructions.Cells[instructRow++, 1].Value = "   b) Fill in information in 'Employee Template' sheet (sample row already included)";
+            instructions.Cells[instructRow++, 1].Value = "   c) Use exact values from 'Lookup' sheet to avoid errors";
+            instructions.Cells[instructRow++, 1].Value = "   d) Save file and upload to the system";
             
             instructions.Cells[instructions.Dimension.Address].AutoFitColumns();
 
@@ -730,35 +730,36 @@ namespace HrmApi.Services
                 worksheet.Cells[1, i + 1].Style.Border.BorderAround(ExcelBorderStyle.Thin);
             }
 
-            // Sample data - cập nhật theo cột mới (không có CompanyEmail)
-            worksheet.Cells[2, 1].Value = "Nguyễn Văn An";                                   // FullName
-            worksheet.Cells[2, 2].Value = "1995-03-20";                                      // DateOfBirth
-            worksheet.Cells[2, 3].Value = "Nam";                                             // Gender
-            worksheet.Cells[2, 4].Value = "Việt Nam";                                        // Nationality
-            worksheet.Cells[2, 5].Value = "Độc thân";                                        // MaritalStatus
-            worksheet.Cells[2, 6].Value = "Không";                                           // HasChildren
-            worksheet.Cells[2, 7].Value = "0123456789012";                                   // CitizenIdNumber (13 số)
-            worksheet.Cells[2, 8].Value = "0945123456";                                      // PersonalTaxCode (10 số)
-            worksheet.Cells[2, 9].Value = "9501234567";                                      // SocialInsuranceNumber (10 số)
-            worksheet.Cells[2, 10].Value = "nguyenvana@personal.com";                        // PersonalEmail
-            worksheet.Cells[2, 11].Value = "0912345678";                                     // PhoneNumber1 (10 số)
+            // Sample data - updated to match English values from AddEmployee page
+            // Complete example with realistic data
+            worksheet.Cells[2, 1].Value = "Trần Thị Minh Châu";                             // FullName
+            worksheet.Cells[2, 2].Value = "1998-06-15";                                      // DateOfBirth
+            worksheet.Cells[2, 3].Value = "Female";                                          // Gender
+            worksheet.Cells[2, 4].Value = "Vietnam";                                         // Nationality
+            worksheet.Cells[2, 5].Value = "Single";                                          // MaritalStatus
+            worksheet.Cells[2, 6].Value = "No";                                              // HasChildren
+            worksheet.Cells[2, 7].Value = "0103456789123";                                   // CitizenIdNumber (13 digits - standard format)
+            worksheet.Cells[2, 8].Value = "7501234567";                                      // PersonalTaxCode (10 digits)
+            worksheet.Cells[2, 9].Value = "9801234567";                                      // SocialInsuranceNumber (10 digits)
+            worksheet.Cells[2, 10].Value = "tranminchau1998@email.com";                      // PersonalEmail
+            worksheet.Cells[2, 11].Value = "0901234567";                                     // PhoneNumber1 (10 digits)
             worksheet.Cells[2, 12].Value = "Personal";                                       // PhoneNumber1Description
-            worksheet.Cells[2, 13].Value = "0987654321";                                     // PhoneNumber2 (10 số)
+            worksheet.Cells[2, 13].Value = "0932156789";                                     // PhoneNumber2 (10 digits)
             worksheet.Cells[2, 14].Value = "Emergency";                                      // PhoneNumber2Description
-            worksheet.Cells[2, 15].Value = "Hồ Chí Minh";                                    // BirthPlaceProvince
-            worksheet.Cells[2, 16].Value = "Quận 9";                                         // BirthPlaceDistrict
-            worksheet.Cells[2, 17].Value = "Hồ Chí Minh";                                    // CurrentAddressProvince
-            worksheet.Cells[2, 18].Value = "Quận 9";                                         // CurrentAddressDistrict
-            worksheet.Cells[2, 19].Value = "TECHCOMBANK";                                    // BankName
-            worksheet.Cells[2, 20].Value = "1234567890123";                                  // BankAccountNumber
+            worksheet.Cells[2, 15].Value = "Hanoi";                                          // BirthPlaceProvince
+            worksheet.Cells[2, 16].Value = "Hoan Kiem";                                      // BirthPlaceDistrict
+            worksheet.Cells[2, 17].Value = "Hanoi";                                          // CurrentAddressProvince
+            worksheet.Cells[2, 18].Value = "Cau Giay";                                       // CurrentAddressDistrict
+            worksheet.Cells[2, 19].Value = "Vietcombank";                                    // BankName
+            worksheet.Cells[2, 20].Value = "0981234567890";                                  // BankAccountNumber
             worksheet.Cells[2, 21].Value = "IT";                                             // DepartmentCode
-            worksheet.Cells[2, 22].Value = "5";                                              // JobTitleCode
-            worksheet.Cells[2, 23].Value = "";                                               // DirectManagerCode (optional)
+            worksheet.Cells[2, 22].Value = "3";                                              // JobTitleCode
+            worksheet.Cells[2, 23].Value = "EMP001";                                         // DirectManagerCode (optional - example)
             worksheet.Cells[2, 24].Value = "Full-time";                                      // EmploymentType
-            worksheet.Cells[2, 25].Value = "Indefinite";                                     // ContractType
-            worksheet.Cells[2, 26].Value = "2023-06-01";                                     // ContractStartDate
-            worksheet.Cells[2, 27].Value = "";                                               // ContractEndDate (empty for indefinite)
-            worksheet.Cells[2, 28].Value = "Nhân viên";                                      // RoleName
+            worksheet.Cells[2, 25].Value = "Fixed-term";                                     // ContractType
+            worksheet.Cells[2, 26].Value = "2024-01-15";                                     // ContractStartDate
+            worksheet.Cells[2, 27].Value = "2025-01-14";                                     // ContractEndDate (12 months)
+            worksheet.Cells[2, 28].Value = "Employee";                                       // RoleName
 
             worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
 
@@ -881,7 +882,7 @@ namespace HrmApi.Services
             row++;
 
             int genderStartRow = row;
-            var genderValues = new[] { "Nam", "Nữ", "Khác" };
+            var genderValues = new[] { "Male", "Female", "Other" };
             foreach (var g in genderValues)
             {
                 lookup.Cells[row, 1].Value = g;
@@ -900,7 +901,7 @@ namespace HrmApi.Services
             row++;
 
             int empTypeStartRow = row;
-            var employmentTypes = new[] { "Full-time", "Part-time", "Remote", "Internship" };
+            var employmentTypes = new[] { "Full-time", "Part-time", "Contract", "Temporary" };
             foreach (var e in employmentTypes)
             {
                 lookup.Cells[row, 1].Value = e;
@@ -919,7 +920,7 @@ namespace HrmApi.Services
             row++;
 
             int contractTypeStartRow = row;
-            var contractTypes = new[] { "Indefinite", "Fixed-term", "Probation" };
+            var contractTypes = new[] { "Permanent", "Fixed-term" };
             foreach (var c in contractTypes)
             {
                 lookup.Cells[row, 1].Value = c;
@@ -938,7 +939,7 @@ namespace HrmApi.Services
             row++;
 
             int maritalStartRow = row;
-            var maritalStatuses = new[] { "Độc thân", "Đã kết hôn", "Đã ly hôn" };
+            var maritalStatuses = new[] { "Single", "Married", "Divorced", "Widowed" };
             foreach (var m in maritalStatuses)
             {
                 lookup.Cells[row, 1].Value = m;
@@ -957,7 +958,7 @@ namespace HrmApi.Services
             row++;
 
             int childrenStartRow = row;
-            var childrenValues = new[] { "Có", "Không" };
+            var childrenValues = new[] { "Yes", "No" };
             foreach (var c in childrenValues)
             {
                 lookup.Cells[row, 1].Value = c;
@@ -976,7 +977,7 @@ namespace HrmApi.Services
             row++;
 
             int nationalityStartRow = row;
-            var nationalities = new[] { "Việt Nam", "Khác" };
+            var nationalities = new[] { "Vietnam", "United States", "United Kingdom", "France", "Germany", "Japan", "South Korea", "China", "Singapore", "Thailand", "Australia", "Canada", "Netherlands", "Italy", "Spain", "Sweden", "Norway", "Denmark", "Finland", "Other" };
             foreach (var n in nationalities)
             {
                 lookup.Cells[row, 1].Value = n;
@@ -1015,7 +1016,7 @@ namespace HrmApi.Services
             row++;
 
             int statusStartRow = row;
-            var statusValues = new[] { "Đang làm việc", "Nghỉ việc", "Tạm dừng", "Từ chức" };
+            var statusValues = new[] { "Active", "Resigned", "Suspended", "Retired" };
             foreach (var s in statusValues)
             {
                 lookup.Cells[row, 1].Value = s;
@@ -1034,7 +1035,7 @@ namespace HrmApi.Services
             row++;
 
             int leaveTypeStartRow = row;
-            var leaveTypeValues = new[] { "Phép năm", "Phép bệnh", "Phép cá nhân", "Nghỉ không lương", "Phép thai sản" };
+            var leaveTypeValues = new[] { "Annual", "Sick", "Personal", "Unpaid", "Maternity" };
             foreach (var l in leaveTypeValues)
             {
                 lookup.Cells[row, 1].Value = l;
@@ -1044,126 +1045,6 @@ namespace HrmApi.Services
 
             lookup.Cells[lookup.Dimension.Address].AutoFitColumns();
 
-            
-            // ===== 3) DROPDOWN VALIDATION trên template =====
-            // Cập nhật theo cấu trúc cột mới:
-            // Gender=3, Nationality=4, MaritalStatus=5, HasChildren=6, 
-            // DepartmentCode=22, JobTitleCode=23, DirectManagerCode=24, 
-            // EmploymentType=25, ContractType=26, RoleName=29
-            int startDataRow = 2;
-            int endDataRow = 1000;
-
-            // Gender (Column 3)
-            if (genderEndRow >= genderStartRow)
-            {
-                var addr = $"A{genderStartRow}:A{genderEndRow}";
-                var dv = worksheet.DataValidations.AddListValidation(worksheet.Cells[startDataRow, 3, endDataRow, 3].Address);
-                dv.Formula.ExcelFormula = $"Lookup!{addr}";
-                dv.ShowErrorMessage = true;
-                dv.ErrorTitle = "Sai Giới tính";
-                dv.Error = "Vui lòng chọn Giới tính từ danh sách: Nam, Nữ, Khác";
-            }
-
-            // Nationality (Column 4)
-            if (nationalityEndRow >= nationalityStartRow)
-            {
-                var addr = $"A{nationalityStartRow}:A{nationalityEndRow}";
-                var dv = worksheet.DataValidations.AddListValidation(worksheet.Cells[startDataRow, 4, endDataRow, 4].Address);
-                dv.Formula.ExcelFormula = $"Lookup!{addr}";
-                dv.ShowErrorMessage = true;
-                dv.ErrorTitle = "Sai Quốc tịch";
-                dv.Error = "Vui lòng chọn Quốc tịch từ danh sách Lookup.";
-            }
-
-            // MaritalStatus (Column 5)
-            if (maritalEndRow >= maritalStartRow)
-            {
-                var addr = $"A{maritalStartRow}:A{maritalEndRow}";
-                var dv = worksheet.DataValidations.AddListValidation(worksheet.Cells[startDataRow, 5, endDataRow, 5].Address);
-                dv.Formula.ExcelFormula = $"Lookup!{addr}";
-                dv.ShowErrorMessage = true;
-                dv.ErrorTitle = "Sai Tình trạng hôn nhân";
-                dv.Error = "Vui lòng chọn từ: Độc thân, Đã kết hôn, Đã ly hôn";
-            }
-
-            // HasChildren (Column 6)
-            if (childrenEndRow >= childrenStartRow)
-            {
-                var addr = $"A{childrenStartRow}:A{childrenEndRow}";
-                var dv = worksheet.DataValidations.AddListValidation(worksheet.Cells[startDataRow, 6, endDataRow, 6].Address);
-                dv.Formula.ExcelFormula = $"Lookup!{addr}";
-                dv.ShowErrorMessage = true;
-                dv.ErrorTitle = "Sai giá trị Có con";
-                dv.Error = "Vui lòng chọn: Có hoặc Không";
-            }
-
-            // DepartmentCode (Column 22)
-            if (deptEndRow >= deptStartRow)
-            {
-                var addr = $"A{deptStartRow}:A{deptEndRow}";
-                var dv = worksheet.DataValidations.AddListValidation(worksheet.Cells[startDataRow, 22, endDataRow, 22].Address);
-                dv.Formula.ExcelFormula = $"Lookup!{addr}";
-                dv.ShowErrorMessage = true;
-                dv.ErrorTitle = "Sai Mã phòng ban";
-                dv.Error = "Vui lòng chọn Mã phòng ban từ danh sách Lookup (Sheet 'Lookup', phần DEPARTMENTS).";
-            }
-
-            // JobTitleCode (Column 23)
-            if (jtEndRow >= jtStartRow)
-            {
-                var addr = $"A{jtStartRow}:A{jtEndRow}";
-                var dv = worksheet.DataValidations.AddListValidation(worksheet.Cells[startDataRow, 23, endDataRow, 23].Address);
-                dv.Formula.ExcelFormula = $"Lookup!{addr}";
-                dv.ShowErrorMessage = true;
-                dv.ErrorTitle = "Sai Mã chức danh";
-                dv.Error = "Vui lòng chọn Mã chức danh từ danh sách Lookup (Sheet 'Lookup', phần JOB TITLES).";
-            }
-
-            // DirectManagerCode (Column 24)
-            if (managerEndRow >= managerStartRow)
-            {
-                var addr = $"A{managerStartRow}:A{managerEndRow}";
-                var dv = worksheet.DataValidations.AddListValidation(worksheet.Cells[startDataRow, 24, endDataRow, 24].Address);
-                dv.Formula.ExcelFormula = $"Lookup!{addr}";
-                dv.ShowErrorMessage = true;
-                dv.ErrorTitle = "Sai Mã quản lý";
-                dv.Error = "Vui lòng chọn Mã quản lý từ danh sách Lookup (Sheet 'Lookup', phần MANAGERS).";
-            }
-
-            // EmploymentType (Column 25)
-            if (empTypeEndRow >= empTypeStartRow)
-            {
-                var addr = $"A{empTypeStartRow}:A{empTypeEndRow}";
-                var dv = worksheet.DataValidations.AddListValidation(worksheet.Cells[startDataRow, 25, endDataRow, 25].Address);
-                dv.Formula.ExcelFormula = $"Lookup!{addr}";
-                dv.ShowErrorMessage = true;
-                dv.ErrorTitle = "Sai Hình thức làm việc";
-                dv.Error = "Vui lòng chọn Hình thức làm việc từ danh sách Lookup.";
-            }
-
-            // ContractType (Column 26)
-            if (contractTypeEndRow >= contractTypeStartRow)
-            {
-                var addr = $"A{contractTypeStartRow}:A{contractTypeEndRow}";
-                var dv = worksheet.DataValidations.AddListValidation(worksheet.Cells[startDataRow, 26, endDataRow, 26].Address);
-                dv.Formula.ExcelFormula = $"Lookup!{addr}";
-                dv.ShowErrorMessage = true;
-                dv.ErrorTitle = "Sai Loại hợp đồng";
-                dv.Error = "Vui lòng chọn: Vĩnh viễn hoặc Có thời hạn";
-            }
-
-            // RoleName (Column 29)
-            if (roleEndRow >= roleStartRow)
-            {
-                var addr = $"A{roleStartRow}:A{roleEndRow}";
-                var dv = worksheet.DataValidations.AddListValidation(worksheet.Cells[startDataRow, 29, endDataRow, 29].Address);
-                dv.Formula.ExcelFormula = $"Lookup!{addr}";
-                dv.ShowErrorMessage = true;
-                dv.ErrorTitle = "Sai Phân quyền";
-                dv.Error = "Vui lòng chọn Phân quyền từ danh sách Lookup (Sheet 'Lookup', phần ROLES).";
-            }
-
-            
             // ===== Return bytes =====
             return package.GetAsByteArray();
         }

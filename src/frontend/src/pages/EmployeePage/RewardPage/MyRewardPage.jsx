@@ -7,47 +7,56 @@ import StatusBadge from '../../../components/common/StatusBadge';
 import Toast from '../../../components/common/Toast';
 import { getMyWallet, redeemPoints, getMyRedemptions } from '../../../Services/rewardService';
 import { HRService } from '../../../Services/employees';
-import { DollarSign, Gift, Activity } from 'lucide-react'; // Dùng lucide-react
+import { DollarSign, Gift, Activity, Eye, EyeOff } from 'lucide-react'; // Dùng lucide-react
+import ConfirmDialog from '../../../components/common/ConfirmDialog';
 
 const MyRewardPage = () => {
     const [wallet, setWallet] = useState({ balance: 0, transactions: [] });
     const [redeemAmount, setRedeemAmount] = useState('');
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState(null);
+    const [showPoints, setShowPoints] = useState(false); // start hidden
+    const [lastUpdated, setLastUpdated] = useState(null);
+    const [employeeStatus, setEmployeeStatus] = useState(null);
+    const [showRedeemConfirm, setShowRedeemConfirm] = useState(false);
 
     useEffect(() => { fetchData(); }, []);
 
+    // Format to DD/MM/YYYY HH:MM
+    const formatDateTime = (value) => {
+        if (!value) return '';
+        const d = new Date(value);
+        const dd = String(d.getDate()).padStart(2, '0');
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const yyyy = d.getFullYear();
+        const HH = String(d.getHours()).padStart(2, '0');
+        const MM = String(d.getMinutes()).padStart(2, '0');
+        return `${dd}/${mm}/${yyyy} ${HH}:${MM}`;
+    };
+
     const fetchData = async () => {
         try {
-            // Debug: Check if token exists
+            // quick auth presence check
             const token = localStorage.getItem('token');
-            const employeeCode = localStorage.getItem('employeeCode');
-            console.log('🔐 Token check:', { 
-                hasToken: !!token, 
-                tokenLength: token?.length,
-                employeeCode,
-                fullToken: token ? token.substring(0, 50) + '...' : 'NO TOKEN'
-            });
-
             if (!token) {
-                console.warn('⚠️ NO TOKEN IN LOCALSTORAGE - User may not be logged in');
-                setToast({ type: 'warning', message: 'Vui lòng đăng nhập lại' });
+                    setToast({ type: 'warning', message: 'Please log in again' });
                 return;
             }
 
             const res = await getMyWallet();
-            console.log('Wallet Response:', res);
 
             // Backend may return different shapes depending on server code / casing.
             // Normalize possible shapes to a single `walletData` object.
             const raw = res?.data ?? res;
             const payload = raw?.data ?? raw?.Data ?? raw;
             const walletData = payload || {};
-
             const balance = walletData.balance ?? walletData.Balance ?? walletData.currentBalance ?? walletData.CurrentBalance ?? 0;
             const totalEarned = walletData.totalEarned ?? walletData.TotalEarned ?? 0;
             const totalSpent = walletData.totalSpent ?? walletData.TotalSpent ?? 0;
             let transactions = walletData.transactions ?? walletData.Transactions ?? [];
+            const last = walletData.lastUpdated ?? walletData.LastUpdated ?? null;
+            const empStatus = walletData.employeeStatus ?? walletData.EmployeeStatus ?? null;
+            const empName = walletData.employeeName ?? walletData.EmployeeName ?? walletData.employeeCode ?? walletData.EmployeeCode ?? null;
 
             // Also fetch redemption requests to show status and metadata for redeem transactions
             try {
@@ -131,40 +140,47 @@ const MyRewardPage = () => {
                 totalSpent,
                 transactions
             });
+            setLastUpdated(last);
+            setEmployeeStatus(empStatus);
+            if (empName) {
+                // optionally expose employee name/code in UI or logs
+            }
         } catch (error) {
-            console.error("Lỗi tải dữ liệu ví:", error);
+            console.error("Wallet load error:", error);
             // More detailed error logging
             if (error.response?.status === 401) {
                 console.error('❌ 401 Unauthorized - Token invalid or expired');
-                console.error('Token from localStorage:', localStorage.getItem('token')?.substring(0, 50) + '...');
             }
-            setToast({ type: 'error', message: 'Không thể tải dữ liệu ví' });
+            setToast({ type: 'error', message: 'Unable to load wallet data' });
         }
     };
 
-    const handleRedeem = async () => {
+    // Initiate redeem: validate and show confirm dialog
+    const handleRedeem = () => {
         if (!redeemAmount || parseInt(redeemAmount) < 100) {
-            setToast({ type: 'warning', message: 'Tối thiểu đổi 100 điểm' });
+            setToast({ type: 'warning', message: 'Minimum redeem is 100 points' });
             return;
         }
         if (parseInt(redeemAmount) > wallet.balance) {
-            setToast({ type: 'error', message: 'Số điểm không đủ' });
+            setToast({ type: 'error', message: 'Insufficient points' });
             return;
         }
-        if (!window.confirm(`Xác nhận đổi ${redeemAmount} điểm?`)) return;
+        setShowRedeemConfirm(true);
+    };
 
+    // Execute redeem after user confirms
+    const executeRedeem = async () => {
+        setShowRedeemConfirm(false);
         setLoading(true);
         try {
-            // Call backend to create a redeem request. Backend should mark this request as PENDING
             const points = parseInt(redeemAmount);
             const res = await redeemPoints({ points, method: 'CASH' });
 
-            // Optimistically update UI: temporarily deduct points and insert a pending transaction
             const pendingTransaction = {
                 id: res?.data?.id || `local-${Date.now()}`,
                 createdAt: new Date().toISOString(),
                 type: 'REDEEM',
-                description: 'Yêu cầu đổi tiền mặt',
+                description: 'Request cash redemption',
                 amount: -points,
                 status: 'PENDING'
             };
@@ -175,13 +191,12 @@ const MyRewardPage = () => {
                 transactions: [pendingTransaction, ...(prev.transactions || [])]
             }));
 
-            setToast({ type: 'success', message: 'Yêu cầu đổi điểm đã gửi, chờ duyệt' });
+            setToast({ type: 'success', message: 'Redemption request submitted, pending approval' });
             setRedeemAmount('');
-            // Refresh from backend to get authoritative data (will reconcile if backend already deducted)
-            fetchData(); 
+            await fetchData();
         } catch (error) {
             console.error('Redeem request failed', error);
-            setToast({ type: 'error', message: 'Đổi điểm thất bại' });
+            setToast({ type: 'error', message: 'Redemption failed' });
         } finally {
             setLoading(false);
         }
@@ -190,14 +205,14 @@ const MyRewardPage = () => {
     // Props input cho Component StatsGrid
     const stats = [
         {
-            title: 'Điểm khả dụng',
-            value: wallet.balance?.toLocaleString(),
+            title: 'Available points',
+            value: showPoints ? Number(wallet.balance).toLocaleString() : '•••••',
             icon: <Gift size={24} />,
             color: 'blue'
         },
         {
-            title: 'Quy đổi VNĐ (Dự kiến)',
-            value: `${(wallet.balance * 1000)?.toLocaleString()} đ`,
+            title: 'Estimated VND conversion',
+            value: showPoints ? `${(Number(wallet.balance) * 1000)?.toLocaleString()} VND` : '•••••',
             icon: <DollarSign size={24} />,
             color: 'green'
         }
@@ -205,9 +220,9 @@ const MyRewardPage = () => {
 
     // Props input cho Component Table
     const columns = [
-        { title: 'Ngày', dataIndex: 'createdAt', render: (row) => new Date(row.createdAt).toLocaleDateString('vi-VN') },
+        { title: 'Date', dataIndex: 'createdAt', render: (row) => new Date(row.createdAt).toLocaleDateString('en-GB') },
         { 
-            title: 'Loại GD', 
+            title: 'Type', 
             dataIndex: 'type',
             render: (row) => {
                 let type = 'default';
@@ -217,7 +232,7 @@ const MyRewardPage = () => {
                 return <StatusBadge status={row.type} type={type} label={row.type} />
             }
         },
-        { title: 'Trạng thái', dataIndex: 'status', render: (row) => {
+        { title: 'Status', dataIndex: 'status', render: (row) => {
                 const st = row.status || '';
                 let t = 'default';
                 if (st === 'PENDING') t = 'warning';
@@ -226,12 +241,12 @@ const MyRewardPage = () => {
                 return st ? <StatusBadge status={st} type={t} label={st} /> : <span className="text-gray-500">-</span>
             }
         },
-        { title: 'Yêu cầu lúc', dataIndex: 'requestedAt', render: (row) => row.requestedAt ? new Date(row.requestedAt).toLocaleString('vi-VN') : '-' },
-        { title: 'Đã xử lý bởi', dataIndex: 'processorName', render: (row) => row.processorName || '-' },
-        { title: 'Thời gian xử lý', dataIndex: 'processedAt', render: (row) => row.processedAt ? new Date(row.processedAt).toLocaleString('vi-VN') : '-' },
-        { title: 'Nội dung', dataIndex: 'description' },
+        { title: 'Requested at', dataIndex: 'requestedAt', render: (row) => row.requestedAt ? new Date(row.requestedAt).toLocaleString('en-GB') : '-' },
+        { title: 'Processed by', dataIndex: 'processorName', render: (row) => row.processorName || '-' },
+        { title: 'Processed at', dataIndex: 'processedAt', render: (row) => row.processedAt ? new Date(row.processedAt).toLocaleString('en-GB') : '-' },
+        { title: 'Description', dataIndex: 'description' },
         { 
-            title: 'Số điểm', 
+            title: 'Points', 
             dataIndex: 'amount', 
             render: (row) => (
                 <span className={`font-bold ${row.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -244,16 +259,27 @@ const MyRewardPage = () => {
     return (
         <div className="p-6 fade-in-up">
             <h1 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
-                <Gift className="text-blue-600"/> Ví Thưởng Cá Nhân
+                <Gift className="text-blue-600"/> My Rewards Wallet
             </h1>
+            <div className="flex items-center gap-3 mb-4">
+                <Button variant="secondary" onClick={() => fetchData()}>Refresh</Button>
+                <Button variant="ghost" onClick={() => setShowPoints(s => !s)} icon={showPoints ? Eye : EyeOff}>
+                    <span className="hidden sm:inline">{showPoints ? 'Hide points' : 'Show points'}</span>
+                </Button>
+                {lastUpdated && (
+                    <div className="text-sm text-gray-500">Last updated: {formatDateTime(lastUpdated)}</div>
+                )}
+            </div>
             
             <div className="mb-8">
                 {/* Simple stats display for wallet (balance + conversion) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
                         <div>
-                            <div className="text-sm text-gray-500">Điểm khả dụng</div>
-                            <div className="text-2xl font-bold text-gray-800">{Number(wallet.balance).toLocaleString()}</div>
+                                    <div className="text-sm text-gray-500">Available Points</div>
+                                    <div className="text-2xl font-bold text-gray-800">{
+                                        employeeStatus === 'LOCKED' ? 'Account is locked' : (showPoints ? Number(wallet.balance).toLocaleString() : '•••••')
+                                    }</div>
                         </div>
                         <div className="text-blue-500">
                             <Gift size={28} />
@@ -262,8 +288,8 @@ const MyRewardPage = () => {
 
                     <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
                         <div>
-                            <div className="text-sm text-gray-500">Quy đổi VNĐ (Dự kiến)</div>
-                            <div className="text-2xl font-bold text-gray-800">{(Number(wallet.balance) * 1000).toLocaleString()} đ</div>
+                            <div className="text-sm text-gray-500">Exchange VNĐ (Estimated)</div>
+                            <div className="text-2xl font-bold text-gray-800">{employeeStatus === 'LOCKED' ? '-' : (showPoints ? (Number(wallet.balance) * 1000).toLocaleString() + ' VND' : '•••••')}</div>
                         </div>
                         <div className="text-green-500">
                             <DollarSign size={28} />
@@ -276,16 +302,16 @@ const MyRewardPage = () => {
                 {/* Feature: Form đổi điểm */}
                 <div className="lg:col-span-1 bg-white p-6 rounded-lg shadow-sm border border-gray-100 h-fit">
                     <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <Activity className="text-orange-500" size={20}/> Đổi Tiền Mặt
+                        <Activity className="text-orange-500" size={20}/> Cash Redemption
                     </h3>
                     <div className="space-y-4">
-                        <FormRow label="Nhập số điểm (Tỷ lệ 1:1000)">
+                        <FormRow label="Enter points to redeem (Rate 1:1000)">
                             <input 
                                 type="number" 
                                 className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                                 value={redeemAmount}
                                 onChange={(e) => setRedeemAmount(e.target.value)}
-                                placeholder="VD: 500"
+                                placeholder="e.g. 500"
                                 min="100"
                             />
                         </FormRow>
@@ -295,18 +321,28 @@ const MyRewardPage = () => {
                             disabled={loading}
                             className="w-full justify-center"
                         >
-                            {loading ? 'Đang xử lý...' : 'Xác nhận Đổi'}
+                            {loading ? 'Processing...' : 'Confirm Redeem'}
                         </Button>
                     </div>
                 </div>
 
                 {/* Feature: Lịch sử */}
                 <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                    <h3 className="text-lg font-semibold mb-4">Lịch sử biến động</h3>
+                    <h3 className="text-lg font-semibold mb-4">Transaction History</h3>
                     <Table columns={columns} data={wallet.transactions || []} />
                 </div>
             </div>
             {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
+            <ConfirmDialog
+                isOpen={showRedeemConfirm}
+                title="Confirm Redeem"
+                message={`Confirm redeem ${redeemAmount} points?`}
+                type="info"
+                onConfirm={executeRedeem}
+                onCancel={() => setShowRedeemConfirm(false)}
+                confirmLabel="Confirm"
+                cancelLabel="Cancel"
+            />
         </div>
     );
 };

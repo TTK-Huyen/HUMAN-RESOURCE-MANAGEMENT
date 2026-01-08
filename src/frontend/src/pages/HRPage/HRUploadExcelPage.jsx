@@ -22,16 +22,16 @@ export default function HRUploadExcelPage() {
   const [toast, setToast] = useState(null); // { message, type }
   const fileInputRef = useRef(null);
 
-  // Xử lý tải file mẫu
+  // Handle download template
   const handleDownloadTemplate = async () => {
     try {
       setDownloading(true);
       await HRService.downloadEmployeeExcelTemplate(); // service tự download
-      setToast({ message: "Tải file mẫu thành công!", type: "success" });
+      setToast({ message: "Downloaded template successfully!", type: "success" });
     } catch (e) {
       console.error(e);
       setToast({
-        message: e?.message || "Không thể tải file mẫu. Vui lòng thử lại.",
+        message: e?.message || "Failed to download template. Please try again.",
         type: "danger",
       });
     } finally {
@@ -39,7 +39,7 @@ export default function HRUploadExcelPage() {
     }
   };
 
-  // Xử lý chọn file
+  // Handle file selection
   const handleFileChange = (e) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
@@ -52,7 +52,7 @@ export default function HRUploadExcelPage() {
   const handleUpload = async () => {
     if (!file) {
       setToast({
-        message: "Vui lòng chọn file trước khi upload",
+        message: "Please select a file before uploading",
         type: "danger",
       });
       return;
@@ -65,25 +65,25 @@ export default function HRUploadExcelPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      // Gọi API import
+      // Call import API
       const response = await HRService.importEmployeesFromExcel(formData);
 
-      // Response.data thường bọc trong một object chung, kiểm tra cấu trúc API trả về
-      // Dựa vào controller: return Ok(new { message, data = result })
+      // Response.data is usually wrapped in a common object, check the API response structure
+      // Based on controller: return Ok(new { message, data = result })
       const resultData = response.data || response;
 
       setImportResult(resultData);
-      setToast({ message: "Xử lý file hoàn tất!", type: "success" });
+      setToast({ message: "File processed successfully!", type: "success" });
 
-      // Reset file input sau khi xong
+      // Reset file input after completion
       setFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (error) {
       console.error(error);
-      const errorMsg = error.response?.data?.message || "Lỗi khi upload file.";
+      const errorMsg = error.response?.data?.message || "Error uploading file.";
       setToast({ message: errorMsg, type: "danger" });
 
-      // Nếu có lỗi validation trả về từ server
+      // If there are validation errors returned from server
       if (error.response?.data?.errors) {
         setImportResult({ errors: error.response.data.errors, isError: true });
       }
@@ -92,17 +92,17 @@ export default function HRUploadExcelPage() {
     }
   };
 
-  // Cấu hình cột cho bảng lỗi (nếu có)
+  // Error table columns configuration
   const errorColumns = [
     {
-      title: "Dòng",
+      title: "Row",
       dataIndex: "row",
       width: "80px",
       className: "text-center",
     },
-    { title: "Mã NV", dataIndex: "employeeCode", width: "120px" },
-    { title: "Trường lỗi", dataIndex: "field", width: "150px" },
-    { title: "Chi tiết lỗi", dataIndex: "error", className: "text-danger" },
+    { title: "Employee Code", dataIndex: "employeeCode", width: "120px" },
+    { title: "Error Field", dataIndex: "field", width: "150px" },
+    { title: "Error Details", dataIndex: "error", className: "text-danger" },
   ];
 
   return (
@@ -144,7 +144,7 @@ export default function HRUploadExcelPage() {
           </div>
           <div>
             <h2 style={{ margin: 0, fontSize: "1.25rem", color: "#1e293b" }}>
-              Import Nhân Viên từ Excel
+              Import Employees from Excel
             </h2>
             <p
               style={{
@@ -153,8 +153,7 @@ export default function HRUploadExcelPage() {
                 fontSize: "0.875rem",
               }}
             >
-              Hỗ trợ file định dạng .xlsx hoặc .csv. Dữ liệu sẽ được thêm mới
-              hoặc cập nhật dựa trên Mã nhân viên.
+              Support .xlsx or .csv file formats. Data will be added or updated based on Employee Code.
             </p>
           </div>
         </div>
@@ -179,7 +178,7 @@ export default function HRUploadExcelPage() {
           isLoading={downloading}
           icon={Download}
         >
-          Tải file mẫu
+          Download Template 
         </Button>
 
         <div style={{ width: 1, height: 40, background: "#cbd5e1" }}></div>
@@ -202,7 +201,7 @@ export default function HRUploadExcelPage() {
           />
         </div>
 
-        {/* Nút Upload */}
+        {/* Import Button */}
         <Button
           variant="primary"
           onClick={handleUpload}
@@ -210,7 +209,7 @@ export default function HRUploadExcelPage() {
           isLoading={uploading}
           icon={Upload}
         >
-          Tiến hành Import
+          Import
         </Button>
       </div>
 
@@ -218,7 +217,7 @@ export default function HRUploadExcelPage() {
       {importResult && (
         <div className="fade-in-up">
           <h3 style={{ fontSize: "1.1rem", marginBottom: 16 }}>
-            Kết quả Import
+            Import Results
           </h3>
 
           {/* Summary Cards */}
@@ -231,28 +230,28 @@ export default function HRUploadExcelPage() {
             }}
           >
             <SummaryCard
-              label="Tổng dòng xử lý"
+              label="Total Rows Processed"
               value={importResult.processedRows || 0}
               icon={Info}
               color="#3b82f6"
               bg="#eff6ff"
             />
             <SummaryCard
-              label="Thêm mới"
+              label="Created"
               value={importResult.createdCount || 0}
               icon={CheckCircle}
               color="#16a34a"
               bg="#dcfce7"
             />
             <SummaryCard
-              label="Cập nhật"
+              label="Updated"
               value={importResult.updatedCount || 0}
               icon={FileUp}
               color="#d97706"
               bg="#fef3c7"
             />
             <SummaryCard
-              label="Bỏ qua / Lỗi"
+              label="Skipped / Errors"
               value={
                 (importResult.skippedCount || 0) +
                 (importResult.errors?.length || 0)
@@ -276,22 +275,24 @@ export default function HRUploadExcelPage() {
                 }}
               >
                 <XCircle size={18} />
-                Danh sách lỗi chi tiết ({importResult.errors.length})
+                Detailed Error List ({importResult.errors.length})
               </h4>
               <Table
                 columns={errorColumns}
                 data={importResult.errors}
-                emptyText="Không có lỗi nào."
+                emptyText="No errors."
               />
             </div>
           )}
         </div>
       )}
+
+      {/* Results will be displayed here */}
     </div>
   );
 }
 
-// Component con hiển thị thẻ thống kê nhỏ
+// Sub component to display small statistics card
 function SummaryCard({ label, value, icon: Icon, color, bg }) {
   return (
     <div

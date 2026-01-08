@@ -33,6 +33,35 @@ function formatDateTime(value) {
   } catch { return ""; }
 }
 
+// Support multiple possible approved timestamp field names from backend
+function getApprovedTime(item) {
+  if (!item) return null;
+  // direct top-level fields
+  const direct = item.approvedAt || item.approved_at || item.decidedAt || item.decided_at || item.approved_on || item.approved_on_date || item.approvedOn;
+  if (direct) return direct;
+
+  // helper to extract time from a history/log entry
+  const extractFromLog = (log) => {
+    if (!log) return null;
+    return log.time || log.timeStamp || log.timestamp || log.approvedAt || log.approved_at || log.decidedAt || log.decided_at || log.createdAt || log.created_at || null;
+  };
+
+  // possible history arrays returned by backend
+  const histories = item.history || item.historyItems || item.histories || item.logs || item.approvalHistory;
+  if (Array.isArray(histories)) {
+    // prefer APPROVED entry
+    const approved = histories.find(h => (h.status || '').toString().toUpperCase() === 'APPROVED');
+    if (approved) return extractFromLog(approved);
+    // fallback: most recent item with a timestamp
+    for (let i = histories.length - 1; i >= 0; i--) {
+      const t = extractFromLog(histories[i]);
+      if (t) return t;
+    }
+  }
+
+  return null;
+}
+
 // [ĐÃ SỬA] Format ngày: Ép buộc giờ Việt Nam (+7)
 function formatDate(value) {
   if (!value) return "";
@@ -452,7 +481,7 @@ export default function RequestStatusPage() {
                       <span className={statusClass(r.status)}>{r.status}</span>
                     </td>
                     <td>{r.approverName || "-"}</td>
-                    <td>{formatDateTime(r.approvedAt) || "-"}</td>
+                    <td>{formatDateTime(getApprovedTime(r)) || "-"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -538,7 +567,7 @@ export default function RequestStatusPage() {
                       </div>
                       <div>
                         <dt>Approved at</dt>
-                        <dd>{formatDateTime(r.approvedAt) || "-"}</dd>
+                        <dd>{formatDateTime(getApprovedTime(r)) || "-"}</dd>
                       </div>
                       {r.rejectReason && (
                         <div className="full-row">

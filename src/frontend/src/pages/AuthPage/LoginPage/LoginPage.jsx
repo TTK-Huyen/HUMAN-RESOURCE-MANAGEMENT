@@ -13,8 +13,14 @@ export default function LoginPage() {
       const res = await login(data); 
       const { token, role, employeeCode, employeeName, employeeId } = res;
 
-      // Clear old data trước khi set data mới
-      localStorage.clear();
+      console.log("📥 Login Response:", { token, role, employeeCode, employeeName, employeeId });
+
+      // ✅ FIX: Remove old keys but DON'T use clear() - it may interfere
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      localStorage.removeItem("employeeCode");
+      localStorage.removeItem("employeeName");
+      localStorage.removeItem("employeeId");
 
       // Set new data
       localStorage.setItem("token", token);
@@ -23,24 +29,47 @@ export default function LoginPage() {
       localStorage.setItem("employeeName", employeeName);
       localStorage.setItem("employeeId", employeeId);
 
-      console.log("Login success - Role:", role);
+      // ✅ VERIFY data was saved
+      const savedToken = localStorage.getItem("token");
+      const savedCode = localStorage.getItem("employeeCode");
+      console.log("✅ Saved to localStorage - Token:", !!savedToken, "Code:", savedCode);
+
+      if (!savedToken || !savedCode) {
+        alert("⚠️ Failed to save login data. Please try again.");
+        return;
+      }
+
+      console.log("✅ Login success - Role:", role);
 
       // Chuyển hướng dựa vào role - không phân biệt chữ hoa/thường
       const normalizedRole = role?.trim().toUpperCase();
       
-      if (normalizedRole === "EMP") {
-        navigate("/employee");
-      } else if (normalizedRole === "HR") {
-        navigate("/hr");
-      } else if (normalizedRole === "MANAGER") {
-        navigate("/manager");
-      } else {
-        console.warn("Unknown role:", role);
-        navigate("/");
-      }
+      // ✅ FIX: Increase delay and verify token exists before navigate
+      setTimeout(() => {
+        // Double-check token still exists
+        const finalToken = localStorage.getItem("token");
+        if (!finalToken) {
+          console.error("❌ Token disappeared!");
+          window.location.href = "/login";
+          return;
+        }
+        
+        if (normalizedRole === "EMP") {
+          navigate("/employee");
+        } else if (normalizedRole === "HR") {
+          navigate("/hr");
+        } else if (normalizedRole === "MANAGER") {
+          navigate("/manager");
+        } else if (normalizedRole === "ADMIN") {
+          navigate("/employee/profile");
+        } else {
+          console.warn("Unknown role:", role);
+          navigate("/");
+        }
+      }, 300);
     } catch (err) {
       console.error("Login error:", err);
-      alert(err.response?.data?.message || "Đăng nhập thất bại");
+      alert(err.response?.data?.message || "Login failed");
     }
   };
 
@@ -56,43 +85,21 @@ export default function LoginPage() {
     handleLogin(formData);
   };
 
-  // Danh sách tài khoản demo theo vai trò (từ DataSeeder)
+  // Demo accounts (from DataSeeder)
   const demoAccounts = [
+    // ===== ADMIN =====
+    { role: "🛡️ Admin", name: "System Administrator", username: "admin"},
     // ===== MANAGERS (4 tài khoản) =====
-    { role: "👔 Quản lý", name: "Trần Văn IT Manager", username: "EMP001", password: "123456" },
-    { role: "👔 Quản lý", name: "Nguyễn Thị HR Manager", username: "EMP002", password: "123456" },
-    { role: "👔 Quản lý", name: "Lê Văn Sale Manager", username: "EMP003", password: "123456" },
-    { role: "👔 Quản lý", name: "Võ Thị ACC Manager", username: "EMP004", password: "123456" },
+    { role: "👔 Manager", name: "Trần Văn IT Manager", username: "EMP001"},
     
     // ===== HR SPECIALISTS (4 tài khoản) =====
-    { role: "💼 HR Admin", name: "Trương Thị IT HR", username: "EMP005", password: "123456" },
-    { role: "💼 HR Admin", name: "Lương Thị HR HR", username: "EMP006", password: "123456" },
-    { role: "💼 HR Admin", name: "Đặng Thị SALE HR", username: "EMP007", password: "123456" },
-    { role: "💼 HR Admin", name: "Hồ Thị ACC HR", username: "EMP008", password: "123456" },
+    { role: "💼 HR Admin", name: "Trương Thị IT HR", username: "EMP005"},
     
     // ===== EMPLOYEES - IT TEAM (5 tài khoản) =====
-    { role: "👤 Nhân viên", name: "Trần Văn A Dev", username: "EMP009", password: "123456" },
-    { role: "👤 Nhân viên", name: "Hoàng Thị B Dev", username: "EMP010", password: "123456" },
-    { role: "👤 Nhân viên", name: "Phạm Văn C QC", username: "EMP011", password: "123456" },
-    { role: "👤 Nhân viên", name: "Lý Thị D Dev", username: "EMP012", password: "123456" },
-    { role: "👤 Nhân viên", name: "Trần Văn E Intern", username: "EMP013", password: "123456" },
+    { role: "👤 Employee", name: "Trần Văn A Dev", username: "EMP009"},
+    { role: "👤 Employee", name: "Hoàng Thị B Dev", username: "EMP010"},
     
-    // ===== EMPLOYEES - SALE TEAM (5 tài khoản) =====
-    { role: "👤 Nhân viên", name: "Vũ Văn F Sale", username: "EMP014", password: "123456" },
-    { role: "👤 Nhân viên", name: "Bùi Thị G Sale", username: "EMP015", password: "123456" },
-    { role: "👤 Nhân viên", name: "Tạ Văn H Sale", username: "EMP016", password: "123456" },
-    { role: "👤 Nhân viên", name: "Đinh Thị I Sale", username: "EMP017", password: "123456" },
-    { role: "👤 Nhân viên", name: "Nương Văn J Sale", username: "EMP018", password: "123456" },
     
-    // ===== EMPLOYEES - HR TEAM (3 tài khoản) =====
-    { role: "👤 Nhân viên", name: "Phan Thị K HR", username: "EMP019", password: "123456" },
-    { role: "👤 Nhân viên", name: "Quách Văn L HR", username: "EMP020", password: "123456" },
-    { role: "👤 Nhân viên", name: "Rút Thị M HR", username: "EMP021", password: "123456" },
-    
-    // ===== EMPLOYEES - ACC TEAM (3 tài khoản) =====
-    { role: "👤 Nhân viên", name: "Sâm Văn N Kế toán", username: "EMP022", password: "123456" },
-    { role: "👤 Nhân viên", name: "Tây Thị O Kế toán", username: "EMP023", password: "123456" },
-    { role: "👤 Nhân viên", name: "Ưng Văn P Kế toán", username: "EMP024", password: "123456" },
   ];
 
   const handleQuickLogin = (account) => {
@@ -256,21 +263,21 @@ export default function LoginPage() {
               <Building2 size={32} />
               HRM SUITE
             </div>
-            <div className="welcome-text">Hệ thống quản trị nhân sự</div>
+            <div className="welcome-text">Human Resource Management System</div>
           </div>
 
             {/* Form Đăng nhập tùy chỉnh */}
             <form onSubmit={handleSubmit} style={{marginTop: '30px'}}>
               <div style={{marginBottom: '20px'}}>
                 <label style={{display: 'block', marginBottom: '8px', fontWeight: '600', color: '#475569', fontSize: '0.9rem'}}>
-                  Tài khoản
+                  Username
                 </label>
                 <input 
                   type="text" 
                   name="username" 
                   value={formData.username}
                   onChange={handleChange}
-                  placeholder="Nhập tài khoản..."
+                  placeholder="Enter username..."
                   required
                   style={{
                     width: '100%',
@@ -288,14 +295,14 @@ export default function LoginPage() {
 
               <div style={{marginBottom: '20px'}}>
                 <label style={{display: 'block', marginBottom: '8px', fontWeight: '600', color: '#475569', fontSize: '0.9rem'}}>
-                  Mật khẩu
+                  Password
                 </label>
                 <input 
                   type="password" 
                   name="password" 
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="Nhập mật khẩu..."
+                  placeholder="Enter password..."
                   required
                   style={{
                     width: '100%',
@@ -327,14 +334,14 @@ export default function LoginPage() {
                 }}
                 onMouseEnter={(e) => e.target.style.background = '#1d4ed8'}
                 onMouseLeave={(e) => e.target.style.background = '#2563eb'}
-              >
-                Đăng nhập
+                >
+                Log In
               </button>
             </form>
 
             {/* Danh sách tài khoản Demo */}
             <div className="demo-accounts-section">
-              <div className="demo-accounts-title">📋 DANH SÁCH TÀI KHOẢN TEST (34 tài khoản)</div>
+              <div className="demo-accounts-title">📋 Demo Accounts (5 accounts) - Pass: 123456</div>
               {demoAccounts.map((account, idx) => (
                 <div key={idx} className="demo-account-item">
                   <div className="demo-account-info">
@@ -344,16 +351,8 @@ export default function LoginPage() {
                     </div>
                     <div className="demo-account-creds">
                       <span className="demo-cred-badge">{account.username}</span>
-                      <span style={{color: '#94a3b8'}}>•</span>
-                      <span className="demo-cred-badge">{account.password}</span>
                     </div>
                   </div>
-                  <button 
-                    className="demo-account-action"
-                    onClick={() => handleQuickLogin(account)}
-                  >
-                    Dùng ngay
-                  </button>
                 </div>
               ))}
             </div>
