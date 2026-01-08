@@ -24,7 +24,8 @@ export default function CampaignsList() {
 
   // pagination (client-side)
   const [currentPage, setCurrentPage] = useState(1);
-  const PAGE_SIZE = 6; // cards per page
+  const [pageSize, setPageSize] = useState(6);
+  const pageSizeOptions = [6, 12, 24, 48];
 
   // Filters
   const [keyword, setKeyword] = useState("");
@@ -146,8 +147,8 @@ export default function CampaignsList() {
   const fmt = (d) => (d ? new Date(d).toLocaleDateString('vi-VN') : "-");
 
   // pagination calculations
-  const totalPages = Math.max(1, Math.ceil((campaigns.length || 0) / PAGE_SIZE));
-  const displayedCampaigns = campaigns.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil((campaigns.length || 0) / pageSize));
+  const displayedCampaigns = campaigns.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   return (
     <div style={{ maxWidth: 1100, margin: "20px auto", padding: 16 }}>
       <ConfirmDialog
@@ -256,7 +257,15 @@ export default function CampaignsList() {
           <style>{`.campaign-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 18px 40px rgba(15,23,42,0.12); } .campaign-card:active { transform: translateY(-2px) scale(1.0); }`}</style>
 
           <div style={{ marginTop: 20, display: 'flex', justifyContent: 'center' }}>
-            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={(p) => setCurrentPage(Math.max(1, Math.min(totalPages, p)))} />
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={p => setCurrentPage(Math.max(1, Math.min(totalPages, p)))}
+              pageSize={pageSize}
+              onPageSizeChange={size => { setPageSize(size); setCurrentPage(1); }}
+              pageSizeOptions={pageSizeOptions}
+              showPageSelector={true}
+            />
           </div>
         </>
       )}
