@@ -64,30 +64,24 @@ const DetailModal = ({ req, typeConfig, onClose, onRefresh }) => {
     }
   }, [req]);
 
-  // 2. Fetch Detail (ĐÃ SỬA: Dùng ID và bỏ /manager cho OT/Resignation)
+  // 2. Fetch Detail
   useEffect(() => {
     fetchHistory();
     setDetailData(null);
     setLoadingDetail(true);
 
     const requestId = req.id || req.requestId;
-    // const requestCode = req.requestCode; // <-- KHÔNG DÙNG CÁI NÀY NỮA
 
     let url = "";
     const type = req.requestType?.toLowerCase() || "";
 
-    // --- SỬA LOGIC NỐI URL Ở ĐÂY ---
     if (type.includes('leave')) {
-        // Leave request vẫn giữ nguyên /manager/ nếu API yêu cầu
         url = `${API_BASE}/manager/leave-requests/${requestId}`;
     } else if (type.includes('overtime') || type === 'ot') {
-        // OT: Bỏ /manager/, dùng requestId
         url = `${API_BASE}/getdetail-overtime-requests/${requestId}`;
     } else if (type.includes('resignation')) {
-        // Resignation: Bỏ /manager/, dùng requestId
         url = `${API_BASE}/getdetail-resignation-requests/${requestId}`;
     }
-    // --------------------------------
 
     if (url) {
         fetch(url)
@@ -164,10 +158,14 @@ const DetailModal = ({ req, typeConfig, onClose, onRefresh }) => {
 
       const type = req.requestType?.toLowerCase() || "";
 
-      // CASE 1: LEAVE
+      // CASE 1: LEAVE [ĐÃ SỬA: Cập nhật cách đọc attachment]
       if (type.includes('leave')) {
-          const rawPath = detailData.attachmentPath || detailData.AttachmentPath;
+          // Lấy đúng trường "attachment" từ API response (dựa theo ảnh image_74412b.png)
+          const rawPath = detailData.attachment || detailData.attachmentPath || detailData.AttachmentPath;
           const fileUrl = getAttachmentUrl(rawPath);
+          
+          // Lấy tên file từ đường dẫn để hiển thị (ví dụ: file.pdf)
+          const fileName = rawPath ? rawPath.split('/').pop() : "View Document";
 
           return (
             <div className="info-box">
@@ -184,10 +182,12 @@ const DetailModal = ({ req, typeConfig, onClose, onRefresh }) => {
                     <span className="info-val">
                         {rawPath ? (
                             <a href={fileUrl} target="_blank" rel="noreferrer" 
-                                style={{ display: 'inline-flex', alignItems: 'center', padding: '6px 12px', backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#0f172a', textDecoration: 'none', fontWeight: '500', fontSize: '0.9rem', transition: 'all 0.2s' }}>
-                                <FileText size={16} style={{ marginRight: '6px', color:'#3b82f6' }}/> 
-                                View Document 
-                                <ExternalLink size={14} style={{ marginLeft: '6px', opacity: 0.5 }}/>
+                                style={{ display: 'inline-flex', alignItems: 'center', padding: '6px 12px', backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#0f172a', textDecoration: 'none', fontWeight: '500', fontSize: '0.9rem', transition: 'all 0.2s', maxWidth: '100%' }}>
+                                <FileText size={16} style={{ marginRight: '6px', color:'#3b82f6', flexShrink: 0 }}/> 
+                                <span style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px'}} title={fileName}>
+                                    {fileName}
+                                </span>
+                                <ExternalLink size={14} style={{ marginLeft: '6px', opacity: 0.5, flexShrink: 0 }}/>
                             </a>
                         ) : (
                             <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>No attachment</span>
