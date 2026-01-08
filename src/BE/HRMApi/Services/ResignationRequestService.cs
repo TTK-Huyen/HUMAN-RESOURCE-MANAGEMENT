@@ -3,6 +3,8 @@ using HrmApi.Models;
 using HrmApi.Repositories;
 using HrmApi.Dtos.Notifications;
 using HrmApi.Services.Notifications;
+using HrmApi.Messaging;
+using HrmApi.Events.Requests;
 
 namespace HrmApi.Services
 {
@@ -13,18 +15,19 @@ namespace HrmApi.Services
 
         private readonly IEmployeeRequestRepository _employeeRequestRepository;
         private readonly INotificationPublisher _noti;
+        private readonly IEventBus _eventBus;
 
         public ResignationRequestService(
             IResignationRequestRepository repository,
             IEmployeeRepository employeeRepository,
             IEmployeeRequestRepository employeeRequestRepository,
-            INotificationPublisher noti
+            IEventBus eventBus
             )
         {
             _repository = repository;
             _employeeRepository = employeeRepository;
             _employeeRequestRepository = employeeRequestRepository;
-            _noti = noti;
+            _eventBus = eventBus;
         }
 
         public async Task<ResignationRequestCreatedDto> CreateAsync(
@@ -62,32 +65,28 @@ namespace HrmApi.Services
             // 3. Lưu DB
             await _repository.AddAsync(entity);
             await _repository.SaveChangesAsync();
-            Employee? manager = null;
 
+            Employee? manager = null;
             if (employee.DirectManagerId.HasValue)
             {
                 manager = await _employeeRepository.GetManagerByIdAsync(employee.DirectManagerId.Value);
             }
 
-
-            await _noti.PublishAsync(new NotificationEventDto
+            var ev = new RequestSubmittedEvent
             {
-                EventType = "REQUEST_CREATED",
-                RequestType = "RESIGNATION",
                 RequestId = request.RequestId,
-
+                RequestType = "RESIGNATION",
                 ActorUserId = employee.Id,
                 ActorName = employee.FullName,
-
-                RequesterUserId = employee.Id,
-                RequesterEmail = employee.PersonalEmail,
-
-                ManagerUserId = manager?.Id,
+                ManagerUserId = employee.DirectManagerId,
                 ManagerEmail = manager?.PersonalEmail,
-
+                RequesterEmail = employee.PersonalEmail,
                 Status = "Pending",
-                Message = "Yêu cầu nghỉ việc mới cần phê duyệt"
-            });
+                Message = $"Nhân viên {employee.FullName} đã gửi yêu cầu nghỉ việc mới."
+            };
+
+            await _eventBus.PublishAsync(ev, "request.submitted.RESIGNATION");
+
 
             // 4. Trả về DTO
             return new ResignationRequestCreatedDto

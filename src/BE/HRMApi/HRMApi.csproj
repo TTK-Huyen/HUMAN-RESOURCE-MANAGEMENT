@@ -7,6 +7,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- EF Core packages -->
+    <PackageReference Include="Bogus" Version="35.6.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.0">
@@ -23,6 +24,7 @@
     
     <!-- EPPlus for Excel processing -->
     <PackageReference Include="EPPlus" Version="7.4.2" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
     
     <!-- Other packages -->
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.1" />

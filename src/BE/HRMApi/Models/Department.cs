@@ -10,7 +10,7 @@ namespace HrmApi.Models
         public string DepartmentCode { get; set; } = default!;
         
         // department_name
-        public string Name { get; set; } = default!;
+        public string Name { get; set; } = default!; // Tên phòng ban - 
 
         // Navigation Property: Mối quan hệ 1-nhiều với Employee
         // Một Department có nhiều Employees

@@ -21,7 +21,7 @@ namespace HrmApi.Services
         /// <summary>
         /// Tạo nhân viên mới cùng với tài khoản đăng nhập
         /// </summary>
-        Task<bool> CreateEmployeeAsync(CreateEmployeeDto dto);
+        Task<CreateEmployeeResponseDto> CreateEmployeeAsync(CreateEmployeeDto dto);
         
         /// <summary>
         /// Lấy danh sách tất cả nhân viên
@@ -37,5 +37,7 @@ namespace HrmApi.Services
         /// </summary>
         /// <param name="employeeCode">Mã nhân viên cụ thể (optional). Nếu null hoặc empty, trả về tất cả nhân viên</param>
         Task<IEnumerable<EssentialEmployeeDto>> GetEssentialEmployeeInfoAsync(string? employeeCode = null);
+
+        
     }
 }

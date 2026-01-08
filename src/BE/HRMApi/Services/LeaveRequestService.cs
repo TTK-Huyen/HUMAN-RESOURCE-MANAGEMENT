@@ -4,8 +4,10 @@ using HrmApi.Repositories;
 using HrmApi.Dtos.Notifications;
 using HrmApi.Services.Notifications;
 using Microsoft.AspNetCore.Hosting;
-using HrmApi.Data; // ⚠️ LƯU Ý: Hãy chắc chắn namespace này đúng với nơi bạn để HrmDbContext
+using HrmApi.Data;
 using Microsoft.EntityFrameworkCore;
+using HrmApi.Messaging;
+using HrmApi.Events.Requests;
 
 namespace HrmApi.Services
 {
@@ -17,12 +19,13 @@ namespace HrmApi.Services
         private readonly INotificationPublisher _noti;
         private readonly IWebHostEnvironment _env;
         private readonly AppDbContext _context; // Thêm Context để dùng Transaction
+        private readonly IEventBus _eventBus;
 
         public LeaveRequestService(
             ILeaveRequestRepository repository,
             IEmployeeRepository employeeRepository,
             IEmployeeRequestRepository employeeRequestRepository,
-            INotificationPublisher noti,
+            IEventBus eventBus,
             IWebHostEnvironment env,
             AppDbContext context // Inject Context vào đây
             )
@@ -30,7 +33,7 @@ namespace HrmApi.Services
             _repository = repository;
             _employeeRepository = employeeRepository;
             _employeeRequestRepository = employeeRequestRepository;
-            _noti = noti;
+            _eventBus = eventBus;
             _env = env;
             _context = context;
         }
@@ -120,8 +123,26 @@ namespace HrmApi.Services
 
                 await transaction.CommitAsync();
 
-                _ = SendNotificationAsync(employee, request);
+                Employee? manager = null;
+                if (employee.DirectManagerId.HasValue)
+                {
+                    manager = await _employeeRepository.GetManagerByIdAsync(employee.DirectManagerId.Value);
+                }
 
+                var ev = new RequestSubmittedEvent
+                {
+                    RequestId = request.RequestId,
+                    RequestType = "LEAVE",
+                    ActorUserId = employee.Id,
+                    ActorName = employee.FullName,
+                    ManagerUserId = employee.DirectManagerId,
+                    ManagerEmail = manager?.PersonalEmail,
+                    RequesterEmail = employee.PersonalEmail,
+                    Status = "Pending",
+                    Message = $"Nhân viên {employee.FullName} đã gửi yêu cầu nghỉ phép mới."
+                };
+
+                await _eventBus.PublishAsync(ev, "request.submitted.LEAVE");
                 return new LeaveRequestCreatedDto
                 {
                     RequestId = request.RequestId,
@@ -136,7 +157,7 @@ namespace HrmApi.Services
         }
 
         // Tách hàm gửi thông báo cho code gọn gàng hơn
-        private async Task SendNotificationAsync(Employee employee, Request request)
+       /* private async Task SendNotificationAsync(Employee employee, Request request)
         {
             try
             {
@@ -165,6 +186,6 @@ namespace HrmApi.Services
             {
                 // Gửi noti thất bại không nên làm fail cả request tạo đơn
             }
-        }
+        }*/
     }
 }

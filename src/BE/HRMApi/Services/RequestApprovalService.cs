@@ -243,8 +243,8 @@ namespace HrmApi.Services
             var requester = request.Employee;
             await _noti.PublishAsync(new NotificationEventDto
             {
-                EventType = newStatus == "Approved" ? "OT_APPROVED" : "OT_REJECTED",
-                RequestType = "OVERTIME",
+                EventType = newStatus == "Approved" ? "REQUEST_APPROVED" : "REQUEST_REJECTED",
+                RequestType = "OT",
                 RequestId = requestId,
                 ActorUserId = approver.Id,
                 ActorName = approver.FullName,
@@ -253,7 +253,9 @@ namespace HrmApi.Services
                 ManagerUserId = approver.Id,
                 ManagerEmail = approver.PersonalEmail,
                 Status = newStatus.ToUpper(),
-                Message = $"Yêu cầu OT ngày {otRequest.Date:dd/MM} đã được {newStatus}"
+                Message = newStatus == "Approved" 
+                    ? $"Yêu cầu tăng ca ngày {otRequest.Date:dd/MM} đã được duyệt"
+                    : $"Yêu cầu tăng ca ngày {otRequest.Date:dd/MM} đã bị từ chối"
             });
 
             return new OtRequestApprovalResponseDto

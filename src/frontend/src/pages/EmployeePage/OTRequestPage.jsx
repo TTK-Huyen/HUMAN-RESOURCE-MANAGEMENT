@@ -18,8 +18,8 @@ export default function OTRequestPage() {
   const [errs, setErrs] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
-  // ⚠️ Tạm thời dùng cứng — sau này sẽ lấy từ login
-  const employeeCode = "EMP001";
+  // ✅ Lấy từ localStorage (được set khi login thành công)
+  const employeeCode = localStorage.getItem("employeeCode") || "EMP001";
 
   function onChange(e) {
     const { name, value } = e.target;

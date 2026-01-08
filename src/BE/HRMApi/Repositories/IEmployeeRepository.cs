@@ -8,7 +8,9 @@ namespace HrmApi.Repositories
         /// <summary>
         /// Tìm employee theo mã employeeCode (ví dụ: "EMP001").
         /// </summary>
-        
+        Task<bool> ExistsByCompanyEmailAsync(string companyEmail);
+        Task<bool> ExistsByCitizenIdAsync(string citizenIdNumber);
+
         Task<Employee?> GetByCodeAsync(string employeeCode);
 
         Task<Employee?> GetByIdAsync(int id);
@@ -50,5 +52,15 @@ namespace HrmApi.Repositories
         Task<List<Employee>> GetEssentialEmployeeInfoAsync(string? employeeCode = null);
 
         Task<List<Employee>> GetAllAsync();
+
+        /// <summary>
+        /// Thêm số điện thoại cho nhân viên
+        /// </summary>
+        Task AddPhoneNumberAsync(EmployeePhoneNumber phoneNumber);
+
+        /// <summary>
+        /// Thêm tài khoản ngân hàng cho nhân viên
+        /// </summary>
+        Task AddBankAccountAsync(EmployeeBankAccount bankAccount);
     }
 }

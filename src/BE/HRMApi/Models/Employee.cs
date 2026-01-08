@@ -77,17 +77,26 @@ namespace HrmApi.Models
 
         // Định danh
         [Column("citizen_id")]
+        [StringLength(13, MinimumLength = 13, ErrorMessage = "CCCD phải có đúng 13 chữ số")]
         public string? CitizenIdNumber { get; set; }
 
         [Column("personal_tax_code")]
+        [StringLength(10, MinimumLength = 10, ErrorMessage = "Mã số thuế phải có đúng 10 chữ số")]
         public string? PersonalTaxCode { get; set; } = default!;
 
         [Column("social_insurance_no")]
+        [StringLength(10, MinimumLength = 10, ErrorMessage = "Số bảo hiểm xã hội phải có đúng 10 chữ số")]
         public string? SocialInsuranceNumber { get; set; } = default!;
 
         // Địa chỉ & Trạng thái
         [Column("current_address")]
         public string? CurrentAddress { get; set; }
+
+        [Column("birth_place_province")]
+        public string? BirthPlaceProvince { get; set; }
+
+        [Column("birth_place_district")]
+        public string? BirthPlaceDistrict { get; set; }
 
         [Column("status")]
         public string Status { get; set; } = "ACTIVE"; // default như code 2

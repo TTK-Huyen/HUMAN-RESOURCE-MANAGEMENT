@@ -30,9 +30,12 @@ const ProfileView = ({ profile }) => {
   const companyEmail = profile.companyEmail ?? profile.company_email;
   const personalEmail = profile.personalEmail ?? profile.personal_email;
 
-  const phoneNumber =
-    (Array.isArray(profile.phoneNumbers) && profile.phoneNumbers[0]) ??
-    profile.phone_number;
+  const phoneNumber = Array.isArray(profile.phoneNumbers) && profile.phoneNumbers.length > 0
+    ? profile.phoneNumbers
+        .filter((p) => p && p.phoneNumber)
+        .map((p) => `${p.phoneNumber}${p.description ? ` (${p.description})` : ""}`)
+        .join(", ")
+    : profile.phone_number;
 
   const currentAddress =
     profile.currentAddress ?? profile.current_address;
@@ -44,9 +47,16 @@ const ProfileView = ({ profile }) => {
   const socialInsuranceNumber =
     profile.socialInsuranceNumber ?? profile.social_insurance_number;
 
-  const bankAccount =
-    (Array.isArray(profile.bankAccounts) && profile.bankAccounts[0]) ??
-    profile.bank_account;
+  const bankAccount = Array.isArray(profile.bankAccounts) && profile.bankAccounts.length > 0
+    ? profile.bankAccounts
+        .filter((b) => b && (b.accountNumber || b.bankName))
+        .map((b) => {
+          const parts = [b.bankName, b.accountNumber, b.accountHolderName].filter(Boolean);
+          const main = parts.join(" - ");
+          return b.isPrimary ? `${main} [Primary]` : main;
+        })
+        .join("; ")
+    : profile.bank_account;
 
   const nationality = profile.nationality;
   const employmentType =

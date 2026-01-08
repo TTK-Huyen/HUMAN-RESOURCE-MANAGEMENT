@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchEmployeeProfile } from "../../services/requestApi";
+import { fetchEmployeeProfile } from "../../Services/requests";
 import { FormRow } from "../../components/common/FormRow";
 import ViolationBanner from "../../components/common/ViolationBanner";
 
-const CURRENT_EMPLOYEE_CODE = "EMP001"; // TODO: lấy từ auth sau này
+// Read employee code from auth-localStorage; do not default to EMP001 unless explicitly set
+const STORED_EMPLOYEE_CODE =
+  localStorage.getItem("employeeCode") || localStorage.getItem("employee_code") || "";
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
@@ -30,9 +32,15 @@ export default function EmployeeProfilePage() {
       setError("");
       setViolations([]);
       
+      if (!STORED_EMPLOYEE_CODE) {
+        setError("Không tìm thấy employee code trong phiên đăng nhập.");
+        setLoading(false);
+        return;
+      }
+
       
       try {
-        const data = await fetchEmployeeProfile(CURRENT_EMPLOYEE_CODE);
+        const data = await fetchEmployeeProfile(STORED_EMPLOYEE_CODE);
         if (!cancelled) {
           setProfile(data);
         }

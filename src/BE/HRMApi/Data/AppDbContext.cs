@@ -4,6 +4,43 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace HrmApi.Data
 {
+    /// <summary>
+    /// AppDbContext - Quản lý dữ liệu toàn hệ thống
+    /// 
+    /// MIỀN GIÁ TRỊ (VALUE RANGES) CỦA CÁC CỘT CHÍNH:
+    /// 
+    /// 1. EMPLOYEE:
+    ///    - Gender: "Nam", "Nữ", "Khác"
+    ///    - MaritalStatus: "Độc thân", "Kết hôn", "Ly hôn", "Góa"
+    ///    - Status: "Đang làm việc", "Nghỉ việc", "Tạm dừng", "Từ chức"
+    ///    - ContractType: "Vĩnh viễn", "Có thời hạn"
+    ///    - EmploymentType: "Toàn thời gian", "Bán thời gian", "Theo hợp đồng", "Tạm thời"
+    ///    - Nationality: "Việt Nam", "Khác"
+    ///    - HasChildren: true/false
+    /// 
+    /// 2. JOBTITLE (POSITION):
+    ///    - Level: "Thực tập sinh", "Nhân viên", "Chuyên viên", "Quản lý", "Giám đốc"
+    ///    - Title: Tên chức danh (tự do)
+    /// 
+    /// 3. DEPARTMENT:
+    ///    - DepartmentCode: Mã phòng ban (tự định nghĩa: IT, HR, SALE, ACC, ADMIN, BGD, etc.)
+    ///    - Name: Tên phòng ban
+    /// 
+    /// 4. ROLE:
+    ///    - RoleCode: "ADMIN", "HR", "MANAGER", "EMP" (hoặc tự định nghĩa khác)
+    ///    - RoleName: "Quản trị viên", "Nhân sự", "Quản lý", "Nhân viên"
+    /// 
+    /// 5. USERACCOUNT:
+    ///    - Status: AccountStatus.ACTIVE, AccountStatus.LOCKED → "Hoạt động", "Bị khóa"
+    /// 
+    /// 6. REQUEST / LEAVEREQUEST / OVERTIMEREQUEST / RESIGNATIONREQUEST:
+    ///    - RequestStatus: Pending → "Chờ duyệt", Approved → "Đã duyệt", Rejected → "Từ chối", Cancelled → "Hủy bỏ"
+    ///    - LeaveType: "Phép năm", "Phép bệnh", "Phép cá nhân", "Nghỉ không lương", "Phép thai sản"
+    /// 
+    /// 7. CAMPAIGN / CAMPAIGNREGISTRATION:
+    ///    - Campaign.Status: CampaignStatus enum (Draft, Active, Closed, Archived)
+    ///    - CampaignRegistration.Status: RegistrationStatus enum (Registered, Evaluated, Rejected)
+    /// </summary>
     public class AppDbContext : DbContext
     {
         public AppDbContext(DbContextOptions<AppDbContext> options)
