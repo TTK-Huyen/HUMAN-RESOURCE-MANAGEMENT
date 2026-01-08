@@ -70,6 +70,8 @@ namespace HrmApi.Data
         public DbSet<CampaignRegistration> CampaignRegistrations => Set<CampaignRegistration>();
         public DbSet<CampaignResult> CampaignResults => Set<CampaignResult>();
 
+        public DbSet<RewardWallet> RewardWallets { get; set; }
+        public DbSet<PointTransaction> PointTransactions { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

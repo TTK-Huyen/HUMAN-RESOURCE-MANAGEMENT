@@ -3,21 +3,29 @@ import { FormRow } from '../../../components/common/FormRow';
 import Button from '../../../components/common/Button';
 import Toast from '../../../components/common/Toast';
 import { givePoints } from '../../../Services/rewardService';
-import { HRService } from '../../../Services/employees'; // Lấy service nhân viên có sẵn
+// FIX 1: Import đúng service
+import { HRService } from '../../../Services/employees'; 
 
 const ManagerGivePointsPage = () => {
     const [employees, setEmployees] = useState([]);
     const [formData, setFormData] = useState({ employeeId: '', points: '', reason: '' });
     const [toast, setToast] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const loadData = async () => {
             try {
-                // Tái sử dụng HRService để lấy danh sách nhân viên
-                const res = await HRService.getAllEmployees({ pageIndex: 1, pageSize: 100 }); 
-                setEmployees(res.data?.items || []); 
+                // FIX 2: Gọi đúng hàm fetchAllEmployees
+                // FIX 3: Tham số thường là Page/PageSize (theo chuẩn .NET BE)
+                const res = await HRService.fetchAllEmployees({ Page: 1, PageSize: 1000 }); 
+                
+                // FIX 4: Xử lý dữ liệu trả về an toàn (API có thể trả về res.data hoặc res.items)
+                // Dựa trên code cũ của bạn: response.data là array
+                const list = Array.isArray(res) ? res : (res.data || res.items || []);
+                setEmployees(list);
             } catch (error) {
-                console.error("Lỗi tải danh sách nhân viên", error);
+                console.error("Lỗi tải danh sách nhân viên:", error);
+                setToast({ type: 'error', message: 'Không thể tải danh sách nhân viên.' });
             }
         };
         loadData();
@@ -25,12 +33,16 @@ const ManagerGivePointsPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
         try {
             await givePoints(formData);
             setToast({ type: 'success', message: 'Đã tặng điểm thành công!' });
             setFormData({ employeeId: '', points: '', reason: '' });
         } catch (error) {
-            setToast({ type: 'error', message: 'Có lỗi xảy ra. Vui lòng thử lại.' });
+            console.error(error);
+            setToast({ type: 'error', message: 'Lỗi khi tặng điểm. Vui lòng thử lại.' });
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -42,15 +54,16 @@ const ManagerGivePointsPage = () => {
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <FormRow label="Chọn nhân viên" required>
                         <select 
-                            className="w-full p-2.5 border border-gray-300 rounded bg-white focus:border-blue-500 outline-none"
+                            className="w-full p-2.5 border border-gray-300 rounded bg-white focus:outline-none focus:border-blue-500"
                             value={formData.employeeId}
                             onChange={e => setFormData({...formData, employeeId: e.target.value})}
                             required
                         >
                             <option value="">-- Chọn nhân viên --</option>
                             {employees.map(emp => (
-                                <option key={emp.employeeId} value={emp.employeeId}>
-                                    {emp.fullName} - {emp.employeeCode}
+                                // FIX 5: Kiểm tra kỹ key và value. Thường Backend trả về 'id' (int)
+                                <option key={emp.id || emp.employeeId} value={emp.id || emp.employeeId}>
+                                    {emp.fullName || emp.employeeName} ({emp.employeeCode})
                                 </option>
                             ))}
                         </select>
@@ -59,18 +72,19 @@ const ManagerGivePointsPage = () => {
                     <FormRow label="Số điểm thưởng" required>
                         <input 
                             type="number"
-                            className="w-full p-2.5 border border-gray-300 rounded focus:border-blue-500 outline-none"
+                            className="w-full p-2.5 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                             value={formData.points}
                             onChange={e => setFormData({...formData, points: e.target.value})}
                             min="1"
-                            placeholder="VD: 50"
+                            max="10000"
+                            placeholder="VD: 100"
                             required
                         />
                     </FormRow>
 
                     <FormRow label="Lý do khen thưởng" required>
                         <textarea 
-                            className="w-full p-2.5 border border-gray-300 rounded h-32 resize-none focus:border-blue-500 outline-none"
+                            className="w-full p-2.5 border border-gray-300 rounded h-32 resize-none focus:outline-none focus:border-blue-500"
                             value={formData.reason}
                             onChange={e => setFormData({...formData, reason: e.target.value})}
                             placeholder="Nhập lý do chi tiết..."
@@ -79,8 +93,13 @@ const ManagerGivePointsPage = () => {
                     </FormRow>
 
                     <div className="flex justify-end pt-4">
-                        <Button type="submit" variant="primary" className="px-6">
-                            Xác nhận Tặng
+                        <Button 
+                            type="submit" 
+                            variant="primary" 
+                            className="px-6"
+                            disabled={loading}
+                        >
+                            {loading ? 'Đang xử lý...' : 'Xác nhận Tặng'}
                         </Button>
                     </div>
                 </form>

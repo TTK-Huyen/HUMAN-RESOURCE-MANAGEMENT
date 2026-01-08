@@ -32,6 +32,7 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddHttpClient<INotificationPublisher, NotificationPublisher>();
 
 // Repositories
+builder.Services.AddScoped<ICampaignService, CampaignService>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 builder.Services.AddScoped<IUserAccountRepository, UserAccountRepository>();
@@ -44,7 +45,9 @@ builder.Services.AddScoped<IRequestsDashboardRepository, RequestsDashboardReposi
 builder.Services.AddScoped<IRequestHistoryRepository, RequestHistoryRepository>();
 builder.Services.AddScoped<ICampaignRepository, CampaignRepository>();
 builder.Services.AddScoped<ICampaignRegistrationRepository, CampaignRegistrationRepository>();
-
+builder.Services.AddScoped<IRewardRepository, RewardRepository>();
+builder.Services.AddScoped<IRewardService, RewardService>();
+// ----------------
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
