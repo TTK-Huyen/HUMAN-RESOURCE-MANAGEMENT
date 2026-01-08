@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom"; 
 import {
   LayoutDashboard,
   FileText,
@@ -11,6 +11,9 @@ import {
   Users,
   Gift,
   Settings,
+  Megaphone,
+  ChevronDown, 
+  ChevronRight,
 } from "lucide-react";
 import NotificationBell from "../NotificationBell.jsx";
 import "./Layout.css";
@@ -50,6 +53,17 @@ const MENU_CONFIG = {
       { to: "/hr/profile-requests", label: "Profile Requests", icon: FileText },
       { to: "/hr/directory", label: "Employee Directory", icon: Users },
       { to: "/hr/rewards/config", label: "Reward Config", icon: Settings },
+      
+      // 👇 MENU CÓ CON (DROPDOWN) - Đã cấu hình
+      { 
+        label: "Chiến dịch", 
+        icon: Megaphone,
+        children: [ 
+          { to: "/hr/campaigns", label: "Danh sách chiến dịch" },
+          { to: "/hr/campaigns/add", label: "Tạo chiến dịch mới" }
+        ]
+      },
+      
       // Employee capabilities
       { to: "/employee/create", label: "Create Request", icon: FileText },
       { to: "/employee/status", label: "Request Status", icon: History },
@@ -66,6 +80,7 @@ const MENU_CONFIG = {
 };
 
 export default function MainLayout({ children }) {
+  const location = useLocation(); // Hook lấy đường dẫn hiện tại
   const [user, setUser] = useState({
     name: "Guest",
     code: "",
@@ -74,6 +89,9 @@ export default function MainLayout({ children }) {
   });
   const [menu, setMenu] = useState(MENU_CONFIG.GUEST);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  
+  // State quản lý mở menu con
+  const [expandedMenu, setExpandedMenu] = useState({});
 
   /* ================= LOAD USER ================= */
   useEffect(() => {
@@ -91,6 +109,14 @@ export default function MainLayout({ children }) {
 
     setMenu(MENU_CONFIG[role] || MENU_CONFIG.GUEST);
   }, []);
+
+  /* ================= LOGIC TOGGLE MENU ================= */
+  const toggleSubMenu = (label) => {
+    setExpandedMenu(prev => ({
+      ...prev,
+      [label]: !prev[label] 
+    }));
+  };
 
   /* ================= LOGOUT ================= */
   const handleLogout = () => {
@@ -119,17 +145,78 @@ export default function MainLayout({ children }) {
 
         {/* Navigation */}
         <nav className="sidebar-nav">
-          {menu.items.map((item, idx) => (
-            <NavLink
-              key={idx}
-              to={item.to}
-              className={({ isActive }) => (isActive ? "active" : "")}
-              end
-            >
-              <item.icon size={18} />
-              {item.label}
-            </NavLink>
-          ))}
+          {menu.items.map((item, idx) => {
+            // --- TRƯỜNG HỢP 1: MENU CÓ CON (DROPDOWN) ---
+            if (item.children) {
+              const isExpanded = expandedMenu[item.label];
+              // Kiểm tra xem có đang ở trang con nào không để highlight menu cha
+              const isActiveParent = item.children.some(child => location.pathname === child.to);
+
+              return (
+                <div key={idx} className="nav-group">
+                  {/* Menu Cha */}
+                  <div 
+                    className={`nav-item-parent ${isActiveParent ? "active" : ""}`}
+                    onClick={() => toggleSubMenu(item.label)}
+                    style={{
+                      display: "flex", alignItems: "center", padding: "12px 15px", 
+                      cursor: "pointer", 
+                      // 👇 MÀU CHỮ: Active = Xanh sáng, Bình thường = Trắng (để nổi trên nền đen)
+                      color: isActiveParent ? "#60a5fa" : "white", 
+                      fontWeight: isActiveParent ? "600" : "500",
+                      justifyContent: "space-between",
+                      transition: "all 0.2s"
+                    }}
+                  >
+                    <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                      <item.icon size={18} />
+                      <span>{item.label}</span>
+                    </div>
+                    {isExpanded ? <ChevronDown size={16}/> : <ChevronRight size={16}/>}
+                  </div>
+
+                  {/* Menu Con */}
+                  {isExpanded && (
+                    <div className="nav-children" style={{paddingLeft: "10px", background: "rgba(0,0,0,0.15)"}}>
+                      {item.children.map((child, cIdx) => (
+                        <NavLink
+                          key={cIdx}
+                          to={child.to}
+                          className={({ isActive }) => (isActive ? "active" : "")}
+                          end
+                          style={({ isActive }) => ({
+                            display: "flex", alignItems: "center", padding: "10px 15px 10px 35px",
+                            textDecoration: "none", fontSize: "0.9rem",
+                            // 👇 MÀU CHỮ CON: Active = Xanh sáng, Bình thường = Xám trắng
+                            color: isActive ? "#60a5fa" : "#e2e8f0"
+                          })}
+                        >
+                          {child.label}
+                        </NavLink>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            // --- TRƯỜNG HỢP 2: MENU THƯỜNG (Giữ nguyên nhưng sửa màu) ---
+            return (
+              <NavLink
+                key={idx}
+                to={item.to}
+                className={({ isActive }) => (isActive ? "active" : "")}
+                end
+                style={({ isActive }) => ({
+                    // Đảm bảo menu thường cũng màu trắng khi chưa active
+                    color: isActive ? "#60a5fa" : "white"
+                })}
+              >
+                <item.icon size={18} />
+                {item.label}
+              </NavLink>
+            );
+          })}
         </nav>
 
         {/* User Card */}
@@ -155,17 +242,15 @@ export default function MainLayout({ children }) {
               <div className="email">{user.code}</div>
             </div>
 
-            {/* 🔔 Notification */}
             <NotificationBell userId={user.id} />
 
-            {/* Logout */}
             <button
               onClick={() => setShowLogoutConfirm(true)}
               style={{
                 marginLeft: "auto",
                 background: "transparent",
                 border: "none",
-                color: "#64748b",
+                color: "#cbd5e1", // Sửa màu icon logout cho rõ hơn
                 cursor: "pointer",
               }}
               title="Đăng xuất"
@@ -179,7 +264,6 @@ export default function MainLayout({ children }) {
       {/* ================= MAIN CONTENT ================= */}
       <div className="main-wrapper">
         <main className="page-content">
-          {/* 👇 Page sẽ render tại đây */}
           {children ? children : <Outlet />}
         </main>
 

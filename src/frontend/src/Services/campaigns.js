@@ -108,3 +108,37 @@ export async function getRegistrationStatus(campaignCode, employeeCode) {
   const dto = res.data;
   return { status: dto?.status ?? null, registered: (dto?.status ?? '').toUpperCase() === 'REGISTERED' };
 }
+
+export async function createCampaign(campaignData) {
+  // 1. Lấy User ID (giả sử lưu trong localStorage)
+  const storedId = localStorage.getItem("employeeId");
+  const createdBy = storedId ? parseInt(storedId) : 1;
+
+  // 2. Chuẩn bị Payload khớp 100% với Swagger (image_679deb.png)
+  const payload = {
+    campaignName: campaignData.campaignName,
+    description: campaignData.description,
+    startDate: campaignData.startDate,     // Định dạng YYYY-MM-DD từ input date là OK
+    endDate: campaignData.endDate,
+    announcementDate: campaignData.announcementDate,
+    
+    // MAPPING QUAN TRỌNG: Form gọi là 'rule' -> API gọi là 'registrationRules'
+    registrationRules: campaignData.rule, 
+    
+    rewardDescription: campaignData.rewardDescription,
+    maxParticipants: campaignData.maxParticipants ? parseInt(campaignData.maxParticipants) : 0,
+    createdBy: parseInt(createdBy) // Backend cần số nguyên
+  };
+
+  // 3. Gọi API (Dựa trên Swagger: POST /api/v1/hr/add-campaigns)
+  // Lưu ý: Nếu axios client của bạn đã set base URL là /api/v1 rồi thì chỉ cần /hr/add-campaigns
+  const res = await api.post("/hr/add-campaigns", payload);
+  return res.data;
+}
+
+export async function deleteCampaign(campaignCode) {
+  // Dựa trên hình Swagger: PATCH /api/v1/campaigns/{campaign_code}/delete
+  // Lưu ý: api.patch không phải api.delete
+  const res = await api.patch(`/campaigns/${campaignCode}/delete`);
+  return res.data;
+}

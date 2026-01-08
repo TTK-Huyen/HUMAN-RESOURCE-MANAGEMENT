@@ -9,7 +9,8 @@ import HRDirectoryPage from "./HRDirectoryPage.jsx";
 import HRAddEmployeePage from "./HRAddEmployeePage.jsx";
 import HRUploadExcelPage from "./HRUploadExcelPage.jsx";
 import HRViewProfilePage from "./HRViewProfilePage.jsx";
-
+import HRAddCampaignPage from "./HRAddCampaignPage.jsx";
+import HRCampaignListPage from "./HRCampaignListPage.jsx";
 export default function HrApp() {
   return (
     <Routes>
@@ -41,6 +42,9 @@ export default function HrApp() {
         Nếu nhập sai đường dẫn con (ví dụ /hr/xyz123) -> Chuyển về trang danh sách yêu cầu.
         QUAN TRỌNG: Phải dùng "/hr/profile-requests" (tuyệt đối) chứ không dùng "profile-requests" (tương đối).
       */}
+      {/* ✅ NHÓM QUẢN LÝ CAMPAIGN */}
+      <Route path="campaigns/add" element={<HRAddCampaignPage />} />
+      <Route path="campaigns" element={<HRCampaignListPage />} />
       <Route path="*" element={<Navigate to="/hr/profile-requests" replace />} />
     </Routes>
   );
