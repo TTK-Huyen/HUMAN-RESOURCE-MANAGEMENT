@@ -132,7 +132,7 @@ export default function LoginPage() {
             </div>
             <div className="demo-row">
               <span className="demo-label">Employee:</span>
-              <span><span className="demo-code">EMP001</span> / <span className="demo-code">123456</span></span>
+              <span><span className="demo-code">EMP003</span> / <span className="demo-code">123456</span></span>
             </div>
             <div className="demo-row">
               <span className="demo-label">HR Admin:</span>
