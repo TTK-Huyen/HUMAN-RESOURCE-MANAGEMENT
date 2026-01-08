@@ -31,7 +31,19 @@ Các bước tối thiểu để chạy project `HRMApi` lần đầu trên Wind
 5. Kết thúc làm việc, tắt môi trường ảo:
    `deactivate`
 
+6. Run RabbitMQ (Windows PowerShell)
+   - Chạy 1 lần (nếu chưa có container rabbitmq):
+      `docker run -d --hostname my-rabbit --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management`
+   - Nếu container đã tồn tại nhưng đang stop:
+      `docker start rabbitmq`
+   - Kiểm tra:
+      `docker ps`
+   - Mở RabbitMQ UI:
+      http://localhost:15672
+      user/pass: guest/guest
+
 3) Lệnh chạy (thư mục chứa `HRMApi.csproj`)
+🔹 Chạy docker rabbitmq
 🔹 Nếu dùng MySQL local
 # 1. Xóa database hiện tại
 dotnet ef database drop -f
@@ -92,6 +104,26 @@ docker ps
 }
 
 ```
+Cài: `dotnet add package RabbitMQ.Client`
 
-
-
+# Cách test áp dụng seminar EDA
+1) Chạy HRMApi với consumer bật (mặc định)
+   - Chạy backend:
+      `dotnet run`
+   Khi chạy đúng:
+      - HRMApi start bình thường
+      - Consumer sẽ kết nối RabbitMQ
+      - Khi submit request, queue sẽ được consume (Ready về 0 nhanh)
+2) Cách “bắt message” để chứng minh publish lên RabbitMQ (tắt consumer)
+   1. Trong Program.cs, comment dòng đăng ký hosted service:
+   ```json
+   "// builder.Services.AddHostedService<RequestSubmittedNotificationConsumer>();"
+   ```
+   2. Chạy lại HRMApi:
+      `dotnet run`
+   3. Gửi request (Leave/OT/Resignation)
+   4. Vào RabbitMQ UI → Queues → hrm.request.submitted.noti
+      - Ready > 0 ⇒ event đã được publish thành công
+      - Tab Get messages ⇒ xem JSON payload
+   5. Bật lại consumer (uncomment) và chạy lại `dotnet run`
+      - Queue sẽ được consume và Ready về 0
