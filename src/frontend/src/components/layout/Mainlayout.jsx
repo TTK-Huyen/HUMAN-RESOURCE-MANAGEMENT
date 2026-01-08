@@ -50,6 +50,7 @@ const MENU_CONFIG = {
       { to: "/hr/profile-requests", label: "Profile Requests", icon: FileText },
       { to: "/hr/directory", label: "Employee Directory", icon: Users },
       { to: "/hr/rewards/config", label: "Reward Config", icon: Settings },
+      { to: "/hr/rewards/redemptions", label: "Yêu cầu đổi điểm", icon: Gift },
       // Employee capabilities
       { to: "/employee/create", label: "Create Request", icon: FileText },
       { to: "/employee/status", label: "Request Status", icon: History },

@@ -6,6 +6,10 @@ namespace HrmApi.Repositories
 {
     public interface IRequestsDashboardRepository
     {
-        Task<List<DashboardRequestItemDto>> GetDashboardRequestsAsync(int? departmentId, string? keyword);
+        Task<List<DashboardRequestItemDto>> GetDashboardRequestsAsync(
+            int? departmentId,
+            string? keyword,
+            int? managerId,
+            bool onlyDirectReports);
     }
 }

@@ -210,6 +210,15 @@ export default function PendingApprovals() {
         const params = new URLSearchParams();
         if (keyword) params.append("keyword", keyword);
         if (deptId) params.append("DepartmentId", deptId);
+        // Nếu role là MANAGER, tự động gửi ManagerId và chỉ lấy báo cáo trực tiếp
+        try {
+          const role = localStorage.getItem("role");
+          const employeeId = localStorage.getItem("employeeId");
+          if (role && role.toUpperCase() === "MANAGER" && employeeId) {
+            params.append("ManagerId", parseInt(employeeId, 10));
+            params.append("OnlyDirectReports", true);
+          }
+        } catch {}
         const query = params.toString();
 
         const [summaryRes, listRes] = await Promise.all([

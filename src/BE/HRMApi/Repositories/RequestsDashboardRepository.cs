@@ -17,7 +17,11 @@ namespace HrmApi.Repositories
             _db = db;
         }
 
-        public async Task<List<DashboardRequestItemDto>> GetDashboardRequestsAsync(int? departmentId, string? keyword)
+        public async Task<List<DashboardRequestItemDto>> GetDashboardRequestsAsync(
+            int? departmentId,
+            string? keyword,
+            int? managerId,
+            bool onlyDirectReports)
         {
             var q = _db.Requests
                 .AsNoTracking()
@@ -32,6 +36,12 @@ namespace HrmApi.Repositories
             if (departmentId.HasValue)
             {
                 q = q.Where(r => r.Employee.DepartmentId == departmentId.Value);
+            }
+
+            // Filter: chỉ lấy request của báo cáo trực tiếp (managerId)
+            if (onlyDirectReports && managerId.HasValue)
+            {
+                q = q.Where(r => r.Employee.DirectManagerId == managerId.Value);
             }
 
             // Filter: keyword (mã NV hoặc tên NV)

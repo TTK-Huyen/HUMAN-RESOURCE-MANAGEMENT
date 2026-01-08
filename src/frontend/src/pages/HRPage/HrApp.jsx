@@ -9,6 +9,7 @@ import HRDirectoryPage from "./HRDirectoryPage.jsx";
 import HRAddEmployeePage from "./HRAddEmployeePage.jsx";
 import HRUploadExcelPage from "./HRUploadExcelPage.jsx";
 import HRViewProfilePage from "./HRViewProfilePage.jsx";
+import RedemptionRequests from "./Reward/RedemptionRequests";
 
 export default function HrApp() {
   return (
@@ -24,6 +25,8 @@ export default function HrApp() {
       */}
       <Route path="profile-requests" element={<HrProfileUpdateRequestListPage />} />
       <Route path="profile-requests/:requestId" element={<HrProfileUpdateRequestDetailPage />} />
+      {/* HR Reward: Pending redemptions (Approve / Reject) */}
+      <Route path="rewards/redemptions" element={<RedemptionRequests />} />
       
       {/* ✅ 3. NHÓM QUẢN LÝ DANH BẠ (DIRECTORY)
         Path: /hr/directory...

@@ -5,5 +5,8 @@ namespace HrmApi.Dtos.Requests
     {
         public int? DepartmentId { get; set; }
         public string? Keyword { get; set; } // mã hoặc tên nhân viên
+        // Giới hạn theo quản lý trực tiếp
+        public int? ManagerId { get; set; }
+        public bool OnlyDirectReports { get; set; } = false;
     }
 }

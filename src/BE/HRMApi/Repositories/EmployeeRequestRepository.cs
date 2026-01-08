@@ -219,7 +219,9 @@ namespace HrmApi.Repositories
         //summary
         public async Task<RequestDashboardSummary> GetDashboardSummaryAsync(
             int? departmentId,
-            string? keyword)
+            string? keyword,
+            int? managerId,
+            bool onlyDirectReports)
         {
             // Query từ các child tables (Leave, OT, Resignation) vì Requests table không chứa tất cả
             var results = new List<(string Status, int Count)>();
@@ -233,6 +235,10 @@ namespace HrmApi.Repositories
             if (departmentId.HasValue)
             {
                 leaveQuery = leaveQuery.Where(l => l.Employee.DepartmentId == departmentId.Value);
+            }
+            if (onlyDirectReports && managerId.HasValue)
+            {
+                leaveQuery = leaveQuery.Where(l => l.Employee.DirectManagerId == managerId.Value);
             }
 
             if (!string.IsNullOrWhiteSpace(keyword))
@@ -260,6 +266,10 @@ namespace HrmApi.Repositories
             {
                 otQuery = otQuery.Where(o => o.Employee.DepartmentId == departmentId.Value);
             }
+            if (onlyDirectReports && managerId.HasValue)
+            {
+                otQuery = otQuery.Where(o => o.Employee.DirectManagerId == managerId.Value);
+            }
 
             if (!string.IsNullOrWhiteSpace(keyword))
             {
@@ -285,6 +295,10 @@ namespace HrmApi.Repositories
             if (departmentId.HasValue)
             {
                 resQuery = resQuery.Where(r => r.Employee.DepartmentId == departmentId.Value);
+            }
+            if (onlyDirectReports && managerId.HasValue)
+            {
+                resQuery = resQuery.Where(r => r.Employee.DirectManagerId == managerId.Value);
             }
 
             if (!string.IsNullOrWhiteSpace(keyword))
