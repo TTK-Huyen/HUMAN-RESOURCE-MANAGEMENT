@@ -1,0 +1,146 @@
+/* src/components/campaigns/CampaignForm.css */
+
+/* --- 1. Layout & Khung --- */
+.campaign-form-wrapper {
+    /* Giới hạn chiều rộng để form không bị bè ra quá to trên màn hình lớn */
+    max-width: 900px;
+    margin: 0 auto; /* Canh giữa */
+    padding: 1rem;
+  }
+  
+  /* Grid 2 cột gọn gàng hơn */
+  .form-grid-compact {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem; /* Tăng khoảng cách giữa 2 cột cho thoáng */
+  }
+  
+  /* Khi màn hình nhỏ thì chuyển về 1 cột */
+  @media (max-width: 768px) {
+    .form-grid-compact {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  /* --- 2. Typography & Màu sắc text --- */
+  .form-label-styled {
+      font-weight: 600;
+      color: #334155; /* Màu xám đậm sang trọng hơn đen tuyền */
+      font-size: 0.9rem;
+      margin-bottom: 0.4rem;
+      display: block;
+  }
+  
+  /* Chữ hướng dẫn nhỏ lại và màu nhạt đi */
+  .help-text-styled {
+      color: #64748b; /* Màu xám nhạt */
+      font-size: 0.75rem; /* Nhỏ lại */
+      margin-top: 0.3rem;
+      display: block;
+      font-style: italic;
+  }
+  
+  /* Input & Textarea đẹp hơn */
+  .form-control-styled {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  
+  .form-control-styled:focus {
+      border-color: #3b82f6; /* Màu xanh khi focus */
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      outline: none;
+  }
+  
+  /* --- 3. Nút bấm --- */
+  .btn-submit-styled {
+      background-color: #2563eb; /* Xanh dương đậm */
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+  }
+  
+  .btn-submit-styled:hover:not(:disabled) {
+      background-color: #1d4ed8;
+      transform: translateY(-1px);
+  }
+  
+  .btn-submit-styled:disabled {
+      background-color: #94a3b8;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+  }
+  
+  /* --- 4. Modal Xác nhận (Confirmation Dialog) --- */
+  .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5); /* Nền tối mờ */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.2s ease-in-out;
+  }
+  
+  .modal-container {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      text-align: center;
+      animation: slideUp 0.2s ease-in-out;
+  }
+  
+  .modal-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 0.75rem;
+  }
+  
+  .modal-description {
+      color: #64748b;
+      margin-bottom: 1.5rem;
+  }
+  
+  .modal-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+  }
+  
+  .btn-modal-cancel {
+      padding: 0.6rem 1.2rem;
+      border: 1px solid #cbd5e1;
+      background: white;
+      color: #475569;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+  }
+  
+  .btn-modal-confirm {
+      padding: 0.6rem 1.2rem;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+  }
+  
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
