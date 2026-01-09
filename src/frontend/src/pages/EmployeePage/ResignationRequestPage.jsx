@@ -26,19 +26,58 @@ function isWeekend(d) {
   return day === 0 || day === 6;
 }
 
-function toISODate(mmddyyyy) {
-  // "01/31/2026" -> "2026-01-31"
-  if (!mmddyyyy) return "";
-  const [mm, dd, yyyy] = mmddyyyy.split("/");
-  if (!mm || !dd || !yyyy) return "";
-  return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
+function toISODate(dateStr) {
+  if (!dateStr) return "";
+  // already ISO
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+
+  const parts = dateStr.split("/");
+  if (parts.length !== 3) return "";
+
+  const [p1, p2, yyyy] = parts;
+  const n1 = Number(p1);
+  const n2 = Number(p2);
+  if (!yyyy || !n1 || !n2) return "";
+
+  // nếu phần đầu > 12 => DD/MM/YYYY, ngược lại coi là MM/DD/YYYY
+  const isDDMM = n1 > 12;
+  const dd = String(isDDMM ? n1 : n2).padStart(2, "0");
+  const mm = String(isDDMM ? n2 : n1).padStart(2, "0");
+
+  return `${yyyy}-${mm}-${dd}`;
 }
+
 
 function formatToMMDDYYYY(dateStr) {
   // Handle both "MM/DD/YYYY" and "DD/MM/YYYY" formats - return as is since backend sends MM/DD/YYYY
   if (!dateStr) return "";
   return dateStr;
 }
+
+function todayStr() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`; // YYYY-MM-DD
+}
+
+function addDaysISO(isoDate, days) {
+  const d = new Date(isoDate);
+  d.setDate(d.getDate() + days);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+// Rule đơn giản: nếu jobTitle có "manager/lead/head" thì 45, còn lại 30
+function getNoticeDays(position) {
+  const p = (position || "").toLowerCase();
+  const isManagerial = /manager|lead|head|supervisor/.test(p);
+  return isManagerial ? 45 : 30;
+}
+
 
 
 export default function ResignationRequestPage() {
@@ -91,11 +130,23 @@ export default function ResignationRequestPage() {
     if (!f.resignationDate) m.push("Resignation date is required.");
 
     if (f.resignationDate) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const today = todayStr();
+      const noticeDays = getNoticeDays(f.position);
+      const minDate = addDaysISO(today, noticeDays);
+
+      const contractEndISO = toISODate(f.contractEnd);
+      if (contractEndISO && f.resignationDate && f.resignationDate > contractEndISO) {
+        m.push("Final working day must be on or before the contract end date.");
+      }
+
+      if (f.resignationDate < minDate) {
+        m.push(`Final working day must be at least ${noticeDays} days from today.`);
+      }
+      const todayD = new Date();
+      todayD.setHours(0, 0, 0, 0);
       const res = new Date(f.resignationDate);
 
-      if (res < today || isWeekend(f.resignationDate)) {
+      if (res < todayD || isWeekend(f.resignationDate)) {
         m.push(
           "Resignation date must be today or later and not fall on a weekend."
         );
@@ -139,6 +190,10 @@ export default function ResignationRequestPage() {
   function resetForm() {
     navigate(-1);
   }
+
+  const noticeDays = getNoticeDays(f.position);
+  const minFinalWorkingDay = addDaysISO(todayStr(), noticeDays);
+  const contractEndISO = toISODate(f.contractEnd);
 
   return (
     <div
@@ -190,8 +245,15 @@ export default function ResignationRequestPage() {
           </FormRow>
 
           <FormRow label="Contract end date" style={{ opacity: f.contractEnd ? 1 : 0.5 }}>
-            <input className="input" value={f.contractEnd ? formatToMMDDYYYY(f.contractEnd) : "None"} readOnly disabled={!f.contractEnd} />
+            <input
+              className="input"
+              type="date"
+              value={contractEndISO || ""}
+              readOnly
+              disabled
+            />
           </FormRow>
+
 
           <FormRow label="Resignation date" required>
             <input
@@ -200,6 +262,8 @@ export default function ResignationRequestPage() {
               name="resignationDate"
               value={f.resignationDate}
               onChange={onChange}
+              min={minFinalWorkingDay}
+              max={contractEndISO || undefined}
             />
           </FormRow>
 
