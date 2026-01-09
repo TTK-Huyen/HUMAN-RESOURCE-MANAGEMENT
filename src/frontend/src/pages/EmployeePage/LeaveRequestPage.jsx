@@ -28,6 +28,14 @@ const INITIAL_FORM = {
   attachment: null,
 };
 
+function todayStr() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 export default function LeaveRequestPage() {
   const navigate = useNavigate();
   const [f, setF] = useState(INITIAL_FORM);
@@ -75,9 +83,12 @@ export default function LeaveRequestPage() {
 
   function validate() {
     const m = [];
+    const today = todayStr();
     if (!f.leaveType) m.push("Leave Type is required.");
     if (!f.startDate || !f.endDate)
       m.push("Start date and End date are required.");
+    if (f.startDate && f.startDate < today) m.push("Start date cannot be in the past.");
+    if (f.endDate && f.endDate < today) m.push("End date cannot be in the past.");
     if (f.startDate && f.endDate && new Date(f.startDate) > new Date(f.endDate))
       m.push("Start date must be ≤ End date.");
     if (!f.reason || f.reason.length < 1 || f.reason.length > 500)
@@ -91,9 +102,9 @@ export default function LeaveRequestPage() {
     if (f.attachment) {
       const ok =
         /\.(pdf|jpg|jpeg|png|docx)$/i.test(f.attachment.name) &&
-        f.attachment.size <= 5 * 1024 * 1024;
+        f.attachment.size <= 10 * 1024 * 1024;
       if (!ok)
-        m.push("Attachment must be .pdf/.jpg/.png/.docx and ≤ 5MB.");
+        m.push("Attachment must be .pdf/.jpg/.png/.docx and ≤ 10MB.");
     }
 
     if (f.leaveType !== "Sick Leave" && f.startDate) {
@@ -182,6 +193,8 @@ export default function LeaveRequestPage() {
     ? "Attachment (required)"
     : "Attachment";
 
+  const minDate = todayStr();
+
   return (
     <div
       style={{
@@ -246,6 +259,7 @@ export default function LeaveRequestPage() {
               name="startDate"
               value={f.startDate}
               onChange={onChange}
+              min={minDate}
             />
           </FormRow>
           <FormRow label="End Date" required>
@@ -255,6 +269,7 @@ export default function LeaveRequestPage() {
               name="endDate"
               value={f.endDate}
               onChange={onChange}
+              min={f.startDate || minDate}
             />
           </FormRow>
 
