@@ -13,9 +13,9 @@ export default function LoginPage() {
       const res = await login(data); 
       const { token, role, employeeCode, employeeName, employeeId } = res;
 
-      console.log("📥 Login Response:", { token, role, employeeCode, employeeName, employeeId });
+      console.log("Login Response:", { token, role, employeeCode, employeeName, employeeId });
 
-      // ✅ FIX: Remove old keys but DON'T use clear() - it may interfere
+      // FIX: Remove old keys but DON'T use clear() - it may interfere
       localStorage.removeItem("token");
       localStorage.removeItem("role");
       localStorage.removeItem("employeeCode");
@@ -29,27 +29,27 @@ export default function LoginPage() {
       localStorage.setItem("employeeName", employeeName);
       localStorage.setItem("employeeId", employeeId);
 
-      // ✅ VERIFY data was saved
+      // VERIFY data was saved
       const savedToken = localStorage.getItem("token");
       const savedCode = localStorage.getItem("employeeCode");
-      console.log("✅ Saved to localStorage - Token:", !!savedToken, "Code:", savedCode);
+      console.log("Saved to localStorage - Token:", !!savedToken, "Code:", savedCode);
 
       if (!savedToken || !savedCode) {
-        alert("⚠️ Failed to save login data. Please try again.");
+        alert("Failed to save login data. Please try again.");
         return;
       }
 
-      console.log("✅ Login success - Role:", role);
+      console.log("Login success - Role:", role);
 
       // Chuyển hướng dựa vào role - không phân biệt chữ hoa/thường
       const normalizedRole = role?.trim().toUpperCase();
       
-      // ✅ FIX: Increase delay and verify token exists before navigate
+      // FIX: Increase delay and verify token exists before navigate
       setTimeout(() => {
         // Double-check token still exists
         const finalToken = localStorage.getItem("token");
         if (!finalToken) {
-          console.error("❌ Token disappeared!");
+          console.error("Token disappeared!");
           window.location.href = "/login";
           return;
         }

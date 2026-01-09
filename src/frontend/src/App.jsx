@@ -13,7 +13,6 @@ import TestPage from './components/TestComponent';
 import MyRewardPage from './pages/EmployeePage/RewardPage/MyRewardPage';
 import ManagerGivePointsPage from './pages/ManagerPage/Reward/ManagerGivePointsPage';
 import AutoAllocationConfig from './pages/HRPage/Reward/AutoAllocationConfig';
-
 function App() {
   return (
     <Router>
@@ -80,28 +79,28 @@ function RequireAuth({ requiredRole, allowedRoles, children }) {
   const storedRole = (localStorage.getItem("role") || "").toUpperCase();
   const targetRole = (requiredRole || "").toUpperCase();
   
-  // ✅ FIX: Use allowedRoles if provided, otherwise strict match
+  // FIX: Use allowedRoles if provided, otherwise strict match
   const rolesAllowed = Array.isArray(allowedRoles)
     ? allowedRoles.map((r) => (r || "").toUpperCase())
     : [targetRole];  // Strict: only exact role match
 
-  console.log("🔐 RequireAuth Check:", { token: !!token, storedRole, targetRole, rolesAllowed, allowed: rolesAllowed.includes(storedRole) });
+  console.log("RequireAuth Check:", { token: !!token, storedRole, targetRole, rolesAllowed, allowed: rolesAllowed.includes(storedRole) });
 
   // ADMIN bypass: administrators have full access to all routes
   if (storedRole === 'ADMIN') {
-    console.log('🔓 ADMIN bypass - full access granted');
+    console.log('ADMIN bypass - full access granted');
     return children;
   }
 
   // 1. Chưa đăng nhập -> Về Login
   if (!token) {
-    console.log("❌ No token - redirecting to login");
+    console.log("No token - redirecting to login");
     return <Navigate to="/" replace />;
   }
   
   // 2. Đã đăng nhập nhưng SAI ROLE -> Redirect sang dashboard của họ (KHÔNG xóa token)
   if (rolesAllowed.length && !rolesAllowed.includes(storedRole)) {
-    console.warn(`⛔ Chặn truy cập. Cần: ${rolesAllowed.join(' hoặc ')}, Có: ${storedRole}`);
+    console.warn(`Chặn truy cập. Cần: ${rolesAllowed.join(' hoặc ')}, Có: ${storedRole}`);
     
     // Redirect sang dashboard của user đó - KHÔNG xóa token
     if (storedRole === 'MANAGER') return <Navigate to="/manager" replace />;
@@ -109,13 +108,13 @@ function RequireAuth({ requiredRole, allowedRoles, children }) {
     if (storedRole === 'EMP') return <Navigate to="/employee" replace />;
     
     // Role lạ hoàn toàn -> logout
-    console.error("❌ Unknown role - clearing storage");
+    console.error("Unknown role - clearing storage");
     localStorage.clear();
     return <Navigate to="/" replace />;
   }
 
   // 3. Hợp lệ -> Cho vào
-  console.log("✅ Auth check passed");
+  console.log("Auth check passed");
   return children;
 }
 

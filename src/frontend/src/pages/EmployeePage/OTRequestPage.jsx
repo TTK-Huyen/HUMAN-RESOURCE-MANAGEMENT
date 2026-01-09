@@ -31,7 +31,7 @@ export default function OTRequestPage() {
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
 
-  // ✅ Lấy từ localStorage (được set khi login thành công)
+  //Lấy từ localStorage (được set khi login thành công)
   const employeeCode = localStorage.getItem("employeeCode") || "EMP001";
 
   function onChange(e) {

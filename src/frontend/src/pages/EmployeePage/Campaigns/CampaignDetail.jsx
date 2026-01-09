@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { fetchCampaignDetail, registerCampaign, getRegistrationStatus } from "../../../Services/campaigns";
 import Loading from "../../../components/common/Loading";
 import StatusBadge from "../../../components/common/StatusBadge";
@@ -10,6 +10,17 @@ import { ArrowLeft, Calendar, Users, Info } from 'lucide-react';
 
 export default function CampaignDetail() {
   const { id: campaignCode } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleBack = () => {
+    const role = (localStorage.getItem("role") || "").toUpperCase();
+
+    // fallback nếu user vào thẳng URL (không có state.from)
+    const fallback = role === "HR" ? "/hr/campaigns" : "/employee/campaigns";
+
+    navigate(location.state?.from || fallback);
+  };
   const [campaign, setCampaign] = useState(null);
   const [isRegistering, setIsRegistering] = useState(false);
   const [toast, setToast] = useState(null);
@@ -102,9 +113,23 @@ export default function CampaignDetail() {
         onCancel={() => setShowConfirmDialog(false)}
       />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-        <Link to="/employee/campaigns" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: '#334155' }}>
+        <button
+          type="button"
+          onClick={handleBack}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            background: "transparent",
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+            color: "#334155",
+          }}
+        >
           <ArrowLeft size={18} /> Back
-        </Link>
+        </button>
+
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           <StatusBadge status={campaign.status} />
           <Button

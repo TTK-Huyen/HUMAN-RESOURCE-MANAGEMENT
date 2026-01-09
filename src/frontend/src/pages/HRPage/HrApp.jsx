@@ -13,6 +13,8 @@ import RedemptionRequests from "./Reward/RedemptionRequests";
 
 import HRAddCampaignPage from "./HRAddCampaignPage.jsx";
 import HRCampaignListPage from "./HRCampaignListPage.jsx";
+import CampaignDetail from "../EmployeePage/Campaigns/CampaignDetail.jsx";
+
 export default function HrApp() {
   return (
     <Routes>
@@ -49,6 +51,8 @@ export default function HrApp() {
       {/* ✅ NHÓM QUẢN LÝ CAMPAIGN */}
       <Route path="campaigns/add" element={<HRAddCampaignPage />} />
       <Route path="campaigns" element={<HRCampaignListPage />} />
+      <Route path="campaigns/:id" element={<CampaignDetail />} />
+
       <Route path="*" element={<Navigate to="/hr/profile-requests" replace />} />
     </Routes>
   );

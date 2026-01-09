@@ -223,8 +223,8 @@ export default function MainLayout({ children }) {
 
     setMenu(MENU_CONFIG[role] || MENU_CONFIG.GUEST);
     
-    // ✅ DEBUG: Log user info
-    console.log("📍 MainLayout - User loaded:", { token: !!token, role, code });
+    // DEBUG: Log user info
+    console.log("MainLayout - User loaded:", { token: !!token, role, code });
   }, []);
 
   /* ================= LOGIC TOGGLE MENU ================= */
@@ -238,7 +238,7 @@ export default function MainLayout({ children }) {
   /* ================= LOGOUT ================= */
   const handleLogout = () => {
     console.log("🚪 Logging out...");
-    // ✅ FIX: Clear only auth data, not entire localStorage
+    // FIX: Clear only auth data, not entire localStorage
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     localStorage.removeItem("employeeCode");

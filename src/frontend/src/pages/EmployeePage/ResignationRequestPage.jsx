@@ -47,13 +47,6 @@ function toISODate(dateStr) {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-
-function formatToMMDDYYYY(dateStr) {
-  // Handle both "MM/DD/YYYY" and "DD/MM/YYYY" formats - return as is since backend sends MM/DD/YYYY
-  if (!dateStr) return "";
-  return dateStr;
-}
-
 function todayStr() {
   const d = new Date();
   const yyyy = d.getFullYear();

@@ -186,7 +186,21 @@ export default function HRCampaignListPage() {
                     </tr>
                   ) : (
                     filteredCampaigns.map((camp, index) => (
-                  <tr key={index} style={{ borderBottom: "1px solid #f3f4f6" }}>
+                      <tr
+                        key={index}
+                        onClick={() =>
+                          navigate(`/hr/campaigns/${camp.campaignCode}`, {
+                            state: { from: "/hr/campaigns" }, // để Detail biết back về đâu
+                          })
+                        }
+                        style={{
+                          borderBottom: "1px solid #f3f4f6",
+                          cursor: "pointer",
+                        }}
+                        onMouseOver={(e) => (e.currentTarget.style.background = "#f8fafc")}
+                        onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}
+                        title="Click to view campaign details"
+                      >
                     <td style={{ padding: "16px", fontWeight: "600", color: "#374151" }}>
                       {camp.campaignCode}
                     </td>
@@ -214,7 +228,9 @@ export default function HRCampaignListPage() {
                     </td>
                     <td style={{ padding: "16px", textAlign: "right" }}>
                       <button
-                        onClick={() => handleDelete(camp.campaignCode, camp.campaignName)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(camp.campaignCode, camp.campaignName)}}
                         title="Delete Campaign"
                         style={{
                           background: "#fef2f2", 

@@ -103,9 +103,9 @@ export default function LeaveRequestPage() {
     if (f.attachment) {
       const ok =
         /\.(pdf|jpg|jpeg|png|docx)$/i.test(f.attachment.name) &&
-        f.attachment.size <= 5 * 1024 * 1024;
+        f.attachment.size <= 10 * 1024 * 1024;
       if (!ok)
-        m.push("Attachment must be .pdf/.jpg/.png/.docx and ≤ 5MB.");
+        m.push("Attachment must be .pdf/.jpg/.png/.docx and ≤ 10MB.");
     }
 
     if (f.leaveType !== "Sick Leave" && f.startDate) {
