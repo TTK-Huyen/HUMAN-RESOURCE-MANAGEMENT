@@ -159,7 +159,8 @@ export default function LeaveRequestPage() {
         endDate: new Date(f.endDate).toISOString(),
         reason: f.reason,
         handoverPersonCode: f.handoverPerson, // backend yêu cầu số
-        attachmentsBase64: attachmentBase64
+        attachmentsBase64: attachmentBase64,
+        fileName: f.attachment ? f.attachment.name : null
       };
 
       // Gọi API thực

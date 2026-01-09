@@ -69,10 +69,19 @@ namespace HrmApi.Services
                     // Convert Base64 -> Byte Array
                     var fileBytes = Convert.FromBase64String(dto.AttachmentsBase64);
                     
-                    // Tạo tên file ngẫu nhiên (vì Base64 ko có tên gốc, ta tự đặt đuôi .png/.jpg/.pdf hoặc mặc định)
-                    // Ở đây mình để mặc định là bin hoặc bạn có thể check header base64 để đoán đuôi.
-                    // Để đơn giản, mình giả định là file ảnh hoặc doc.
-                    var fileName = $"{Guid.NewGuid()}_attachment.dat"; 
+                    // --- SỬA ĐOẠN NÀY ---
+                    // Lấy đuôi file gốc (ví dụ .pdf, .png) từ dto.FileName
+                    // Nếu không có tên file thì mặc định là .dat
+                    string extension = ".dat";
+                    if (!string.IsNullOrEmpty(dto.FileName))
+                    {
+                        // Path.GetExtension sẽ lấy cả dấu chấm, ví dụ ".pdf"
+                        extension = Path.GetExtension(dto.FileName);
+                    }
+
+                    // Đặt tên file: Guid + đuôi file gốc (để tránh trùng tên nhưng vẫn mở được)
+                    var fileName = $"{Guid.NewGuid()}{extension}"; 
+                    // --------------------
                     
                     string rootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
                     var uploadFolder = Path.Combine(rootPath, "uploads");

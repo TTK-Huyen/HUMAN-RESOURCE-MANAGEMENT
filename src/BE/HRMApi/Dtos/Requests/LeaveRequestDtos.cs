@@ -27,6 +27,9 @@ namespace HrmApi.Dtos.Requests
         // Map với FE: attachmentsBase64 (Frontend gửi chuỗi Base64 chứ không gửi IFormFile)
         [JsonPropertyName("attachmentsBase64")]
         public string? AttachmentsBase64 { get; set; }
+
+        [JsonPropertyName("fileName")]
+        public string? FileName { get; set; }
     }
 
     public class LeaveRequestCreatedDto
