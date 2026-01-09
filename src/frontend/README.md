@@ -28,3 +28,4 @@ src/
 
 
 Note: chạy thì cần tải: "npm install lucide-react"
+Chạy: npm run start
