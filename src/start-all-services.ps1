@@ -5,9 +5,9 @@
 
 # --- CẤU HÌNH ĐƯỜNG DẪN (Sửa lại cho đúng folder của bạn) ---
 # Dấu "." nghĩa là thư mục hiện tại chứa file script này
-$dotnetPath  = "..\BE\HRMApi"        # Ví dụ: Folder backend nằm ngang hàng folder frontend
-$frontendPath = "..\frontend\src"      # Ví dụ: Folder frontend nằm ngang hàng folder backend
-$javaPath     = "..\notification-service\notificatio-service"   # Ví dụ: Folder java nằm ngang hàng
+$dotnetPath  = "./BE/HRMApi"        # Folder backend
+$frontendPath = "./frontend"         # Folder frontend
+$javaPath     = "./notification-service/notification-service"   # Folder java
 
 # --- BẮT ĐẦU SCRIPT ---
 

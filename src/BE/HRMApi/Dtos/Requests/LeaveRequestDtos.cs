@@ -21,11 +21,8 @@ namespace HrmApi.Dtos.Requests
         [JsonPropertyName("reason")]
         public string Reason { get; set; } = string.Empty;
 
-        // --- KHÔI PHỤC CÁC TRƯỜNG BỊ THIẾU ---
-
-        // Map với FE: handoverPersonId
-        [JsonPropertyName("handoverPersonId")] 
-        public int? HandoverPersonId { get; set; }
+        [JsonPropertyName("handoverPersonCode")] 
+        public string? HandoverPersonCode { get; set; }
 
         // Map với FE: attachmentsBase64 (Frontend gửi chuỗi Base64 chứ không gửi IFormFile)
         [JsonPropertyName("attachmentsBase64")]

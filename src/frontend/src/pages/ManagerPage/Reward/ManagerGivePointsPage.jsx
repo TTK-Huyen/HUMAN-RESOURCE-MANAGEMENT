@@ -14,8 +14,9 @@ const ManagerGivePointsPage = () => {
         const loadData = async () => {
             try {
                 // Tái sử dụng HRService để lấy danh sách nhân viên
-                const res = await HRService.getAllEmployees({ pageIndex: 1, pageSize: 100 }); 
-                setEmployees(res.data?.items || []); 
+                const res = await HRService.fetchAllEmployees({ pageIndex: 1, pageSize: 100 }); 
+                setEmployees(res.data || []); 
+                console.log("Danh sách nhân viên tải về:", res.data || []);
             } catch (error) {
                 console.error("Lỗi tải danh sách nhân viên", error);
             }
@@ -27,8 +28,10 @@ const ManagerGivePointsPage = () => {
         e.preventDefault();
         try {
             await givePoints(formData);
+            
             setToast({ type: 'success', message: 'Đã tặng điểm thành công!' });
             setFormData({ employeeId: '', points: '', reason: '' });
+
         } catch (error) {
             setToast({ type: 'error', message: 'Có lỗi xảy ra. Vui lòng thử lại.' });
         }
@@ -49,8 +52,8 @@ const ManagerGivePointsPage = () => {
                         >
                             <option value="">-- Chọn nhân viên --</option>
                             {employees.map(emp => (
-                                <option key={emp.employeeId} value={emp.employeeId}>
-                                    {emp.fullName} - {emp.employeeCode}
+                                <option key={emp.id} value={emp.id}>
+                                    {emp.employeeName} - {emp.employeeCode}
                                 </option>
                             ))}
                         </select>

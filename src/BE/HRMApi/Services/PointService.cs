@@ -20,6 +20,7 @@ namespace HrmApi.Services
             var balance = await GetOrCreateBalanceAsync(employeeId);
             var employee = await _context.Employees.FindAsync(employeeId);
             var transactions = await _context.PointTransactions
+                .Include(t => t.Creator)
                 .Where(t => t.EmployeeId == employeeId)
                 .OrderByDescending(t => t.CreatedAt)
                 .Take(50)
@@ -31,7 +32,10 @@ namespace HrmApi.Services
                     t.Description,
                     t.CreatedAt,
                     Type = t.Points > 0 ? "EARN" : "REDEEM",
-                    Amount = t.Points
+                    Amount = t.Points,
+
+                    ProcessedBy = t.Creator != null ? t.Creator.FullName : "Company",
+                    status = "APPROVED"
                 })
                 .ToListAsync();
 
@@ -120,7 +124,7 @@ namespace HrmApi.Services
                 throw new ArgumentException("Số điểm phải lớn hơn 0");
 
             var balance = await GetOrCreateBalanceAsync(employeeId);
-            
+
             if (balance.CurrentBalance < points)
                 throw new InvalidOperationException("Số điểm không đủ");
 
@@ -155,6 +159,7 @@ namespace HrmApi.Services
             await _context.SaveChangesAsync();
             return redemption;
         }
+
 
         public async Task<List<CashRedemption>> GetMyRedemptionsAsync(int employeeId)
         {
@@ -237,7 +242,7 @@ namespace HrmApi.Services
                 throw new ArgumentException("Số điểm phải lớn hơn 0");
 
             var balance = await GetOrCreateBalanceAsync(employeeId);
-            
+
             balance.CurrentBalance += points;
             balance.TotalEarned += points;
             balance.LastUpdated = DateTime.Now;
@@ -284,5 +289,6 @@ namespace HrmApi.Services
 
             return balance;
         }
+
     }
 }

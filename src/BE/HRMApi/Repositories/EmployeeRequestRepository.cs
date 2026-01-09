@@ -59,7 +59,7 @@ namespace HrmApi.Repositories
                         ApproverName  = l.Request.Approver != null
                                             ? l.Request.Approver.FullName
                                             : null,
-                        ApprovedAt    = null // hiện chưa có cột trong DB
+                        ApprovedAt    = l.Request.ApprovedAt
                     })
                     .ToListAsync();
 
@@ -102,7 +102,7 @@ namespace HrmApi.Repositories
                         ApproverName  = o.Request.Approver != null
                                             ? o.Request.Approver.FullName
                                             : null,
-                        ApprovedAt    = null
+                        ApprovedAt    = o.Request.ApprovedAt
                     })
                     .ToListAsync();
 
@@ -145,7 +145,7 @@ namespace HrmApi.Repositories
                         ApproverName  = rg.Request.Approver != null
                                             ? rg.Request.Approver.FullName
                                             : null,
-                        ApprovedAt    = null
+                        ApprovedAt    = rg.Request.ApprovedAt
                     })
                     .ToListAsync();
 

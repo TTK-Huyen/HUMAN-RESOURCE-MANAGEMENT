@@ -42,19 +42,22 @@ namespace HrmApi.Services
             string employeeCode,
             CreateLeaveRequestDto dto)
         {
-            // 1. Tìm và Validate nhân viên
+            // 1. Validate and retrieve employee
             var employee = await _employeeRepository.GetByCodeAsync(employeeCode)
                            ?? throw new InvalidOperationException("Employee not found");
 
-            // 2. Validate người bàn giao
-            if (dto.HandoverPersonId.HasValue)
+            // 2. Validate handover person
+            int? handoverEmployeeId = null;
+            if (!string.IsNullOrEmpty(dto.HandoverPersonCode))
             {
-                var handoverEmp = await _employeeRepository.GetByIdAsync(dto.HandoverPersonId.Value);
+                var handoverEmp = await _employeeRepository.GetByCodeAsync(dto.HandoverPersonCode);
                 if (handoverEmp == null)
-                    throw new ArgumentException($"Nhân viên bàn giao ID {dto.HandoverPersonId} không tồn tại.");
+                    throw new ArgumentException($"Handover employee with code {dto.HandoverPersonCode} does not exist.");
                 
                 if (handoverEmp.Id == employee.Id)
-                    throw new ArgumentException("Không thể bàn giao cho chính mình.");
+                    throw new ArgumentException("Cannot handover to yourself.");
+                
+                handoverEmployeeId = handoverEmp.Id;
             }
 
             // 3. Xử lý File Upload (BASE64) - Sửa đoạn này để hết lỗi dto.File
@@ -112,7 +115,7 @@ namespace HrmApi.Services
                     StartDate         = dto.StartDate,
                     EndDate           = dto.EndDate,
                     Reason            = dto.Reason,
-                    HandoverEmployeeId = dto.HandoverPersonId, // Đã có trong DTO
+                    HandoverEmployeeId = handoverEmployeeId,
                     AttachmentPath    = savedFilePath,
                     Status            = RequestStatus.Pending,
                     CreatedAt         = DateTime.UtcNow
