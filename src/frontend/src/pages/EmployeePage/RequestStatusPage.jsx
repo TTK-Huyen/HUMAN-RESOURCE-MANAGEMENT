@@ -36,8 +36,10 @@ function formatDateTime(value) {
 // Support multiple possible approved timestamp field names from backend
 function getApprovedTime(item) {
   if (!item) return null;
-  // direct top-level fields
-  const direct = item.approvedAt || item.approved_at || item.decidedAt || item.decided_at || item.approved_on || item.approved_on_date || item.approvedOn;
+  // direct top-level fields - check approvedAt first (from both list and detail API)
+  if (item.approvedAt) return item.approvedAt;
+  
+  const direct = item.approved_at || item.decidedAt || item.decided_at || item.approved_on || item.approved_on_date || item.approvedOn;
   if (direct) return direct;
 
   // helper to extract time from a history/log entry
@@ -278,8 +280,8 @@ export default function RequestStatusPage() {
               </div>
             )}
             <div>
-              <dt>Handover to (employee ID)</dt>
-              <dd>{r.handoverToEmployeeId ?? "-"}</dd>
+              <dt>Handover to (employee Code)</dt>
+              <dd>{r.handoverToEmployeeCode ?? "-"}</dd>
             </div>
             <div>
               <dt>Attachment</dt>

@@ -24,7 +24,7 @@ const INITIAL_FORM = {
   startDate: "",
   endDate: "",
   reason: "",
-  handoverPerson: "",
+  handoverPersonCode: "",
   attachment: null,
 };
 
@@ -64,10 +64,11 @@ export default function LeaveRequestPage() {
     // Gọi API thật để lấy department
     try {
       const profile = await HRService.fetchEmployeeProfileByCode(employeeCode);
+      console.log("Employee profile:", profile); // Debug: xem response từ API
 
       setF((prev) => ({
         ...prev,
-        department: profile.departmentName || profile.department || "",
+        department: profile.Department || profile.departmentName || profile.department || "",
       }));
     } catch (e) {
       console.error("Error loading employee data:", e);
@@ -102,9 +103,9 @@ export default function LeaveRequestPage() {
     if (f.attachment) {
       const ok =
         /\.(pdf|jpg|jpeg|png|docx)$/i.test(f.attachment.name) &&
-        f.attachment.size <= 10 * 1024 * 1024;
+        f.attachment.size <= 5 * 1024 * 1024;
       if (!ok)
-        m.push("Attachment must be .pdf/.jpg/.png/.docx and ≤ 10MB.");
+        m.push("Attachment must be .pdf/.jpg/.png/.docx and ≤ 5MB.");
     }
 
     if (f.leaveType !== "Sick Leave" && f.startDate) {
@@ -137,14 +138,6 @@ export default function LeaveRequestPage() {
     setSubmitting(true);
 
     try {
-      // Kiểm tra employee code có tồn tại không
-      try {
-        await HRService.fetchEmployeeProfileByCode(f.handoverPerson);
-      } catch (err) {
-        setErrs([`Handover person with code "${f.handoverPerson}" does not exist.`]);
-        setSubmitting(false);
-        return;
-      }
 
       // Convert file -> base64 nếu có
       let attachmentBase64 = null;
@@ -165,7 +158,7 @@ export default function LeaveRequestPage() {
         startDate: new Date(f.startDate).toISOString(),
         endDate: new Date(f.endDate).toISOString(),
         reason: f.reason,
-        handoverPersonId: Number(f.handoverPerson), // backend yêu cầu số
+        handoverPersonCode: f.handoverPerson, // backend yêu cầu số
         attachmentsBase64: attachmentBase64
       };
 
