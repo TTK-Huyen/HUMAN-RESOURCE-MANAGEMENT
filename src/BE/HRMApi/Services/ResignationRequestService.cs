@@ -82,7 +82,7 @@ namespace HrmApi.Services
                 ManagerEmail = manager?.PersonalEmail,
                 RequesterEmail = employee.PersonalEmail,
                 Status = "Pending",
-                Message = $"Nhân viên {employee.FullName} đã gửi yêu cầu nghỉ việc mới."
+                Message = $"Employee {employee.FullName} has submitted a new resignation request."
             };
 
             await _eventBus.PublishAsync(ev, "request.submitted.RESIGNATION");

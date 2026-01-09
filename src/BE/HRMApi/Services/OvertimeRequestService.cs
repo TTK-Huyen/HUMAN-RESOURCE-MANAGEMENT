@@ -100,7 +100,7 @@ namespace HrmApi.Services
                 ManagerEmail = manager?.PersonalEmail,
                 RequesterEmail = employee.PersonalEmail,
                 Status = "Pending",
-                Message = $"Nhân viên {employee.FullName} đã gửi yêu cầu tăng ca mới."
+                Message = $"Employee {employee.FullName} has submitted a new overtime request."
             };
 
             await _eventBus.PublishAsync(ev, "request.submitted.OT");

@@ -151,7 +151,7 @@ namespace HrmApi.Services
                     ManagerEmail = manager?.PersonalEmail,
                     RequesterEmail = employee.PersonalEmail,
                     Status = "Pending",
-                    Message = $"Nhân viên {employee.FullName} đã gửi yêu cầu nghỉ phép mới."
+                    Message = $"Employee {employee.FullName} has submitted a new leave request."
                 };
 
                 await _eventBus.PublishAsync(ev, "request.submitted.LEAVE");
