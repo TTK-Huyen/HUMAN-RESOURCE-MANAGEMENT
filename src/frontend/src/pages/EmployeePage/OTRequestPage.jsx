@@ -16,6 +16,14 @@ const INITIAL_FORM = {
   projectId: "",
 };
 
+function todayStr() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 export default function OTRequestPage() {
   const navigate = useNavigate();
   const [f, setF] = useState(INITIAL_FORM);
@@ -39,7 +47,9 @@ export default function OTRequestPage() {
 
   function validate() {
     const m = [];
+    const today = todayStr();
     if (!f.date) m.push("Date is required.");
+    if (f.date && f.date < today) m.push("OT date cannot be in the past.");
     if (!f.start || !f.end || f.start >= f.end)
       m.push("End time must be later than Start time.");
     const diff = f.start && f.end ? timeDiffHours(f.start, f.end) : 0;
@@ -85,6 +95,8 @@ export default function OTRequestPage() {
     navigate(-1);
   }
 
+  const minDate = todayStr();
+
   return (
     <div
       style={{
@@ -125,6 +137,7 @@ export default function OTRequestPage() {
               name="date"
               value={f.date}
               onChange={onChange}
+              min={minDate}
             />
           </FormRow>
 
