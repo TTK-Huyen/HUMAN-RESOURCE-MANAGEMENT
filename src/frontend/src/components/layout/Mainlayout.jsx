@@ -176,8 +176,7 @@ const MENU_CONFIG = {
         items: [
           { to: "/hr/rewards/config", label: "Reward Config", icon: Settings },
           { to: "/employee/rewards", label: "My Rewards", icon: Gift},
-          { to: "/hr/rewards/redemptions", label: "Redemptions", icon: Gift },
-          { to: "/manager/rewards/give", label: "Give Bonus", icon: Gift },          
+          { to: "/hr/rewards/redemptions", label: "Redemptions", icon: Gift }        
         ],
       },
     ],
