@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-
+using System.Text.Json.Serialization;
 namespace HrmApi.Dtos.Employee
 {
     public class EmployeeProfileDto
@@ -153,6 +153,7 @@ namespace HrmApi.Dtos.Employee
         public string FieldName { get; set; } = string.Empty;
 
         // Giá trị cũ (server fill), FE có thể không gửi
+        [JsonPropertyName("oldValue")] 
         public string? OldValue { get; set; }
 
         // Giá trị mới mà user muốn đổi

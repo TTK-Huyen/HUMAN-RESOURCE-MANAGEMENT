@@ -1,23 +1,49 @@
-import React from "react";
+import React, { useState } from "react"; // ✅ Đã thêm useState
 import { FormRow } from "../../common/FormRow.jsx";
 import StatusBadge from "../../common/StatusBadge.jsx";
+
+// Component con: Hiển thị trường thông tin (có hỗ trợ che/hiện)
+const SensitiveField = ({ label, val, isSensitive = false, full = false }) => {
+  const [isVisible, setIsVisible] = useState(!isSensitive); // Mặc định ẩn nếu là sensitive
+
+  const displayValue = () => {
+    if (val === undefined || val === null || val === "") return "—";
+    if (isVisible) return val;
+    return "••••••••••••"; // Ký tự che
+  };
+
+  return (
+    <FormRow label={label} full={full}>
+      <div className="relative p-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-700 min-h-[40px] flex items-center justify-between group">
+        <span className="truncate pr-8 font-medium">{displayValue()}</span>
+        
+        {isSensitive && val && (
+          <button
+            type="button"
+            onClick={() => setIsVisible(!isVisible)}
+            className="absolute right-3 text-gray-400 hover:text-blue-600 focus:outline-none transition-colors"
+            title={isVisible ? "Ẩn thông tin" : "Xem thông tin"}
+          >
+            {/* Icon mắt đơn giản bằng SVG để không cần cài thư viện ngoài */}
+            {isVisible ? (
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            )}
+          </button>
+        )}
+      </div>
+    </FormRow>
+  );
+};
 
 const ProfileView = ({ profile }) => {
   if (!profile)
     return (
-      <div className="text-gray-500 text-center py-8">
+      <div className="text-gray-500 text-center py-8 animate-pulse">
         Loading profile information...
       </div>
     );
-
-  // Helper render read-only field
-  const ReadOnlyField = ({ label, val, full }) => (
-    <FormRow label={label} full={full}>
-      <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-700 min-h-[40px] flex items-center">
-        {val !== undefined && val !== null && val !== "" ? val : "—"}
-      </div>
-    </FormRow>
-  );
 
   // Map giá trị từ DTO
   const employeeCode = profile.employeeCode ?? profile.employee_code;
@@ -51,7 +77,9 @@ const ProfileView = ({ profile }) => {
     : profile.current_address;
 
   const birthPlaceStr = profile.birthPlace
-    ? `${profile.birthPlace?.province}, ${profile.birthPlace?.district}`
+    ? (typeof profile.birthPlace === 'object'
+        ? `${profile.birthPlace?.province}, ${profile.birthPlace?.district}`
+        : profile.birthPlace)
     : "—";
 
   const citizenId = profile.citizenIdNumber ?? profile.citizen_id ?? profile.citizenId;
@@ -74,25 +102,25 @@ const ProfileView = ({ profile }) => {
           Personal Information
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ReadOnlyField label="Employee Code" val={employeeCode} />
-          <ReadOnlyField label="Full Name" val={fullName} />
-          <ReadOnlyField label="Date of Birth" val={dateOfBirth} />
-          <ReadOnlyField label="Gender" val={gender} />
-          <ReadOnlyField label="Nationality" val={nationality} />
-          <ReadOnlyField label="Marital Status" val={maritalStatus} />
-          <ReadOnlyField label="Has Children" val={hasChildren ? "Yes" : "No"} />
+          <SensitiveField label="Employee Code" val={employeeCode} />
+          <SensitiveField label="Full Name" val={fullName} />
+          <SensitiveField label="Date of Birth" val={dateOfBirth} />
+          <SensitiveField label="Gender" val={gender} />
+          <SensitiveField label="Nationality" val={nationality} />
+          <SensitiveField label="Marital Status" val={maritalStatus} />
+          <SensitiveField label="Has Children" val={hasChildren ? "Yes" : "No"} />
         </div>
       </section>
 
-      {/* Legal Information */}
+      {/* Legal Information - CÓ CHE THÔNG TIN */}
       <section className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
         <h3 className="text-lg font-bold text-blue-600 border-b pb-3 mb-4">
           Legal Information
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ReadOnlyField label="Citizen ID Number" val={citizenId} />
-          <ReadOnlyField label="Personal Tax Code" val={personalTaxCode} />
-          <ReadOnlyField label="Social Insurance Number" val={socialInsuranceNumber} />
+          <SensitiveField label="Citizen ID Number" val={citizenId} isSensitive={true} />
+          <SensitiveField label="Personal Tax Code" val={personalTaxCode} isSensitive={true} />
+          <SensitiveField label="Social Insurance No" val={socialInsuranceNumber} isSensitive={true} />
         </div>
       </section>
 
@@ -102,10 +130,10 @@ const ProfileView = ({ profile }) => {
           Contact Information
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ReadOnlyField label="Company Email" val={companyEmail} />
-          <ReadOnlyField label="Personal Email" val={personalEmail} />
-          <ReadOnlyField label="Phone Numbers" val={phoneNumber} />
-          <ReadOnlyField label="Current Address" val={currentAddressStr} full={true} />
+          <SensitiveField label="Company Email" val={companyEmail} />
+          <SensitiveField label="Personal Email" val={personalEmail} />
+          <SensitiveField label="Main Phone Number" val={phoneNumber} />
+          <SensitiveField label="Current Address" val={currentAddressStr} full={true} />
         </div>
       </section>
 
@@ -115,18 +143,18 @@ const ProfileView = ({ profile }) => {
           Birth Place
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ReadOnlyField label="Birth Place" val={birthPlaceStr} full={true} />
+          <SensitiveField label="Birth Place" val={birthPlaceStr} full={true} />
         </div>
       </section>
 
-      {/* Bank Account */}
+      {/* Bank Account - CÓ CHE THÔNG TIN */}
       <section className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
         <h3 className="text-lg font-bold text-blue-600 border-b pb-3 mb-4">
           Bank Account
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ReadOnlyField label="Bank Name" val={bankName} />
-          <ReadOnlyField label="Account Number" val={accountNumber} />
+          <SensitiveField label="Bank Name" val={bankName} />
+          <SensitiveField label="Account Number" val={accountNumber} isSensitive={true} />
         </div>
       </section>
 
@@ -136,10 +164,10 @@ const ProfileView = ({ profile }) => {
           Employment Information
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ReadOnlyField label="Department" val={department} />
-          <ReadOnlyField label="Job Title" val={jobTitle} />
-          <ReadOnlyField label="Direct Manager" val={directManager || "—"} />
-          <ReadOnlyField label="Employment Type" val={employmentType} />
+          <SensitiveField label="Department" val={department} />
+          <SensitiveField label="Job Title" val={jobTitle} />
+          <SensitiveField label="Direct Manager" val={directManager || "—"} />
+          <SensitiveField label="Employment Type" val={employmentType} />
           <FormRow label="Status">
             <StatusBadge status={status} />
           </FormRow>
@@ -152,9 +180,9 @@ const ProfileView = ({ profile }) => {
           Contract Information
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ReadOnlyField label="Contract Type" val={contractType} />
-          <ReadOnlyField label="Contract Start Date" val={contractStartDate} />
-          <ReadOnlyField label="Contract End Date" val={contractEndDate || "—"} />
+          <SensitiveField label="Contract Type" val={contractType} />
+          <SensitiveField label="Contract Start Date" val={contractStartDate} />
+          <SensitiveField label="Contract End Date" val={contractEndDate || "—"} />
         </div>
       </section>
 
@@ -165,7 +193,7 @@ const ProfileView = ({ profile }) => {
             Education
           </h3>
           <div className="grid grid-cols-1 gap-4">
-            <ReadOnlyField label="Education" val={education} full={true} />
+            <SensitiveField label="Education" val={education} full={true} />
           </div>
         </section>
       )}

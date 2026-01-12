@@ -18,7 +18,6 @@ namespace HrmApi.Services
         }
 
         // ========= API #1: GET LIST =========
-        // ⚠️ INTERFACE yêu cầu: Task<IEnumerable<RequestListItemDto>>
         public async Task<IEnumerable<RequestListItemDto>> SearchAsync(RequestFilterDto filter)
         {
             var requests = await _requestRepo.SearchAsync(filter);
@@ -31,7 +30,6 @@ namespace HrmApi.Services
                 CreatedAt    = r.RequestDate,
                 Status       = r.Status
             }).ToList();
-
         }
 
         // ========= API #2: GET DETAIL =========
@@ -82,7 +80,7 @@ namespace HrmApi.Services
                 throw new KeyNotFoundException("Request not found");
             }
 
-            // ✅ Nếu APPROVED thì apply thay đổi vào Employee
+            // ✅ NẾU APPROVED THÌ APPLY THAY ĐỔI VÀO EMPLOYEE
             if (normalizedStatus == "APPROVED")
             {
                 var employee = await _employeeRepo.FindByIdAsync(request.EmployeeId)
@@ -90,13 +88,68 @@ namespace HrmApi.Services
 
                 foreach (var d in request.Details)
                 {
+                    // Map đúng FieldName được gửi từ Frontend (ProfileUpdateRequestPage.jsx)
                     switch (d.FieldName)
                     {
-                        case "FULL_NAME":
-                            employee.FullName = d.NewValue;
+                        // --- Nhóm Thông Tin Liên Hệ ---
+                        case "PersonalEmail":
+                            employee.PersonalEmail = d.NewValue;
                             break;
 
-                        // TODO: thêm từng field khác theo design của bạn
+                        case "PhoneNumber":
+                            employee.PhoneNumber = d.NewValue;
+                            break;
+
+                        case "CurrentAddress":
+                            // Giá trị đã được gộp chuỗi ở FE (Số nhà, Phường, Quận, Tỉnh)
+                            employee.CurrentAddress = d.NewValue;
+                            break;
+
+                        // --- Nhóm Thông Tin Cá Nhân ---
+                        case "MaritalStatus":
+                            employee.MaritalStatus = d.NewValue;
+                            break;
+
+                        case "Nationality":
+                            employee.Nationality = d.NewValue;
+                            break;
+
+                        case "HasChildren":
+                            // Parse string "true"/"false" sang boolean
+                            if (bool.TryParse(d.NewValue, out bool hasChildren))
+                            {
+                                employee.HasChildren = hasChildren;
+                            }
+                            break;
+
+                        // --- Nhóm Hiệu Đính Pháp Lý ---
+                        case "CitizenIdNumber":
+                            employee.CitizenIdNumber = d.NewValue;
+                            break;
+
+                        case "PersonalTaxCode":
+                            employee.PersonalTaxCode = d.NewValue;
+                            break;
+
+                        case "SocialInsuranceNumber":
+                            employee.SocialInsuranceNumber = d.NewValue;
+                            break;
+
+                        case "DateOfBirth":
+                            // Parse string "yyyy-MM-dd" sang DateTime
+                            if (DateTime.TryParse(d.NewValue, out DateTime dob))
+                            {
+                                employee.DateOfBirth = dob;
+                            }
+                            break;
+
+                        case "Gender":
+                            employee.Gender = d.NewValue;
+                            break;
+
+                        // Lưu ý: BankAccount phức tạp vì là Collection, 
+                        // thường HR sẽ đọc request và update thủ công ở tab Lương thưởng,
+                        // hoặc cần logic riêng để update vào bảng EmployeeBankAccounts.
                         default:
                             break;
                     }
@@ -105,7 +158,7 @@ namespace HrmApi.Services
                 await _employeeRepo.SaveAsync(employee);
             }
 
-            // ✅ Update status + reviewed_by + reviewed_at + reject_reason
+            // ✅ Update status + reviewed_by + reviewed_at + reject_reason của Request
             var intId = checked((int)requestId);
             await _requestRepo.UpdateStatusAsync(
                 intId,
@@ -125,12 +178,16 @@ namespace HrmApi.Services
         {
             var employee = await _employeeRepo.GetByCodeAsync(employeeCode);
             if (employee == null) return false;
+            
             if (dto.Details == null || !dto.Details.Any()) return false;
+            
+            // Validate sơ bộ
             foreach (var detail in dto.Details)
             {
-                if (string.IsNullOrWhiteSpace(detail.FieldName) || string.IsNullOrWhiteSpace(detail.NewValue))
+                if (string.IsNullOrWhiteSpace(detail.FieldName)) // NewValue có thể null/empty nếu user muốn xóa data
                     return false;
             }
+
             var request = new ProfileUpdateRequest
             {
                 EmployeeId = employee.Id,
@@ -143,9 +200,9 @@ namespace HrmApi.Services
                     NewValue = d.NewValue
                 }).ToList()
             };
+
             await _requestRepo.AddAsync(request);
             return await _requestRepo.SaveChangesAsync();
         }
     }
-
 }
