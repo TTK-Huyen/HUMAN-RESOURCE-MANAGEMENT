@@ -18,7 +18,9 @@ namespace HrmApi.Services
         {
             var items = await _repo.GetDashboardRequestsAsync(
                 filter?.DepartmentId,
-                filter?.Keyword);
+                filter?.Keyword,
+                filter?.ManagerId,
+                filter?.OnlyDirectReports ?? false);
 
             return new DashboardRequestListResponseDto
             {

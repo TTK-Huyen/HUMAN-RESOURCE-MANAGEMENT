@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { FormRow } from "../../common/FormRow";
+import Button from "../../common/Button";
+import ConfirmDialog from "../../common/ConfirmDialog";
 import "./CampaignForm.css";
 
 export default function CampaignForm({ onSubmit, loading }) {
@@ -25,7 +27,7 @@ export default function CampaignForm({ onSubmit, loading }) {
     return `${yyyy}-${mm}-${dd}`;
   };
 
-  // Hàm kiểm tra 3 ngày (tách riêng để dễ gọi)
+    // Check announcement/start date rules (separated for reuse)
   const checkDateRules = (announceStr, startStr) => {
     if (!announceStr || !startStr) return "";
 
@@ -36,18 +38,18 @@ export default function CampaignForm({ onSubmit, loading }) {
     announce.setHours(0,0,0,0);
     start.setHours(0,0,0,0);
 
-    if (start < announce) {
-      return "Ngày công bố không được sau ngày bắt đầu!";
+        if (start < announce) {
+            return "Announcement date must be before start date!";
     }
 
     const diffTime = start - announce;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays < 3) {
-      return `Mới cách có ${diffDays} ngày. Phải công bố trước ít nhất 3 ngày!`;
+        if (diffDays < 3) {
+            return `Only ${diffDays} day(s) apart. Announcement must be at least 3 days before start.`;
     }
 
-    return ""; // Không có lỗi
+        return ""; // no error
   };
 
   const handleChange = (e) => {
@@ -75,15 +77,15 @@ export default function CampaignForm({ onSubmit, loading }) {
         return newData;
     });
 
-    // 3. Xóa lỗi cơ bản khi nhập lại
-    if (errors[name] && name !== "announcementDate") {
-       setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
+     // 3. Clear basic error on re-type (except announcementDate which is handled above)
+     if (errors[name] && name !== "announcementDate") {
+         setErrors((prev) => ({ ...prev, [name]: "" }));
+     }
 
     // 4. Validate realtime số lượng
     if (name === "maxParticipants") {
         if (value && Number(value) < 1) {
-            setErrors((prev) => ({ ...prev, maxParticipants: "Số lượng tối thiểu là 1" }));
+            setErrors((prev) => ({ ...prev, maxParticipants: "Minimum is 1" }));
         } else {
             setErrors((prev) => ({ ...prev, maxParticipants: "" }));
         }
@@ -94,17 +96,17 @@ export default function CampaignForm({ onSubmit, loading }) {
     const newErrors = {};
     
     // Validate required
-    if (!formData.campaignName.trim()) newErrors.campaignName = "Nhập tên chiến dịch";
-    if (!formData.description.trim()) newErrors.description = "Nhập mô tả";
-    if (!formData.rule.trim()) newErrors.rule = "Nhập thể lệ"; 
-    
+    if (!formData.campaignName.trim()) newErrors.campaignName = "Enter campaign name";
+    if (!formData.description.trim()) newErrors.description = "Enter description";
+    if (!formData.rule.trim()) newErrors.rule = "Enter rules"; 
+
     if (!formData.maxParticipants || Number(formData.maxParticipants) < 1) {
-        newErrors.maxParticipants = "Số lượng tối thiểu là 1";
+        newErrors.maxParticipants = "Minimum is 1";
     }
 
-    if (!formData.announcementDate) newErrors.announcementDate = "Chọn ngày công bố";
-    if (!formData.startDate) newErrors.startDate = "Chọn ngày bắt đầu";
-    if (!formData.endDate) newErrors.endDate = "Chọn ngày kết thúc";
+    if (!formData.announcementDate) newErrors.announcementDate = "Choose announcement date";
+    if (!formData.startDate) newErrors.startDate = "Choose start date";
+    if (!formData.endDate) newErrors.endDate = "Choose end date";
 
     // Re-check logic ngày lần cuối trước khi submit
     const dateError = checkDateRules(formData.announcementDate, formData.startDate);
@@ -114,7 +116,7 @@ export default function CampaignForm({ onSubmit, loading }) {
 
     if (formData.startDate && formData.endDate) {
         if (new Date(formData.endDate) <= new Date(formData.startDate)) {
-            newErrors.endDate = "Ngày kết thúc phải sau ngày bắt đầu";
+            newErrors.endDate = "End date must be after start date";
         }
     }
 
@@ -136,17 +138,17 @@ export default function CampaignForm({ onSubmit, loading }) {
     <div className="campaign-form-wrapper">
         <div className="form-grid-compact" style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem'}}>
             
-            {/* === CỘT TRÁI === */}
+            {/* === LEFT COLUMN === */}
             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
                 <FormRow error={errors.campaignName}>
-                    <StyledLabel label="Tên chiến dịch" required />
+                    <StyledLabel label="Campaign name" required />
                     <input className={`form-control-styled ${errors.campaignName ? 'border-red-500' : ''}`}
                         name="campaignName" value={formData.campaignName} onChange={handleChange} />
                 </FormRow>
 
-                {/* 👇 KHU VỰC NGÀY CÔNG BỐ: Hiện lỗi đỏ ngay tại đây */}
+                {/* Announcement date area: show immediate validation */}
                 <FormRow>
-                    <StyledLabel label="Ngày công bố" required />
+                    <StyledLabel label="Announcement date" required />
                     <input 
                         type="date" 
                         className={`form-control-styled ${errors.announcementDate ? 'border-red-500' : ''}`}
@@ -163,48 +165,48 @@ export default function CampaignForm({ onSubmit, loading }) {
                         </p>
                     ) : (
                         <small style={{fontSize: '0.75rem', color: '#6b7280', fontStyle: 'italic'}}>
-                           Phải trước ngày bắt đầu ít nhất 3 ngày
+                           Must be at least 3 days before start date
                         </small>
                     )}
                 </FormRow>
 
                 <FormRow error={errors.startDate}>
-                    <StyledLabel label="Ngày bắt đầu" required />
+                    <StyledLabel label="Start date" required />
                     <input type="date" className="form-control-styled"
                         name="startDate" value={formData.startDate} onChange={handleChange}
                         min={formData.announcementDate || getTodayDate()} />
                 </FormRow>
 
                 <FormRow error={errors.endDate}>
-                    <StyledLabel label="Ngày kết thúc" required />
+                    <StyledLabel label="End date" required />
                     <input type="date" className="form-control-styled"
                         name="endDate" value={formData.endDate} onChange={handleChange}
                         min={formData.startDate || getTodayDate()} />
                 </FormRow>
             </div>
 
-            {/* === CỘT PHẢI === */}
+            {/* === RIGHT COLUMN === */}
             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
                 <FormRow error={errors.description}>
-                    <StyledLabel label="Mô tả chi tiết" required/>
+                    <StyledLabel label="Detailed description" required/>
                     <textarea className="form-control-styled" rows="3"
                         name="description" value={formData.description} onChange={handleChange} />
                 </FormRow>
 
                 <FormRow error={errors.rule}>
-                    <StyledLabel label="Thể lệ (Rules)" required />
+                    <StyledLabel label="Rules" required />
                     <textarea className="form-control-styled" rows="2"
                         name="rule" value={formData.rule} onChange={handleChange} />
                 </FormRow>
 
                 <FormRow>
-                    <StyledLabel label="Phần thưởng" />
+                    <StyledLabel label="Rewards" />
                     <textarea className="form-control-styled" rows="2"
                         name="rewardDescription" value={formData.rewardDescription} onChange={handleChange} />
                 </FormRow>
 
                 <FormRow>
-                    <StyledLabel label="Số lượng tối đa" required />
+                    <StyledLabel label="Max participants" required />
                     <input 
                         type="number" 
                         className={`form-control-styled ${errors.maxParticipants ? 'border-red-500' : ''}`}
@@ -221,27 +223,23 @@ export default function CampaignForm({ onSubmit, loading }) {
                 </FormRow>
 
                 <div style={{ marginTop: "auto", paddingTop: "1rem", textAlign: 'right' }}>
-                    <button className="btn-submit-styled" onClick={handlePreSubmit} disabled={loading}
-                        style={{padding: '10px 24px', backgroundColor: '#2563eb', color: 'white', borderRadius: '6px', fontWeight: '600'}}>
-                        {loading ? "Đang xử lý..." : "Tạo chiến dịch"}
-                    </button>
+                    <Button className="btn-submit-styled" onClick={handlePreSubmit} disabled={loading} variant="primary" style={{padding: '10px 24px', fontWeight: '600'}}>
+                        {loading ? "Processing..." : "Create campaign"}
+                    </Button>
                 </div>
             </div>
         </div>
 
-        {/* Modal Xác nhận */}
-        {showConfirm && (
-            <div className="modal-overlay" style={{position:'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000}}>
-                <div className="modal-container" style={{background:'white', padding:'2rem', borderRadius:'8px', width:'400px'}}>
-                    <h3 style={{marginTop:0}}>Xác nhận tạo?</h3>
-                    <p>Bạn có chắc chắn muốn tạo chiến dịch <strong>{formData.campaignName}</strong>?</p>
-                    <div style={{display:'flex', justifyContent:'flex-end', gap:'10px', marginTop:'20px'}}>
-                        <button onClick={() => setShowConfirm(false)} style={{padding:'8px 16px', border:'1px solid #ddd', background:'white', borderRadius:'4px', cursor:'pointer'}}>Hủy</button>
-                        <button onClick={() => { setShowConfirm(false); onSubmit(formData); }} style={{padding:'8px 16px', background:'#2563eb', color:'white', border:'none', borderRadius:'4px', cursor:'pointer'}}>Đồng ý</button>
-                    </div>
-                </div>
-            </div>
-        )}
+        <ConfirmDialog
+            isOpen={showConfirm}
+            title="Confirm creation"
+            message={`Are you sure you want to create campaign "${formData.campaignName}"?`}
+            onConfirm={() => { setShowConfirm(false); onSubmit(formData); }}
+            onCancel={() => setShowConfirm(false)}
+            type="info"
+            confirmLabel="Confirm"
+            cancelLabel="Cancel"
+        />
     </div>
   );
 }

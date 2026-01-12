@@ -37,16 +37,16 @@ namespace HrmApi.Services
         public (bool isValid, string error) ValidateExcelFile(IFormFile file)
         {
             if (file == null || file.Length == 0)
-                return (false, "File không được để trống");
+                return (false, "File cannot be empty");
 
             var allowedExtensions = new[] { ".xlsx", ".xls" };
             var fileExtension = Path.GetExtension(file.FileName).ToLower();
 
             if (!allowedExtensions.Contains(fileExtension))
-                return (false, "Chỉ chấp nhận file Excel (.xlsx, .xls)");
+                return (false, "Only Excel files (.xlsx, .xls) are accepted");
 
             if (file.Length > 10 * 1024 * 1024) // 10MB limit
-                return (false, "Kích thước file không được vượt quá 10MB");
+                return (false, "File size must not exceed 10MB");
 
             return (true, string.Empty);
         }
@@ -107,7 +107,7 @@ namespace HrmApi.Services
             }
             catch (Exception ex)
             {
-                result.Errors.Add(new ExcelImportErrorDto { Row = 0, Error = $"Lỗi xử lý file: {ex.Message}" });
+                result.Errors.Add(new ExcelImportErrorDto { Row = 0, Error = $"File processing error: {ex.Message}" });
             }
 
             return result;
@@ -121,57 +121,88 @@ namespace HrmApi.Services
             await file.CopyToAsync(stream);
 
             using var package = new ExcelPackage(stream);
-            var worksheet = package.Workbook.Worksheets.FirstOrDefault();
+            var worksheet = package.Workbook.Worksheets.FirstOrDefault(ws => ws.Name == "Employee Template");
 
             if (worksheet == null)
-                throw new ArgumentException("File Excel không có worksheet");
+                throw new ArgumentException("Excel file does not have 'Employee Template' worksheet");
 
             var rowCount = worksheet.Dimension?.Rows ?? 0;
             if (rowCount <= 1)
-                throw new ArgumentException("File Excel không có dữ liệu (chỉ có header)");
+                throw new ArgumentException("Excel file has no data (header only)");
 
             // Read data starting from row 2 (skip header)
+            // New structure (no EmployeeCode, Username, Password, CompanyEmail):
+            // 1=FullName, 2=DateOfBirth, 3=Gender, 4=Nationality, 5=MaritalStatus, 6=HasChildren,
+            // 7=CitizenIdNumber, 8=PersonalTaxCode, 9=SocialInsuranceNumber,
+            // 10=PersonalEmail,
+            // 11=PhoneNumber1, 12=PhoneNumber1Description, 13=PhoneNumber2, 14=PhoneNumber2Description,
+            // 15=BirthPlaceProvince, 16=BirthPlaceDistrict,
+            // 17=CurrentAddressProvince, 18=CurrentAddressDistrict,
+            // 19=BankName, 20=BankAccountNumber,
+            // 21=DepartmentCode, 22=JobTitleCode, 23=DirectManagerCode,
+            // 24=EmploymentType, 25=ContractType, 26=ContractStartDate, 27=ContractEndDate,
+            // 28=RoleName
             for (int row = 2; row <= rowCount; row++)
             {
+                var fullName = GetCellValue(worksheet, row, 1)?.Trim();
+                var citizenId = GetCellValue(worksheet, row, 7)?.Trim();
+                
+                // Skip empty rows
+                if (string.IsNullOrEmpty(fullName) && string.IsNullOrEmpty(citizenId))
+                    continue;
+
+                // EmployeeCode, Username, Password left empty - server will auto-generate
                 var employee = new EmployeeExcelImportDto
                 {
                     RowNumber = row,
-                    EmployeeCode = GetCellValue(worksheet, row, 1)?.Trim() ?? "",
-                    FullName = GetCellValue(worksheet, row, 2)?.Trim() ?? "",
-                    Username = GetCellValue(worksheet, row, 3)?.Trim() ?? "",
-                    Password = GetCellValue(worksheet, row, 4)?.Trim() ?? "",
-                    DateOfBirth = ParseDate(GetCellValue(worksheet, row, 5)),
-                    Gender = GetCellValue(worksheet, row, 6)?.Trim(),
-                    CitizenIdNumber = GetCellValue(worksheet, row, 7)?.Trim(),
-                    PhoneNumber1 = GetCellValue(worksheet, row, 8)?.Trim(),
-                    PhoneNumber1Description = GetCellValue(worksheet, row, 9)?.Trim(),
-                    PhoneNumber2 = GetCellValue(worksheet, row, 10)?.Trim(),
-                    PhoneNumber2Description = GetCellValue(worksheet, row, 11)?.Trim(),
-                    BirthPlaceProvince = GetCellValue(worksheet, row, 12)?.Trim(),
-                    BirthPlaceDistrict = GetCellValue(worksheet, row, 13)?.Trim(),
-                    PersonalEmail = GetCellValue(worksheet, row, 14)?.Trim(),
-                    CompanyEmail = GetCellValue(worksheet, row, 15)?.Trim(),
-                    CurrentAddress = GetCellValue(worksheet, row, 16)?.Trim(),
-                    BankName = GetCellValue(worksheet, row, 17)?.Trim(),
-                    BankAccountNumber = GetCellValue(worksheet, row, 18)?.Trim(),
-                    DepartmentCode = GetCellValue(worksheet, row, 19)?.Trim(),
-                    JobTitleCode = GetCellValue(worksheet, row, 20)?.Trim(),
-                    RoleName = GetCellValue(worksheet, row, 21)?.Trim(),
-                    EmploymentType = GetCellValue(worksheet, row, 22)?.Trim(),
-                    ContractType = GetCellValue(worksheet, row, 23)?.Trim(),
-                    ContractStartDate = ParseDate(GetCellValue(worksheet, row, 24)),
-                    ContractEndDate = ParseDate(GetCellValue(worksheet, row, 25)),
-                    DirectManagerCode = GetCellValue(worksheet, row, 26)?.Trim(),
-                    MaritalStatus = GetCellValue(worksheet, row, 27)?.Trim(),
-                    HasChildren = ParseBool(GetCellValue(worksheet, row, 28)),
-                    PersonalTaxCode = GetCellValue(worksheet, row, 29)?.Trim(),
-                    SocialInsuranceNumber = GetCellValue(worksheet, row, 30)?.Trim(),
-                    Nationality = GetCellValue(worksheet, row, 31)?.Trim()
+                    EmployeeCode = "",  // Auto-generated
+                    Username = "",      // Auto-generated
+                    Password = "",      // Auto-generated from CCCD
+                    
+                    // Personal information
+                    FullName = fullName ?? "",
+                    DateOfBirth = ParseDate(GetCellValue(worksheet, row, 2)),
+                    Gender = GetCellValue(worksheet, row, 3)?.Trim(),
+                    Nationality = GetCellValue(worksheet, row, 4)?.Trim(),
+                    MaritalStatus = GetCellValue(worksheet, row, 5)?.Trim(),
+                    HasChildren = ParseBool(GetCellValue(worksheet, row, 6)),
+                    
+                    // Legal information
+                    CitizenIdNumber = citizenId,
+                    PersonalTaxCode = GetCellValue(worksheet, row, 8)?.Trim(),
+                    SocialInsuranceNumber = GetCellValue(worksheet, row, 9)?.Trim(),
+                    
+                    // Contact information
+                    CompanyEmail = null, // Auto-generated from name
+                    PersonalEmail = GetCellValue(worksheet, row, 10)?.Trim(),
+                    PhoneNumber1 = GetCellValue(worksheet, row, 11)?.Trim(),
+                    PhoneNumber1Description = GetCellValue(worksheet, row, 12)?.Trim(),
+                    PhoneNumber2 = GetCellValue(worksheet, row, 13)?.Trim(),
+                    PhoneNumber2Description = GetCellValue(worksheet, row, 14)?.Trim(),
+                    
+                    // Address
+                    BirthPlaceProvince = GetCellValue(worksheet, row, 15)?.Trim(),
+                    BirthPlaceDistrict = GetCellValue(worksheet, row, 16)?.Trim(),
+                    CurrentAddressProvince = GetCellValue(worksheet, row, 17)?.Trim(),
+                    CurrentAddressDistrict = GetCellValue(worksheet, row, 18)?.Trim(),
+                    CurrentAddress = null, // Will be built from province + district
+                    
+                    // Bank
+                    BankName = GetCellValue(worksheet, row, 19)?.Trim(),
+                    BankAccountNumber = GetCellValue(worksheet, row, 20)?.Trim(),
+                    
+                    // Job
+                    DepartmentCode = GetCellValue(worksheet, row, 21)?.Trim(),
+                    JobTitleCode = GetCellValue(worksheet, row, 22)?.Trim(),
+                    DirectManagerCode = GetCellValue(worksheet, row, 23)?.Trim(),
+                    EmploymentType = GetCellValue(worksheet, row, 24)?.Trim(),
+                    ContractType = GetCellValue(worksheet, row, 25)?.Trim(),
+                    ContractStartDate = ParseDate(GetCellValue(worksheet, row, 26)),
+                    ContractEndDate = ParseDate(GetCellValue(worksheet, row, 27)),
+                    
+                    // Phân quyền
+                    RoleName = GetCellValue(worksheet, row, 28)?.Trim()
                 };
-
-                // Skip empty rows
-                if (string.IsNullOrEmpty(employee.EmployeeCode) && string.IsNullOrEmpty(employee.FullName))
-                    continue;
 
                 employees.Add(employee);
             }
@@ -196,21 +227,45 @@ namespace HrmApi.Services
                 throw new ArgumentException($"Validation failed: {errors}");
             }
 
-            // Business rules: conditional required
-            if (!string.IsNullOrEmpty(rowData.ContractType) && rowData.ContractType.Equals("Fixed-term", StringComparison.OrdinalIgnoreCase))
+            // Validate CCCD format (13 số)
+            if (!string.IsNullOrEmpty(rowData.CitizenIdNumber))
             {
-                if (!rowData.ContractEndDate.HasValue)
-                    throw new ArgumentException("ContractEndDate is required when ContractType is 'Fixed-term'");
+                var cccdDigits = new string(rowData.CitizenIdNumber.Where(char.IsDigit).ToArray());
+                if (cccdDigits.Length != 13)
+                    throw new ArgumentException("CCCD phải đúng 13 chữ số");
             }
 
-            // DirectManagerCode required if system requires approval workflows - we'll treat as optional but if provided must exist
-            // CompanyEmail conditional - not enforced here
+            // Validate phone number format (10 số)
+            if (!string.IsNullOrEmpty(rowData.PhoneNumber1))
+            {
+                var phoneDigits = new string(rowData.PhoneNumber1.Where(char.IsDigit).ToArray());
+                if (phoneDigits.Length != 10)
+                    throw new ArgumentException("Số điện thoại 1 phải đúng 10 chữ số");
+            }
 
-            // Check if employee exists
+            // Business rules: conditional required
+            if (!string.IsNullOrEmpty(rowData.ContractType) && 
+                (rowData.ContractType.Equals("Có thời hạn", StringComparison.OrdinalIgnoreCase) ||
+                 rowData.ContractType.Equals("Fixed-term", StringComparison.OrdinalIgnoreCase)))
+            {
+                if (!rowData.ContractEndDate.HasValue)
+                    throw new ArgumentException("Ngày kết thúc hợp đồng là bắt buộc khi loại hợp đồng là 'Có thời hạn'");
+            }
+
+            // Build CurrentAddress from province + district if not provided
+            if (string.IsNullOrEmpty(rowData.CurrentAddress))
+            {
+                if (!string.IsNullOrEmpty(rowData.CurrentAddressProvince) && !string.IsNullOrEmpty(rowData.CurrentAddressDistrict))
+                {
+                    rowData.CurrentAddress = $"{rowData.CurrentAddressDistrict}, {rowData.CurrentAddressProvince}";
+                }
+            }
+
+            // Check if employee exists by CCCD (không dựa vào EmployeeCode vì nó tự động tạo)
             var existingEmployee = await _context.Employees
                 .Include(e => e.Department)
                 .Include(e => e.JobTitle)
-                .FirstOrDefaultAsync(e => e.EmployeeCode == rowData.EmployeeCode);
+                .FirstOrDefaultAsync(e => e.CitizenIdNumber == rowData.CitizenIdNumber);
 
             var isUpdate = existingEmployee != null;
 
@@ -276,19 +331,18 @@ namespace HrmApi.Services
             employee.DateOfBirth = data.DateOfBirth;
             employee.Gender = data.Gender;
             employee.CitizenIdNumber = data.CitizenIdNumber;
-            employee.PhoneNumber = data.PhoneNumber;
+            employee.PhoneNumber = data.PhoneNumber1 ?? data.PhoneNumber2;  // Update main phone
             employee.CompanyEmail = data.CompanyEmail;
             employee.PersonalEmail = data.PersonalEmail;
             employee.CurrentAddress = data.CurrentAddress;
             employee.BirthPlaceProvince = data.BirthPlaceProvince;
             employee.BirthPlaceDistrict = data.BirthPlaceDistrict;
-            employee.EmploymentType = data.EmploymentType;
-            // Use existing value when incoming value is null to avoid assigning null to non-nullable property
+            employee.EmploymentType = data.EmploymentType ?? employee.EmploymentType;
             employee.ContractType = data.ContractType ?? employee.ContractType;
             employee.ContractStartDate = data.ContractStartDate;
             employee.ContractEndDate = data.ContractEndDate;
-            employee.MaritalStatus = data.MaritalStatus;
-            employee.HasChildren = data.HasChildren ?? false;
+            employee.MaritalStatus = data.MaritalStatus ?? employee.MaritalStatus;
+            employee.HasChildren = data.HasChildren ?? employee.HasChildren;
             employee.PersonalTaxCode = data.PersonalTaxCode;
             employee.SocialInsuranceNumber = data.SocialInsuranceNumber;
             employee.Nationality = data.Nationality ?? employee.Nationality;
@@ -331,7 +385,7 @@ namespace HrmApi.Services
                     {
                         EmployeeId = employee.Id,
                         PhoneNumber = data.PhoneNumber2,
-                        Description = data.PhoneNumber2Description ?? "Liên hệ"
+                        Description = data.PhoneNumber2Description ?? "Khẩn cấp"
                     };
                     await _employeeRepository.AddPhoneNumberAsync(phone2);
                 }
@@ -348,16 +402,21 @@ namespace HrmApi.Services
                 
                 if (existingBank != null)
                 {
-                    _context.EmployeeBankAccounts.Remove(existingBank);
+                    existingBank.BankName = data.BankName;
+                    existingBank.AccountNumber = data.BankAccountNumber;
+                    _context.EmployeeBankAccounts.Update(existingBank);
                 }
-
-                var bankAccount = new EmployeeBankAccount
+                else
                 {
-                    EmployeeId = employee.Id,
-                    BankName = data.BankName,
-                    AccountNumber = data.BankAccountNumber
-                };
-                await _employeeRepository.AddBankAccountAsync(bankAccount);
+                    var bankAccount = new EmployeeBankAccount
+                    {
+                        EmployeeId = employee.Id,
+                        BankName = data.BankName,
+                        AccountNumber = data.BankAccountNumber
+                    };
+                    await _employeeRepository.AddBankAccountAsync(bankAccount);
+                }
+                
                 await _context.SaveChangesAsync();
             }
         }
@@ -369,47 +428,52 @@ namespace HrmApi.Services
             Role? role,
             Employee? directManager)
         {
-            // Check if username already exists
-            var existingUser = await _context.Employees
-                .FirstOrDefaultAsync(u => u.CitizenIdNumber == data.CitizenIdNumber);
+            // Check if CCCD already exists
+            var existingEmployee = await _context.Employees
+                .FirstOrDefaultAsync(e => e.CitizenIdNumber == data.CitizenIdNumber);
 
-            if (existingUser != null)
-                throw new ArgumentException($"Username '{data.FullName}' đã tồn tại");
+            if (existingEmployee != null)
+                throw new ArgumentException($"CCCD '{data.CitizenIdNumber}' đã tồn tại trong hệ thống");
 
-            // Extract birth place and current address from data
-            string? birthPlaceProvince = null;
-            string? birthPlaceDistrict = null;
-            string? currentAddressFormatted = data.CurrentAddress;
+            // ===== TỰ ĐỘNG TẠO EmployeeCode =====
+            var employeeCode = await GenerateNextEmployeeCodeAsync();
+            
+            // ===== TỰ ĐỘNG TẠO Username = EmployeeCode =====
+            var username = employeeCode;
+            
+            // ===== TỰ ĐỘNG TẠO Password = EMP + 4 số cuối CCCD =====
+            var cccdDigits = new string(data.CitizenIdNumber!.Where(char.IsDigit).ToArray());
+            var last4Digits = cccdDigits.Length >= 4 ? cccdDigits.Substring(cccdDigits.Length - 4) : cccdDigits;
+            var defaultPassword = $"EMP{last4Digits}";
 
-            if (!string.IsNullOrEmpty(data.BirthPlaceProvince) && !string.IsNullOrEmpty(data.BirthPlaceDistrict))
-            {
-                birthPlaceProvince = data.BirthPlaceProvince;
-                birthPlaceDistrict = data.BirthPlaceDistrict;
-            }
+            // ===== TỰ ĐỘNG TẠO CompanyEmail (luôn tự động tạo từ tên nhân viên) =====
+            // Template Excel không có cột CompanyEmail nữa, backend tự động tạo 100%
+            var companyEmail = await GenerateUniqueCompanyEmailAsync(data.FullName);
 
             // Create employee
             var employee = new Employee
             {
+                EmployeeCode = employeeCode,
                 FullName = data.FullName,
                 DateOfBirth = data.DateOfBirth,
                 Gender = data.Gender,
                 CitizenIdNumber = data.CitizenIdNumber,
-                PhoneNumber = string.IsNullOrEmpty(data.PhoneNumber) ? null : data.PhoneNumber,
-                CompanyEmail = data.CompanyEmail,
+                PhoneNumber = data.PhoneNumber1 ?? data.PhoneNumber2,  // Lấy số phone chính
+                CompanyEmail = companyEmail,
                 PersonalEmail = data.PersonalEmail,
-                CurrentAddress = currentAddressFormatted,
-                BirthPlaceProvince = birthPlaceProvince,
-                BirthPlaceDistrict = birthPlaceDistrict,
-                EmploymentType = data.EmploymentType,
+                CurrentAddress = data.CurrentAddress,
+                BirthPlaceProvince = data.BirthPlaceProvince,
+                BirthPlaceDistrict = data.BirthPlaceDistrict,
+                EmploymentType = data.EmploymentType ?? "Full-time",
                 ContractType = data.ContractType ?? "Indefinite",
                 ContractStartDate = data.ContractStartDate,
                 ContractEndDate = data.ContractEndDate,
-                MaritalStatus = data.MaritalStatus,
+                MaritalStatus = data.MaritalStatus ?? "Độc thân",
                 HasChildren = data.HasChildren ?? false,
                 PersonalTaxCode = data.PersonalTaxCode,
                 SocialInsuranceNumber = data.SocialInsuranceNumber,
-                Nationality = data.Nationality ?? "Vietnamese",
-                Status = "ACTIVE",
+                Nationality = data.Nationality ?? "Việt Nam",
+                Status = "Đang làm việc",
                 DepartmentId = department?.Id,
                 JobTitleId = jobTitle?.Id,
                 DirectManagerId = directManager?.Id
@@ -436,7 +500,7 @@ namespace HrmApi.Services
                 {
                     EmployeeId = employee.Id,
                     PhoneNumber = data.PhoneNumber2,
-                    Description = data.PhoneNumber2Description ?? "Liên hệ"
+                    Description = data.PhoneNumber2Description ?? "Khẩn cấp"
                 };
                 await _employeeRepository.AddPhoneNumberAsync(phone2);
             }
@@ -453,19 +517,103 @@ namespace HrmApi.Services
                 await _employeeRepository.AddBankAccountAsync(bankAccount);
             }
 
-            // Create user account
+            await _context.SaveChangesAsync();
+
+            // Create UserAccount with auto-generated credentials
+            var hashedPassword = _passwordHasher.HashPassword(defaultPassword);
+            
             var userAccount = new UserAccount
             {
-                Username = data.Username,
-                PasswordHash = _passwordHasher.HashPassword(data.Password),
                 EmployeeId = employee.Id,
-                RoleId = role?.RoleId ?? 1 // Default to Employee role
+                Username = username,
+                PasswordHash = hashedPassword,
+                RoleId = role?.RoleId ?? 3  // Default to Employee role (roleId = 3)
             };
 
             _context.UserAccounts.Add(userAccount);
             await _context.SaveChangesAsync();
         }
 
+        // Helper method để tạo EmployeeCode tự động
+        private async Task<string> GenerateNextEmployeeCodeAsync()
+        {
+            var lastEmployee = await _context.Employees
+                .OrderByDescending(e => e.EmployeeCode)
+                .FirstOrDefaultAsync();
+
+            if (lastEmployee == null || string.IsNullOrEmpty(lastEmployee.EmployeeCode))
+                return "EMP001";
+
+            // Extract number from EmployeeCode (format: EMP001)
+            var codePrefix = "EMP";
+            var lastCode = lastEmployee.EmployeeCode;
+            
+            if (lastCode.StartsWith(codePrefix) && lastCode.Length > codePrefix.Length)
+            {
+                var numberPart = lastCode.Substring(codePrefix.Length);
+                if (int.TryParse(numberPart, out int lastNumber))
+                {
+                    var nextNumber = lastNumber + 1;
+                    return $"{codePrefix}{nextNumber:D3}";  // D3 = 3 digits with leading zeros
+                }
+            }
+
+            // Fallback
+            return $"{codePrefix}001";
+        }
+
+        // Helper method để tạo CompanyEmail duy nhất
+        private async Task<string> GenerateUniqueCompanyEmailAsync(string fullName)
+        {
+            const string domain = "@company.com";
+            
+            // Chuyển tên thành email: loại bỏ dấu, chữ thường, không space
+            var emailLocal = RemoveVietnameseTones(fullName)
+                .ToLower()
+                .Replace(" ", "")
+                .Replace("đ", "d");
+            
+            // Loại bỏ các ký tự đặc biệt
+            emailLocal = new string(emailLocal.Where(c => char.IsLetterOrDigit(c)).ToArray());
+            
+            // Kiểm tra trùng
+            var baseEmail = $"{emailLocal}{domain}";
+            var exists = await _context.Employees.AnyAsync(e => e.CompanyEmail == baseEmail);
+            
+            if (!exists)
+                return baseEmail;
+            
+            // Nếu trùng, thêm số vào sau
+            int counter = 1;
+            string emailWithNumber;
+            do
+            {
+                emailWithNumber = $"{emailLocal}{counter}{domain}";
+                exists = await _context.Employees.AnyAsync(e => e.CompanyEmail == emailWithNumber);
+                counter++;
+            } while (exists);
+            
+            return emailWithNumber;
+        }
+
+        // Helper method để bỏ dấu tiếng Việt
+        private string RemoveVietnameseTones(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return text;
+
+            var withDiacritics = "àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ" +
+                                "ÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ";
+            var withoutDiacritics = "aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyyd" +
+                                   "AAAAAAAAAAAAAAAAAEEEEEEEEEEEIIIIIOOOOOOOOOOOOOOOOOUUUUUUUUUUUYYYYYD";
+
+            for (int i = 0; i < withDiacritics.Length; i++)
+            {
+                text = text.Replace(withDiacritics[i], withoutDiacritics[i]);
+            }
+
+            return text;
+        }
 
         public async Task<byte[]> GenerateExcelTemplateAsync()
         {
@@ -473,42 +621,104 @@ namespace HrmApi.Services
 
             using var package = new ExcelPackage();
 
-            // ===== 1) TEMPLATE SHEET =====
+            // ===== 1) INSTRUCTIONS SHEET =====
+            var instructions = package.Workbook.Worksheets.Add("Instructions");
+            instructions.Cells[1, 1].Value = "EMPLOYEE IMPORT GUIDE";
+            instructions.Cells[1, 1].Style.Font.Bold = true;
+            instructions.Cells[1, 1].Style.Font.Size = 16;
+            instructions.Cells[1, 1].Style.Font.Color.SetColor(Color.DarkBlue);
+            
+            int instructRow = 3;
+            instructions.Cells[instructRow++, 1].Value = "1. REQUIRED FIELDS (marked with *):";
+            instructions.Cells[instructRow++, 1].Value = "   - Full Name (FullName)";
+            instructions.Cells[instructRow++, 1].Value = "   - Date of Birth (DateOfBirth) - Format: YYYY-MM-DD";
+            instructions.Cells[instructRow++, 1].Value = "   - Gender - Select: Male, Female, Other";
+            instructions.Cells[instructRow++, 1].Value = "   - Citizen ID Number (CitizenIdNumber) - Exactly 13 digits";
+            instructions.Cells[instructRow++, 1].Value = "   - Phone Number 1 (PhoneNumber1) - 10 digits";
+            instructions.Cells[instructRow++, 1].Value = "   - Birth Place Province (BirthPlaceProvince)";
+            instructions.Cells[instructRow++, 1].Value = "   - Birth Place District (BirthPlaceDistrict)";
+            instructions.Cells[instructRow++, 1].Value = "   - Current Address Province (CurrentAddressProvince)";
+            instructions.Cells[instructRow++, 1].Value = "   - Current Address District (CurrentAddressDistrict)";
+            instructions.Cells[instructRow++, 1].Value = "   - Bank Name (BankName)";
+            instructions.Cells[instructRow++, 1].Value = "   - Bank Account Number (BankAccountNumber)";
+            instructions.Cells[instructRow++, 1].Value = "   - Department Code (DepartmentCode) - See Lookup sheet";
+            instructions.Cells[instructRow++, 1].Value = "   - Job Title Code (JobTitleCode) - See Lookup sheet";
+            instructions.Cells[instructRow++, 1].Value = "   - Contract Start Date (ContractStartDate) - Format: YYYY-MM-DD";
+            instructions.Cells[instructRow++, 1].Value = "   - Role Name (RoleName) - See Lookup sheet";
+            instructions.Cells[instructRow++, 1].Value = "";
+            
+            instructions.Cells[instructRow++, 1].Value = "2. OPTIONAL FIELDS:";
+            instructions.Cells[instructRow++, 1].Value = "   - Nationality - Default: Vietnam";
+            instructions.Cells[instructRow++, 1].Value = "   - Marital Status - Select: Single, Married, Divorced, Widowed";
+            instructions.Cells[instructRow++, 1].Value = "   - Has Children - Yes/No";
+            instructions.Cells[instructRow++, 1].Value = "   - Personal Tax Code (PersonalTaxCode) - 10 digits";
+            instructions.Cells[instructRow++, 1].Value = "   - Social Insurance Number (SocialInsuranceNumber) - 10 digits";
+            instructions.Cells[instructRow++, 1].Value = "   - Personal Email (PersonalEmail)";
+            instructions.Cells[instructRow++, 1].Value = "   - Phone Number 1 Description (PhoneNumber1Description) - E.g: Personal, Emergency, Work";
+            instructions.Cells[instructRow++, 1].Value = "   - Phone Number 2 (PhoneNumber2) - 10 digits";
+            instructions.Cells[instructRow++, 1].Value = "   - Phone Number 2 Description (PhoneNumber2Description)";
+            instructions.Cells[instructRow++, 1].Value = "   - Employment Type (EmploymentType) - Default: Full-time";
+            instructions.Cells[instructRow++, 1].Value = "     Values: Full-time | Part-time | Contract | Temporary";
+            instructions.Cells[instructRow++, 1].Value = "   - Contract Type (ContractType) - Default: Permanent";
+            instructions.Cells[instructRow++, 1].Value = "     Values: Permanent | Fixed-term";
+            instructions.Cells[instructRow++, 1].Value = "   - Contract End Date (ContractEndDate) - Required if ContractType is 'Fixed-term'";
+            instructions.Cells[instructRow++, 1].Value = "   - Direct Manager Code (DirectManagerCode) - Employee code of the manager";
+            instructions.Cells[instructRow++, 1].Value = "";
+            
+            instructions.Cells[instructRow++, 1].Value = "3. IMPORTANT NOTES:";
+            instructions.Cells[instructRow++, 1].Value = "   - Employee Code (EmployeeCode) is auto-generated, no need to enter";
+            instructions.Cells[instructRow++, 1].Value = "   - Username is auto-generated = EmployeeCode";
+            instructions.Cells[instructRow++, 1].Value = "   - Default password is auto-generated from ID number";
+            instructions.Cells[instructRow++, 1].Value = "   - Company Email (CompanyEmail) is auto-generated from employee name";
+            instructions.Cells[instructRow++, 1].Value = "   - Citizen ID must be exactly 13 digits";
+            instructions.Cells[instructRow++, 1].Value = "   - Date of Birth must be in the past";
+            instructions.Cells[instructRow++, 1].Value = "   - Personal Email (if provided) must be valid format";
+            instructions.Cells[instructRow++, 1].Value = "   - EmploymentType and ContractType values must be exact (see list above)";
+            instructions.Cells[instructRow++, 1].Value = "   - If ContractEndDate is provided, it must be after ContractStartDate";
+            instructions.Cells[instructRow++, 1].Value = "";
+            
+            instructions.Cells[instructRow++, 1].Value = "4. HOW TO USE:";
+            instructions.Cells[instructRow++, 1].Value = "   a) View 'Lookup' sheet to see valid values (DepartmentCode, JobTitleCode, RoleName, etc.)";
+            instructions.Cells[instructRow++, 1].Value = "   b) Fill in information in 'Employee Template' sheet (sample row already included)";
+            instructions.Cells[instructRow++, 1].Value = "   c) Use exact values from 'Lookup' sheet to avoid errors";
+            instructions.Cells[instructRow++, 1].Value = "   d) Save file and upload to the system";
+            
+            instructions.Cells[instructions.Dimension.Address].AutoFitColumns();
+
+            // ===== 2) TEMPLATE SHEET =====
             var worksheet = package.Workbook.Worksheets.Add("Employee Template");
 
+            // Cập nhật headers - loại bỏ EmployeeCode, Username, Password, CompanyEmail
             var headers = new[]
             {
-                "EmployeeCode*",
-                "FullName*",
-                "Username*",
-                "Password*",
-                "DateOfBirth*",
-                "Gender*",
-                "CitizenIdNumber*",
-                "PhoneNumber1*",
-                "PhoneNumber1Description",
-                "PhoneNumber2",
-                "PhoneNumber2Description",
-                "BirthPlaceProvince*",
-                "BirthPlaceDistrict*",
-                "PersonalEmail",
-                "CompanyEmail",
-                "CurrentAddress",
-                "BankName*",
-                "BankAccountNumber*",
-                "DepartmentCode*",
-                "JobTitleCode*",
-                "RoleName",
-                "EmploymentType",
-                "ContractType",
-                "ContractStartDate*",
-                "ContractEndDate",
-                "DirectManagerCode",
-                "MaritalStatus",
-                "HasChildren",
-                "PersonalTaxCode",
-                "SocialInsuranceNumber",
-                "Nationality*"
+                "FullName*",                      // 1
+                "DateOfBirth*",                   // 2
+                "Gender*",                        // 3
+                "Nationality",                    // 4
+                "MaritalStatus",                  // 5
+                "HasChildren",                    // 6
+                "CitizenIdNumber*",               // 7
+                "PersonalTaxCode",                // 8
+                "SocialInsuranceNumber",          // 9
+                "PersonalEmail",                  // 10
+                "PhoneNumber1*",                  // 11
+                "PhoneNumber1Description",        // 12
+                "PhoneNumber2",                   // 13
+                "PhoneNumber2Description",        // 14
+                "BirthPlaceProvince*",            // 15
+                "BirthPlaceDistrict*",            // 16
+                "CurrentAddressProvince*",        // 17
+                "CurrentAddressDistrict*",        // 18
+                "BankName*",                      // 19
+                "BankAccountNumber*",             // 20
+                "DepartmentCode*",                // 21
+                "JobTitleCode*",                  // 22
+                "DirectManagerCode",              // 23
+                "EmploymentType",                 // 24
+                "ContractType",                   // 25
+                "ContractStartDate*",             // 26
+                "ContractEndDate",                // 27
+                "RoleName*"                       // 28
             };
 
             for (int i = 0; i < headers.Length; i++)
@@ -517,40 +727,39 @@ namespace HrmApi.Services
                 worksheet.Cells[1, i + 1].Style.Font.Bold = true;
                 worksheet.Cells[1, i + 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
                 worksheet.Cells[1, i + 1].Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                worksheet.Cells[1, i + 1].Style.Border.BorderAround(ExcelBorderStyle.Thin);
             }
 
-            // ✅ Sample data (PHẢI khớp đúng "Code" / "RoleName" như header)
-            worksheet.Cells[2, 1].Value = "NV001";                                           // EmployeeCode
-            worksheet.Cells[2, 2].Value = "Nguyễn Văn An";                                   // FullName
-            worksheet.Cells[2, 3].Value = "nguyenvana";                                      // Username
-            worksheet.Cells[2, 4].Value = "Password@123";                                    // Password
-            worksheet.Cells[2, 5].Value = "1995-03-20";                                      // DateOfBirth
-            worksheet.Cells[2, 6].Value = "Nam";                                             // Gender
-            worksheet.Cells[2, 7].Value = "0123456789012";                                   // CitizenIdNumber
-            worksheet.Cells[2, 8].Value = "0912345678";                                      // PhoneNumber1
-            worksheet.Cells[2, 9].Value = "Cá nhân";                                         // PhoneNumber1Description
-            worksheet.Cells[2, 10].Value = "0987654321";                                     // PhoneNumber2
-            worksheet.Cells[2, 11].Value = "Liên hệ";                                        // PhoneNumber2Description
-            worksheet.Cells[2, 12].Value = "Hồ Chí Minh";                                   // BirthPlaceProvince
-            worksheet.Cells[2, 13].Value = "Quận 9";                                         // BirthPlaceDistrict
-            worksheet.Cells[2, 14].Value = "nguyenvana@personal.com";                        // PersonalEmail
-            worksheet.Cells[2, 15].Value = "nguyenvana@company.com";                         // CompanyEmail
-            worksheet.Cells[2, 16].Value = "456 Đường Lê Văn Việt, Quận 9, TP.HCM";          // CurrentAddress
-            worksheet.Cells[2, 17].Value = "TECHCOMBANK";                                    // BankName
-            worksheet.Cells[2, 18].Value = "1234567890123";                                  // BankAccountNumber
-            worksheet.Cells[2, 19].Value = "IT";                                             // DepartmentCode
-            worksheet.Cells[2, 20].Value = "5";                                              // JobTitleCode
-            worksheet.Cells[2, 21].Value = "Nhân viên";                                      // RoleName
-            worksheet.Cells[2, 22].Value = "Toàn thời gian";                                 // EmploymentType
-            worksheet.Cells[2, 23].Value = "Vĩnh viễn";                                      // ContractType
-            worksheet.Cells[2, 24].Value = "2023-06-01";                                     // ContractStartDate
-            worksheet.Cells[2, 25].Value = "";                                               // ContractEndDate (empty for indefinite)
-            worksheet.Cells[2, 26].Value = "MNG001";                                         // DirectManagerCode
-            worksheet.Cells[2, 27].Value = "Độc thân";                                       // MaritalStatus
-            worksheet.Cells[2, 28].Value = "Không";                                          // HasChildren
-            worksheet.Cells[2, 29].Value = "0945123456";                                     // PersonalTaxCode
-            worksheet.Cells[2, 30].Value = "9501234567";                                     // SocialInsuranceNumber
-            worksheet.Cells[2, 31].Value = "Việt Nam";                                       // Nationality
+            // Sample data - updated to match English values from AddEmployee page
+            // Complete example with realistic data
+            worksheet.Cells[2, 1].Value = "Trần Thị Minh Châu";                             // FullName
+            worksheet.Cells[2, 2].Value = "1998-06-15";                                      // DateOfBirth
+            worksheet.Cells[2, 3].Value = "Female";                                          // Gender
+            worksheet.Cells[2, 4].Value = "Vietnam";                                         // Nationality
+            worksheet.Cells[2, 5].Value = "Single";                                          // MaritalStatus
+            worksheet.Cells[2, 6].Value = "No";                                              // HasChildren
+            worksheet.Cells[2, 7].Value = "0103456789123";                                   // CitizenIdNumber (13 digits - standard format)
+            worksheet.Cells[2, 8].Value = "7501234567";                                      // PersonalTaxCode (10 digits)
+            worksheet.Cells[2, 9].Value = "9801234567";                                      // SocialInsuranceNumber (10 digits)
+            worksheet.Cells[2, 10].Value = "tranminchau1998@email.com";                      // PersonalEmail
+            worksheet.Cells[2, 11].Value = "0901234567";                                     // PhoneNumber1 (10 digits)
+            worksheet.Cells[2, 12].Value = "Personal";                                       // PhoneNumber1Description
+            worksheet.Cells[2, 13].Value = "0932156789";                                     // PhoneNumber2 (10 digits)
+            worksheet.Cells[2, 14].Value = "Emergency";                                      // PhoneNumber2Description
+            worksheet.Cells[2, 15].Value = "Hanoi";                                          // BirthPlaceProvince
+            worksheet.Cells[2, 16].Value = "Hoan Kiem";                                      // BirthPlaceDistrict
+            worksheet.Cells[2, 17].Value = "Hanoi";                                          // CurrentAddressProvince
+            worksheet.Cells[2, 18].Value = "Cau Giay";                                       // CurrentAddressDistrict
+            worksheet.Cells[2, 19].Value = "Vietcombank";                                    // BankName
+            worksheet.Cells[2, 20].Value = "0981234567890";                                  // BankAccountNumber
+            worksheet.Cells[2, 21].Value = "IT";                                             // DepartmentCode
+            worksheet.Cells[2, 22].Value = "3";                                              // JobTitleCode
+            worksheet.Cells[2, 23].Value = "EMP001";                                         // DirectManagerCode (optional - example)
+            worksheet.Cells[2, 24].Value = "Full-time";                                      // EmploymentType
+            worksheet.Cells[2, 25].Value = "Fixed-term";                                     // ContractType
+            worksheet.Cells[2, 26].Value = "2024-01-15";                                     // ContractStartDate
+            worksheet.Cells[2, 27].Value = "2025-01-14";                                     // ContractEndDate (12 months)
+            worksheet.Cells[2, 28].Value = "Employee";                                       // RoleName
 
             worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
 
@@ -673,7 +882,7 @@ namespace HrmApi.Services
             row++;
 
             int genderStartRow = row;
-            var genderValues = new[] { "Nam", "Nữ", "Khác" };
+            var genderValues = new[] { "Male", "Female", "Other" };
             foreach (var g in genderValues)
             {
                 lookup.Cells[row, 1].Value = g;
@@ -692,7 +901,7 @@ namespace HrmApi.Services
             row++;
 
             int empTypeStartRow = row;
-            var employmentTypes = new[] { "Toàn thời gian", "Bán thời gian", "Theo hợp đồng", "Tạm thời" };
+            var employmentTypes = new[] { "Full-time", "Part-time", "Contract", "Temporary" };
             foreach (var e in employmentTypes)
             {
                 lookup.Cells[row, 1].Value = e;
@@ -711,7 +920,7 @@ namespace HrmApi.Services
             row++;
 
             int contractTypeStartRow = row;
-            var contractTypes = new[] { "Vĩnh viễn", "Có thời hạn" };
+            var contractTypes = new[] { "Permanent", "Fixed-term" };
             foreach (var c in contractTypes)
             {
                 lookup.Cells[row, 1].Value = c;
@@ -730,7 +939,7 @@ namespace HrmApi.Services
             row++;
 
             int maritalStartRow = row;
-            var maritalStatuses = new[] { "Độc thân", "Kết hôn", "Ly hôn", "Góa" };
+            var maritalStatuses = new[] { "Single", "Married", "Divorced", "Widowed" };
             foreach (var m in maritalStatuses)
             {
                 lookup.Cells[row, 1].Value = m;
@@ -749,7 +958,7 @@ namespace HrmApi.Services
             row++;
 
             int childrenStartRow = row;
-            var childrenValues = new[] { "Có", "Không" };
+            var childrenValues = new[] { "Yes", "No" };
             foreach (var c in childrenValues)
             {
                 lookup.Cells[row, 1].Value = c;
@@ -768,7 +977,7 @@ namespace HrmApi.Services
             row++;
 
             int nationalityStartRow = row;
-            var nationalities = new[] { "Việt Nam", "Khác" };
+            var nationalities = new[] { "Vietnam", "United States", "United Kingdom", "France", "Germany", "Japan", "South Korea", "China", "Singapore", "Thailand", "Australia", "Canada", "Netherlands", "Italy", "Spain", "Sweden", "Norway", "Denmark", "Finland", "Other" };
             foreach (var n in nationalities)
             {
                 lookup.Cells[row, 1].Value = n;
@@ -807,7 +1016,7 @@ namespace HrmApi.Services
             row++;
 
             int statusStartRow = row;
-            var statusValues = new[] { "Đang làm việc", "Nghỉ việc", "Tạm dừng", "Từ chức" };
+            var statusValues = new[] { "Active", "Resigned", "Suspended", "Retired" };
             foreach (var s in statusValues)
             {
                 lookup.Cells[row, 1].Value = s;
@@ -826,7 +1035,7 @@ namespace HrmApi.Services
             row++;
 
             int leaveTypeStartRow = row;
-            var leaveTypeValues = new[] { "Phép năm", "Phép bệnh", "Phép cá nhân", "Nghỉ không lương", "Phép thai sản" };
+            var leaveTypeValues = new[] { "Annual", "Sick", "Personal", "Unpaid", "Maternity" };
             foreach (var l in leaveTypeValues)
             {
                 lookup.Cells[row, 1].Value = l;
@@ -836,126 +1045,6 @@ namespace HrmApi.Services
 
             lookup.Cells[lookup.Dimension.Address].AutoFitColumns();
 
-            
-            // ===== 3) (OPTIONAL) Dropdown validation ngay trên template =====
-            // Nếu bạn muốn user chọn từ dropdown thay vì gõ code
-            // DepartmentCode = column 8, JobTitleCode = 9, RoleName = 10, EmploymentType = 11
-            // ContractType = 12, Gender = 3, MaritalStatus = 16, HasChildren = 17, Nationality = 20
-            // áp dụng từ row 2 đến row 1000
-            int startDataRow = 2;
-            int endDataRow = 1000;
-
-            // Gender (Column 3)
-            if (genderEndRow >= genderStartRow)
-            {
-                var addr = $"A{genderStartRow}:A{genderEndRow}";
-                var dv = worksheet.DataValidations.AddListValidation(worksheet.Cells[startDataRow, 3, endDataRow, 3].Address);
-                dv.Formula.ExcelFormula = $"Lookup!{addr}";
-                dv.ShowErrorMessage = true;
-                dv.ErrorTitle = "Sai Gender";
-                dv.Error = "Vui lòng chọn Gender từ danh sách Lookup.";
-            }
-
-            // DepartmentCode (Column 8)
-            if (deptEndRow >= deptStartRow)
-            {
-                var addr = $"A{deptStartRow}:A{deptEndRow}";
-                var dv = worksheet.DataValidations.AddListValidation(worksheet.Cells[startDataRow, 8, endDataRow, 8].Address);
-                dv.Formula.ExcelFormula = $"Lookup!{addr}";
-                dv.ShowErrorMessage = true;
-                dv.ErrorTitle = "Sai DepartmentCode";
-                dv.Error = "Vui lòng chọn DepartmentCode từ danh sách Lookup.";
-            }
-
-            // JobTitleCode (Column 9)
-            if (jtEndRow >= jtStartRow)
-            {
-                var addr = $"A{jtStartRow}:A{jtEndRow}";
-                var dv = worksheet.DataValidations.AddListValidation(worksheet.Cells[startDataRow, 9, endDataRow, 9].Address);
-                dv.Formula.ExcelFormula = $"Lookup!{addr}";
-                dv.ShowErrorMessage = true;
-                dv.ErrorTitle = "Sai JobTitleCode";
-                dv.Error = "Vui lòng chọn JobTitleCode từ danh sách Lookup.";
-            }
-
-            // RoleName (Column 10)
-            if (roleEndRow >= roleStartRow)
-            {
-                var addr = $"A{roleStartRow}:A{roleEndRow}";
-                var dv = worksheet.DataValidations.AddListValidation(worksheet.Cells[startDataRow, 10, endDataRow, 10].Address);
-                dv.Formula.ExcelFormula = $"Lookup!{addr}";
-                dv.ShowErrorMessage = true;
-                dv.ErrorTitle = "Sai RoleName";
-                dv.Error = "Vui lòng chọn RoleName từ danh sách Lookup.";
-            }
-
-            // EmploymentType (Column 11)
-            if (empTypeEndRow >= empTypeStartRow)
-            {
-                var addr = $"A{empTypeStartRow}:A{empTypeEndRow}";
-                var dv = worksheet.DataValidations.AddListValidation(worksheet.Cells[startDataRow, 11, endDataRow, 11].Address);
-                dv.Formula.ExcelFormula = $"Lookup!{addr}";
-                dv.ShowErrorMessage = true;
-                dv.ErrorTitle = "Sai EmploymentType";
-                dv.Error = "Vui lòng chọn EmploymentType từ danh sách Lookup.";
-            }
-
-            // ContractType (Column 12)
-            if (contractTypeEndRow >= contractTypeStartRow)
-            {
-                var addr = $"A{contractTypeStartRow}:A{contractTypeEndRow}";
-                var dv = worksheet.DataValidations.AddListValidation(worksheet.Cells[startDataRow, 12, endDataRow, 12].Address);
-                dv.Formula.ExcelFormula = $"Lookup!{addr}";
-                dv.ShowErrorMessage = true;
-                dv.ErrorTitle = "Sai ContractType";
-                dv.Error = "Vui lòng chọn ContractType từ danh sách Lookup.";
-            }
-
-            // MaritalStatus (Column 16)
-            if (maritalEndRow >= maritalStartRow)
-            {
-                var addr = $"A{maritalStartRow}:A{maritalEndRow}";
-                var dv = worksheet.DataValidations.AddListValidation(worksheet.Cells[startDataRow, 16, endDataRow, 16].Address);
-                dv.Formula.ExcelFormula = $"Lookup!{addr}";
-                dv.ShowErrorMessage = true;
-                dv.ErrorTitle = "Sai MaritalStatus";
-                dv.Error = "Vui lòng chọn MaritalStatus từ danh sách Lookup.";
-            }
-
-            // HasChildren (Column 17)
-            if (childrenEndRow >= childrenStartRow)
-            {
-                var addr = $"A{childrenStartRow}:A{childrenEndRow}";
-                var dv = worksheet.DataValidations.AddListValidation(worksheet.Cells[startDataRow, 17, endDataRow, 17].Address);
-                dv.Formula.ExcelFormula = $"Lookup!{addr}";
-                dv.ShowErrorMessage = true;
-                dv.ErrorTitle = "Sai HasChildren";
-                dv.Error = "Vui lòng chọn HasChildren từ danh sách Lookup.";
-            }
-
-            // Nationality (Column 20)
-            if (nationalityEndRow >= nationalityStartRow)
-            {
-                var addr = $"A{nationalityStartRow}:A{nationalityEndRow}";
-                var dv = worksheet.DataValidations.AddListValidation(worksheet.Cells[startDataRow, 20, endDataRow, 20].Address);
-                dv.Formula.ExcelFormula = $"Lookup!{addr}";
-                dv.ShowErrorMessage = true;
-                dv.ErrorTitle = "Sai Nationality";
-                dv.Error = "Vui lòng chọn Nationality từ danh sách Lookup.";
-            }
-
-            // DirectManagerCode (Column 15)
-            if (managerEndRow >= managerStartRow)
-            {
-                var addr = $"A{managerStartRow}:A{managerEndRow}";
-                var dv = worksheet.DataValidations.AddListValidation(worksheet.Cells[startDataRow, 15, endDataRow, 15].Address);
-                dv.Formula.ExcelFormula = $"Lookup!{addr}";
-                dv.ShowErrorMessage = true;
-                dv.ErrorTitle = "Sai DirectManagerCode";
-                dv.Error = "Vui lòng chọn DirectManagerCode từ danh sách Lookup.";
-            }
-
-            
             // ===== Return bytes =====
             return package.GetAsByteArray();
         }

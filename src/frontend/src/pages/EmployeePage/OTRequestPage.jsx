@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { createOvertimeRequest  } from "../../Services/requests";
 import ViolationBanner from "../../components/common/ViolationBanner";
 import { FormRow } from "../../components/common/FormRow";
+import Button from "../../components/common/Button";
+import Toast from "../../components/common/Toast";
 import "./RequestForm.css";
 
 
@@ -13,12 +16,22 @@ const INITIAL_FORM = {
   projectId: "",
 };
 
+function todayStr() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 export default function OTRequestPage() {
+  const navigate = useNavigate();
   const [f, setF] = useState(INITIAL_FORM);
   const [errs, setErrs] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [toast, setToast] = useState(null);
 
-  // ✅ Lấy từ localStorage (được set khi login thành công)
+  //Lấy từ localStorage (được set khi login thành công)
   const employeeCode = localStorage.getItem("employeeCode") || "EMP001";
 
   function onChange(e) {
@@ -34,7 +47,9 @@ export default function OTRequestPage() {
 
   function validate() {
     const m = [];
+    const today = todayStr();
     if (!f.date) m.push("Date is required.");
+    if (f.date && f.date < today) m.push("OT date cannot be in the past.");
     if (!f.start || !f.end || f.start >= f.end)
       m.push("End time must be later than Start time.");
     const diff = f.start && f.end ? timeDiffHours(f.start, f.end) : 0;
@@ -64,11 +79,11 @@ export default function OTRequestPage() {
 
       console.log("Sending payload:", payload);
 
-      await createOvertimeRequest(employeeCode, payload);  // ✅ CALL API REAL
+      await createOvertimeRequest(employeeCode, payload);
 
-      alert("Overtime request created successfully!");
+      setToast({ message: "Overtime request created successfully!", type: "success" });
       setErrs([]);
-      setF(INITIAL_FORM);
+      setTimeout(() => navigate(-1), 2000);
     } catch (err) {
       setErrs([err.message || "Failed to create overtime request"]);
     } finally {
@@ -77,84 +92,122 @@ export default function OTRequestPage() {
   }
 
   function resetForm() {
-    setF(INITIAL_FORM);
-    setErrs([]);
+    navigate(-1);
   }
 
+  const minDate = todayStr();
+
   return (
-    <div className="card form-card fade-in-up">
-      <h3>Overtime request</h3>
-      <ViolationBanner messages={errs} />
-      <form className="form-grid" onSubmit={submit} noValidate>
-        <FormRow label="Date" required>
-          <input
-            className="input"
-            type="date"
-            name="date"
-            value={f.date}
-            onChange={onChange}
-          />
-        </FormRow>
-
-        <FormRow label="Start time" required>
-          <input
-            className="input"
-            type="time"
-            name="start"
-            value={f.start}
-            onChange={onChange}
-          />
-        </FormRow>
-
-        <FormRow label="End time" required>
-          <input
-            className="input"
-            type="time"
-            name="end"
-            value={f.end}
-            onChange={onChange}
-          />
-        </FormRow>
-
-        <FormRow label="Project ID">
-          <input
-            className="input"
-            name="projectId"
-            value={f.projectId}
-            onChange={onChange}
-          />
-        </FormRow>
-
-        <FormRow label="Reason" required full>
-          <textarea
-            className="textarea"
-            name="reason"
-            value={f.reason}
-            onChange={onChange}
-          />
-        </FormRow>
-
+    <div
+      style={{
+        padding: "24px",
+        maxWidth: "1200px",
+        margin: "0 auto",
+      }}
+    >
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      <div className="card form-card fade-in-up">
         <div
-          className="hstack"
-          style={{ gridColumn: "1 / -1", justifyContent: "flex-end", gap: 8 }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "24px",
+            paddingBottom: "16px",
+            borderBottom: "1px solid #e2e8f0",
+          }}
         >
-          <button
-            type="button"
-            className="btn ghost"
-            onClick={resetForm}
-            disabled={submitting}
-          >
-            Cancel
-          </button>
-          <button
-            className="btn primary"
-            type="submit"
-            disabled={submitting}
-          >
-            {submitting ? "Submitting..." : "Submit"}
-          </button>
+          <div>
+            <h2 style={{ margin: "0 0 4px 0", fontSize: "1.5rem", color: "#0f172a" }}>
+              Overtime request
+            </h2>
+            <p style={{ margin: 0, fontSize: "0.9rem", color: "#64748b" }}>
+              Submit an overtime request for approval
+            </p>
+          </div>
         </div>
-      </form>
+
+        <ViolationBanner messages={errs} />
+
+        <form className="form-grid" onSubmit={submit} noValidate>
+          <FormRow label="Date" required>
+            <input
+              className="input"
+              type="date"
+              name="date"
+              value={f.date}
+              onChange={onChange}
+              min={minDate}
+            />
+          </FormRow>
+
+          <FormRow label="Start time" required>
+            <input
+              className="input"
+              type="time"
+              name="start"
+              value={f.start}
+              onChange={onChange}
+            />
+          </FormRow>
+
+          <FormRow label="End time" required>
+            <input
+              className="input"
+              type="time"
+              name="end"
+              value={f.end}
+              onChange={onChange}
+            />
+          </FormRow>
+
+          <FormRow label="Project ID">
+            <input
+              className="input"
+              name="projectId"
+              value={f.projectId}
+              onChange={onChange}
+            />
+          </FormRow>
+
+          <FormRow label="Reason" required full>
+            <textarea
+              className="textarea"
+              name="reason"
+              value={f.reason}
+              onChange={onChange}
+            />
+          </FormRow>
+
+          <div
+            style={{
+              gridColumn: "1 / -1",
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: "12px",
+              marginTop: "16px",
+              paddingTop: "16px",
+              borderTop: "1px solid #e2e8f0",
+            }}
+          >
+            <Button
+              variant="ghost"
+              onClick={resetForm}
+              disabled={submitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={submit}
+              disabled={submitting}
+              isLoading={submitting}
+            >
+              {submitting ? "Submitting..." : "Submit"}
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

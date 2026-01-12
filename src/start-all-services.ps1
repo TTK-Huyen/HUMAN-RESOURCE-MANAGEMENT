@@ -1,32 +1,55 @@
-# start-all-services.ps1
-# Script để start tất cả services
+# Vào folder src : "cd F:\HCMUS_KH\Nam4\PTTK_HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src>" trước khi chạy script này
+# Chạy lệnh sau trên vscode: .\notification-service\start-all-services.ps1
 
-Write-Host "Starting all services..." -ForegroundColor Green
 
-# Config
-$BackendPath = "F:\HCMUS_KH\Nam4\PTTK_HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\BE\HRMApi"
-$NotificationPath = "F:\HCMUS_KH\Nam4\PTTK_HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\notification-service\notification-service"
-$FrontendPath = "F:\HCMUS_KH\Nam4\PTTK_HTTTHD\HUMAN-RESOURCE-MANAGEMENT\src\frontend"
 
-# 1. Notification Service (Java)
-Write-Host "`n[1/3] Starting Notification Service (Java on port 8085)..." -ForegroundColor Cyan
-$env:PATH = "C:\Program Files\Java\jdk-17\bin;$env:PATH"
-Start-Process powershell -ArgumentList "-NoExit -Command `"cd '$NotificationPath' ; java -jar target/notification-service-0.0.1-SNAPSHOT.jar`"" -WindowStyle Normal
+# --- CẤU HÌNH ĐƯỜNG DẪN (Sửa lại cho đúng folder của bạn) ---
+# Dấu "." nghĩa là thư mục hiện tại chứa file script này
+$dotnetPath  = "./BE/HRMApi"        # Folder backend
+$frontendPath = "./frontend"         # Folder frontend
+$javaPath     = "./notification-service/notification-service"   # Folder java
 
-Start-Sleep -Seconds 3
+# --- BẮT ĐẦU SCRIPT ---
 
-# 2. Backend API (.NET)
-Write-Host "[2/3] Starting Backend API (.NET on port 5291)..." -ForegroundColor Cyan
-Start-Process powershell -ArgumentList "-NoExit -Command `"cd '$BackendPath' ; dotnet run`"" -WindowStyle Normal
+Write-Host "Dang khoi dong he thong..." -ForegroundColor Cyan
 
-Start-Sleep -Seconds 3
+# --- TASK 1: JAVA SERVICE ---
+# Kiểm tra xem folder có tồn tại không trước khi chạy
+if (Test-Path $javaPath) {
+    Write-Host "-> Khoi chay Java..." -ForegroundColor Yellow
+    # Lệnh: cd vào folder -> chạy lệnh java
+    $cmdJava = "cd '$javaPath'; Write-Host 'Dang chay Java Service...' -ForegroundColor Yellow; java -jar target/notification-service-0.0.1-SNAPSHOT.jar"
+    Start-Process powershell -ArgumentList "-NoExit", "-Command", $cmdJava
+} else {
+    Write-Host "ERR: Khong tim thay folder Java tai: $javaPath" -ForegroundColor Red
+}
 
-# 3. Frontend (React)
-Write-Host "[3/3] Starting Frontend (React on port 3000)..." -ForegroundColor Cyan
-Start-Process powershell -ArgumentList "-NoExit -Command `"cd '$FrontendPath' ; npm start`"" -WindowStyle Normal
+# --- TASK 2: FRONTEND ---
+if (Test-Path $frontendPath) {
+    Write-Host "-> Khoi chay Frontend..." -ForegroundColor Green
+    # Lệnh: cd vào folder -> npm start
+    $cmdFe = "cd '$frontendPath'; Write-Host 'Dang chay Frontend...' -ForegroundColor Green; npm start"
+    Start-Process powershell -ArgumentList "-NoExit", "-Command", $cmdFe
+} else {
+    Write-Host "ERR: Khong tim thay folder Frontend tai: $frontendPath" -ForegroundColor Red
+}
 
-Write-Host "`n✅ All services started!" -ForegroundColor Green
-Write-Host "Notification Service: http://localhost:8085" -ForegroundColor Yellow
-Write-Host "Backend API:          http://localhost:5291" -ForegroundColor Yellow
-Write-Host "Frontend:             http://localhost:3000" -ForegroundColor Yellow
-Write-Host "`nLogin: manager / 123456" -ForegroundColor Yellow
+# --- TASK 3: BACKEND .NET (RESET DB & RUN) ---
+Write-Host "-> Khoi chay Backend .NET (Reset DB)..." -ForegroundColor Magenta
+
+# Chuỗi lệnh gộp tất cả các bước bạn yêu cầu
+$cmdBe = "cd '$dotnetPath'; " +
+         "Write-Host '1. Xoa Database...' -ForegroundColor Cyan; " +
+         "dotnet ef database drop -f; " +
+         "Write-Host '2. Xoa thu muc Migrations...' -ForegroundColor Cyan; " +
+         "if (Test-Path 'Migrations') { Remove-Item -Path 'Migrations' -Recurse -Force }; " +
+         "Write-Host '3. Tao Migration InitialCreate...' -ForegroundColor Cyan; " +
+         "dotnet ef migrations add InitialCreate; " +
+         "Write-Host '4. Update Database...' -ForegroundColor Cyan; " +
+         "dotnet ef database update; " +
+         "Write-Host '5. Start Backend...' -ForegroundColor Green; " +
+         "dotnet watch run"
+
+Start-Process powershell -ArgumentList "-NoExit", "-Command", $cmdBe
+
+Write-Host "Da gui lenh mo 3 cua so!" -ForegroundColor Cyan

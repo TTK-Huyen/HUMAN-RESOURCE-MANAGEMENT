@@ -41,7 +41,6 @@ public class NotificationController {
       if (managerUserId != null) add(managerUserId, e);
     } else {
       if (requesterUserId != null) add(requesterUserId, e);
-      if (managerUserId != null) add(managerUserId, e);
     }
 
     return ResponseEntity.accepted().build();

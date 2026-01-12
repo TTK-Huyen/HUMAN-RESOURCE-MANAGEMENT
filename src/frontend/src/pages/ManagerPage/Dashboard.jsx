@@ -42,8 +42,8 @@ const ManagerDashboard = () => {
       
       {/* HEADER */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Dashboard Quản Lý Yêu Cầu</h1>
-        <p className="text-slate-500">Xin chào Manager, bạn có 2 yêu cầu cần duyệt hôm nay.</p>
+        <h1 className="text-2xl font-bold text-slate-900">Requests Dashboard</h1>
+        <p className="text-slate-500">Hello Manager, you have 2 requests pending approval today.</p>
       </div>
 
       {/* 1. THỐNG KÊ (STATS CARDS) */}
@@ -84,7 +84,7 @@ const ManagerDashboard = () => {
           <Search size={18} className="text-slate-400"/>
           <input 
             type="text" 
-            placeholder="Tìm theo tên hoặc ID nhân viên..." 
+            placeholder="Search by name or employee ID..." 
             className="bg-transparent outline-none text-sm w-full"
             value={searchId}
             onChange={(e) => setSearchId(e.target.value)}
@@ -97,15 +97,15 @@ const ManagerDashboard = () => {
             className="bg-transparent outline-none text-sm w-full text-slate-600"
             onChange={(e) => setFilterDept(e.target.value)}
           >
-            <option value="">Tất cả phòng ban</option>
-            <option value="IT">Kỹ thuật (IT)</option>
-            <option value="HR">Nhân sự (HR)</option>
-            <option value="Sales">Kinh doanh (Sales)</option>
+            <option value="">All departments</option>
+            <option value="IT">IT</option>
+            <option value="HR">HR</option>
+            <option value="Sales">Sales</option>
           </select>
         </div>
         
         <button className="px-4 py-2 bg-slate-800 text-white text-sm rounded-lg font-medium hover:bg-slate-700 transition">
-          Xuất báo cáo
+          Export report
         </button>
       </div>
 
@@ -164,7 +164,7 @@ const ManagerDashboard = () => {
           </tbody>
         </table>
         {filteredData.length === 0 && (
-            <div className="p-8 text-center text-slate-500">Không tìm thấy yêu cầu nào.</div>
+          <div className="p-8 text-center text-slate-500">No requests found.</div>
         )}
       </div>
 
@@ -199,44 +199,44 @@ const ManagerDashboard = () => {
 
               {/* Request Details */}
               <div>
-                <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wide mb-3">Thông tin</h4>
+                <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wide mb-3">Information</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="text-slate-500">Loại yêu cầu</div>
+                    <div className="text-slate-500">Request type</div>
                     <div className="font-medium text-slate-800 text-right">{selectedReq.type}</div>
                     
-                    <div className="text-slate-500">Ngày gửi</div>
+                    <div className="text-slate-500">Submitted</div>
                     <div className="font-medium text-slate-800 text-right">{selectedReq.submittedDate}</div>
                     
-                    <div className="text-slate-500">Ngày hiệu lực</div>
+                    <div className="text-slate-500">Effective date</div>
                     <div className="font-medium text-slate-800 text-right">{selectedReq.effectiveDate}</div>
 
-                    <div className="text-slate-500">Trạng thái</div>
+                    <div className="text-slate-500">Status</div>
                     <div className="flex justify-end">{getStatusBadge(selectedReq.status)}</div>
                 </div>
                 <div className="mt-4">
-                    <div className="text-slate-500 text-sm mb-1">Lý do:</div>
+                    <div className="text-slate-500 text-sm mb-1">Reason:</div>
                     <p className="text-sm text-slate-800 bg-slate-50 p-3 rounded border border-slate-100">
-                        Xin phép nghỉ để giải quyết công việc gia đình. Mong quản lý duyệt giúp.
+                      Requesting leave for family matters. Please approve.
                     </p>
                 </div>
               </div>
 
               {/* Approval Log Timeline */}
               <div>
-                 <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wide mb-3">Lịch sử xử lý (Log)</h4>
+                 <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wide mb-3">Approval Log</h4>
                  <div className="space-y-0 relative border-l-2 border-slate-200 ml-2 pl-6 pb-2">
                     {selectedReq.logs.map((log, index) => (
                         <div key={index} className="mb-6 relative">
                             <div className="absolute -left-[31px] top-1 w-3 h-3 rounded-full bg-slate-300 border-2 border-white box-content"></div>
                             <p className="text-xs text-slate-400">{log.time}</p>
                             <p className="text-sm font-medium text-slate-800">{log.action}</p>
-                            <p className="text-xs text-slate-500">Bởi: {log.user}</p>
+                            <p className="text-xs text-slate-500">By: {log.user}</p>
                         </div>
                     ))}
                     {selectedReq.status === 'pending' && (
                         <div className="relative">
                             <div className="absolute -left-[31px] top-1 w-3 h-3 rounded-full bg-yellow-400 border-2 border-white box-content animate-pulse"></div>
-                            <p className="text-sm text-yellow-600 font-medium italic">Đang chờ xử lý...</p>
+                            <p className="text-sm text-yellow-600 font-medium italic">Pending...</p>
                         </div>
                     )}
                  </div>

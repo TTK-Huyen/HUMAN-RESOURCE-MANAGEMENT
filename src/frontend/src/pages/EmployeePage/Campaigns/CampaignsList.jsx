@@ -34,12 +34,12 @@ export default function CampaignsList() {
   const [endDate, setEndDate] = useState("");
 
   const statusOptions = [
-    { value: "", label: "Tất cả trạng thái" },
-    { value: "PENDING", label: "Đang chờ" },
-    { value: "UPCOMING", label: "Sắp diễn ra" },
-    { value: "ONGOING", label: "Đang diễn ra" },
-    { value: "FINISHED", label: "Đã kết thúc" },
-    { value: "CANCELLED", label: "Đã hủy" },
+    { value: "", label: "All statuses" },
+    { value: "PENDING", label: "Pending" },
+    { value: "UPCOMING", label: "Upcoming" },
+    { value: "ONGOING", label: "Ongoing" },
+    { value: "FINISHED", label: "Finished" },
+    { value: "CANCELLED", label: "Cancelled" },
   ];
 
   const load = async (filters = {}) => {
@@ -81,7 +81,7 @@ export default function CampaignsList() {
     const max = c.maxParticipants;
     const current = c.currentParticipants ?? 0;
     if (max && current >= max) {
-      setToast({ type: 'error', message: 'Chiến dịch đã đầy.' });
+      setToast({ type: 'error', message: 'Campaign is full.' });
       return;
     }
 
@@ -99,7 +99,7 @@ export default function CampaignsList() {
     
     try {
       const res = await registerCampaign(pendingCampaignCode);
-      const msg = res?.message || 'Đăng ký thành công.';
+      const msg = res?.message || 'Registered successfully.';
       setToast({ type: 'success', message: msg });
       // refresh current filters
       const filters = {};
@@ -109,7 +109,7 @@ export default function CampaignsList() {
       if (endDate) filters.endDate = endDate;
       await load(filters);
     } catch (ex) {
-      const errMsg = ex?.response?.data?.message || ex?.message || 'Đăng ký thất bại. Vui lòng thử lại.';
+      const errMsg = ex?.response?.data?.message || ex?.message || 'Registration failed. Please try again.';
       setToast({ type: 'error', message: errMsg });
     } finally {
       setRegisteringCode("");
@@ -153,11 +153,11 @@ export default function CampaignsList() {
     <div style={{ maxWidth: 1100, margin: "20px auto", padding: 16 }}>
       <ConfirmDialog
         isOpen={showConfirmDialog}
-        title="Xác nhận đăng ký"
-        message={`Bạn có chắc chắn muốn đăng ký cho chiến dịch này?`}
-        warningMessage="Lưu ý: Để hủy đăng ký sau này, bạn cần sự phê duyệt của HR."
-        confirmLabel="Đăng ký"
-        cancelLabel="Hủy"
+        title="Confirm Registration"
+        message={`Are you sure you want to register for this campaign?`}
+        warningMessage="Note: To cancel registration later, HR approval is required."
+        confirmLabel="Register"
+        cancelLabel="Cancel"
         type="info"
         onConfirm={handleConfirmRegister}
         onCancel={() => {
@@ -166,14 +166,14 @@ export default function CampaignsList() {
         }}
       />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
-        <h1 style={{ margin: 0, color: "#0b1220", fontSize: 24, fontWeight: 800 }}>Chiến dịch</h1>
+        <h1 style={{ margin: 0, color: "#0b1220", fontSize: 24, fontWeight: 800 }}>Campaigns</h1>
       </div>
 
       {/* Filter Panel - now updates immediately on change (debounced) */}
       <div style={{ display: "flex", gap: 12, marginBottom: 18, alignItems: 'center', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fff', padding: '8px 12px', borderRadius: 10, boxShadow: '0 6px 18px rgba(2,6,23,0.04)', minWidth: 320 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fff', padding: '8px 12px', borderRadius: 10, boxShadow: '0 6px 18px rgba(2,6,23,0.04)', minWidth: 320 }}>
           <Search size={18} color="#94a3b8" />
-          <input value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="Tìm theo tên chiến dịch" style={{ border: 'none', outline: 'none', width: '260px', fontSize: 14 }} />
+          <input value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="Search by campaign name" style={{ border: 'none', outline: 'none', width: '260px', fontSize: 14 }} />
         </div>
 
         <select value={status} onChange={(e) => setStatus(e.target.value)} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #eef2f7', background: '#fff', minWidth: 160 }}>
@@ -195,7 +195,7 @@ export default function CampaignsList() {
 
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
           <button className="btn-reset-campaigns" onClick={resetFilters} style={{ padding: '10px 16px', borderRadius: 999, border: 'none', background: '#3b82f6', color: 'white', fontWeight: 800, boxShadow: '0 8px 20px rgba(59,130,246,0.12)', display: 'inline-flex', gap: 8, alignItems: 'center' }}>
-            Đặt lại
+            Reset
           </button>
           <style>{`.btn-reset-campaigns:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(59,130,246,0.16); } .btn-reset-campaigns:active { transform: translateY(0); }`}</style>
         </div>
@@ -203,11 +203,11 @@ export default function CampaignsList() {
 
       {/* List */}
       {loading ? (
-        <Loading fullScreen={false} text="Đang tải chiến dịch..." />
+        <Loading fullScreen={false} text="Loading campaigns..." />
       ) : error ? (
         <div style={{ padding: 20, background: '#fff2f2', borderRadius: 8, color: '#b91c1c' }}>{error}</div>
       ) : campaigns.length === 0 ? (
-        <EmptyState message="Không tìm thấy chiến dịch" subMessage="Thử xóa bộ lọc hoặc điều chỉnh tìm kiếm" />
+        <EmptyState message="No campaigns found" subMessage="Try removing filters or adjust your search" />
       ) : (
         <>
           {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
@@ -219,20 +219,20 @@ export default function CampaignsList() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                     <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#0b1220' }}>{c.campaignName}</h3>
                     <div style={{ color: '#64748b', fontSize: 12 }}>
-                      {c.status === 'PENDING' ? 'Đang chờ' :
-                      c.status === 'UPCOMING' ? 'Sắp diễn ra' :
-                      c.status === 'ONGOING' ? 'Đang diễn ra' :
-                      c.status === 'FINISHED' ? 'Đã kết thúc' :
-                      c.status === 'CANCELLED' ? 'Đã hủy' : c.status}
+                      {c.status === 'PENDING' ? 'Pending' :
+                      c.status === 'UPCOMING' ? 'Upcoming' :
+                      c.status === 'ONGOING' ? 'Ongoing' :
+                      c.status === 'FINISHED' ? 'Finished' :
+                      c.status === 'CANCELLED' ? 'Cancelled' : c.status}
                     </div>
                   </div>
 
                   <p style={{ marginTop: 8, color: '#475569', fontSize: 14, minHeight: 44 }}>{c.description}</p>
 
                   <div style={{ display: 'flex', gap: 12, marginTop: 12, color: '#475569', fontSize: 13 }}>
-                    <div><strong>Từ:</strong> {fmt(c.startDate)}</div>
-                    <div><strong>Đến:</strong> {fmt(c.endDate)}</div>
-                  </div>
+                            <div><strong>From:</strong> {fmt(c.startDate)}</div>
+                            <div><strong>To:</strong> {fmt(c.endDate)}</div>
+                          </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
@@ -242,10 +242,10 @@ export default function CampaignsList() {
                     disabled={Boolean(c.isRegistered || (c.maxParticipants && c.currentParticipants >= c.maxParticipants))}
                     onClick={() => handleRegister(c.campaignCode)}
                   >
-                    <PlusCircle size={14} /> {c.isRegistered ? 'Đã đăng ký' : 'Đăng ký'}
+                    <PlusCircle size={14} /> {c.isRegistered ? 'Registered' : 'Register'}
                   </Button>
                   <Link to={`/employee/campaigns/${c.campaignCode}`} style={{ flex: 1, padding: '10px', background: '#64748b', color: 'white', border: 'none', borderRadius: 8, textAlign: 'center', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                    <Info size={14} /> Chi tiết
+                    <Info size={14} /> Details
                   </Link>
                 </div>
                 <style>{`.campaign-card .btn { transition: transform 0.12s, box-shadow 0.12s; } .campaign-card .btn:hover { transform: translateY(-2px); }`}</style>

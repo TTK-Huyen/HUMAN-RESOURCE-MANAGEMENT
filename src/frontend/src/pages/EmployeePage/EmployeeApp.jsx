@@ -17,20 +17,20 @@ function CreateGrid() {
   const tiles = [
     {
       to: "leave",
-      title: "Xin nghỉ phép",
-      desc: "Tạo đơn xin nghỉ phép năm, nghỉ ốm...",
+      title: "Leave Request",
+      desc: "Create annual leave, sick leave, personal leave requests...",
       icon: <FileText size={32} color="#2563eb" />,
     },
     {
       to: "ot",
-      title: "Đăng ký OT",
-      desc: "Đăng ký làm thêm giờ (Overtime)",
+      title: "Overtime Registration",
+      desc: "Register for overtime work hours",
       icon: <Clock size={32} color="#f59e0b" />,
     },
     {
       to: "resignation",
-      title: "Nghỉ việc",
-      desc: "Gửi đơn xin thôi việc",
+      title: "Resignation",
+      desc: "Submit resignation request",
       icon: <LogOut size={32} color="#ef4444" />,
     },
   ];
@@ -56,10 +56,10 @@ function CreateGrid() {
             marginBottom: 8,
           }}
         >
-          Bạn muốn tạo yêu cầu gì?
+          What request would you like to create?
         </h2>
         <p style={{ color: "#64748b", margin: 0 }}>
-          Chọn loại đơn từ bên dưới để bắt đầu quy trình.
+          Select a request type below to start the process.
         </p>
       </div>
 
@@ -154,12 +154,12 @@ function CreateGrid() {
 // --- MAIN EMPLOYEE APP ---
 export default function EmployeeApp() {
   return (
-    // ❌ QUAN TRỌNG: Đã xóa <EmployeeLayout> vì App.js đã bọc MainLayout rồi
+    // ❌ IMPORTANT: Removed <EmployeeLayout> because App.js already wraps MainLayout
     <Routes>
-      {/* Mặc định vào /employee sẽ chuyển hướng đến trang Create */}
+      {/* Default /employee redirects to /employee/create */}
       <Route index element={<Navigate to="create" replace />} />
 
-      {/* 1. Nhóm Trang Tạo Đơn (/employee/create) */}
+      {/* 1. Request Creation Routes (/employee/create) */}
       <Route path="create">
         <Route index element={<CreateGrid />} /> {/* /employee/create */}
         <Route path="leave" element={<LeaveRequestPage />} />{" "}
@@ -170,22 +170,22 @@ export default function EmployeeApp() {
         {/* /employee/create/resignation */}
       </Route>
 
-      {/* 2. Trang Xem Trạng Thái (/employee/status) */}
+      {/* 2. Request Status Page (/employee/status) */}
       <Route path="status" element={<RequestStatusPage />} />
 
-      {/* 3. Nhóm Trang Profile (/employee/profile) */}
+      {/* 3. Profile Routes (/employee/profile) */}
       <Route path="profile">
         <Route index element={<MyProfilePage />} />
         <Route path="update-request" element={<ProfileUpdateRequestPage />} />
       </Route>
 
-      {/* 4. Nhóm Trang Chiến Dịch (/employee/campaigns) */}
+      {/* 4. Campaigns Routes (/employee/campaigns) */}
       <Route path="campaigns">
         <Route index element={<CampaignsList />} />
         <Route path=":id" element={<CampaignDetail />} />
       </Route>
 
-      {/* Fallback: Nhập sai link thì về create */}
+      {/* Fallback: Redirect to create if path not found */}
       <Route path="*" element={<Navigate to="create" replace />} />
     </Routes>
   );

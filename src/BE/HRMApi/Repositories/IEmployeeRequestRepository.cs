@@ -27,7 +27,9 @@ namespace HrmApi.Repositories
 
         Task<RequestDashboardSummary> GetDashboardSummaryAsync(
             int? departmentId,
-            string? keyword);
+            string? keyword,
+            int? managerId,
+            bool onlyDirectReports);
 
           }
 }

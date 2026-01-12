@@ -120,8 +120,8 @@ namespace HrmApi.Services
                     ManagerEmail = actor.PersonalEmail,
                     Status = newStatus.ToUpper(),
                     Message = newStatus == "Approved"
-                        ? "Yêu cầu nghỉ phép đã được duyệt"
-                        : "Yêu cầu nghỉ phép đã bị từ chối"
+                        ? "The leave request has been approved."
+                        : "The leave request has been rejected."
                 });
             }
 
@@ -254,8 +254,8 @@ namespace HrmApi.Services
                 ManagerEmail = approver.PersonalEmail,
                 Status = newStatus.ToUpper(),
                 Message = newStatus == "Approved" 
-                    ? $"Yêu cầu tăng ca ngày {otRequest.Date:dd/MM} đã được duyệt"
-                    : $"Yêu cầu tăng ca ngày {otRequest.Date:dd/MM} đã bị từ chối"
+                    ? $"The overtime request for {otRequest.Date:dd/MM} has been approved."
+                    : $"The overtime request for {otRequest.Date:dd/MM} has been rejected."
             });
 
             return new OtRequestApprovalResponseDto
@@ -384,8 +384,8 @@ namespace HrmApi.Services
                 ManagerEmail = approver.PersonalEmail,
                 Status = newStatus.ToUpper(),
                 Message = newStatus == "Approved" 
-                    ? "Đơn nghỉ việc đã được duyệt. Quy trình Offboarding bắt đầu." 
-                    : "Đơn nghỉ việc đã bị từ chối."
+                    ? "The resignation request has been approved. The offboarding process has started." 
+                    : "The resignation request has been rejected."
             });
 
             return new ResignationRequestApprovalResponseDto

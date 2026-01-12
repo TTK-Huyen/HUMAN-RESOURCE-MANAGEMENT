@@ -56,5 +56,8 @@ namespace HrmApi.Models
             get => Id;
             set => Id = value;
         }
+
+        [Column("reject_reason")]
+        public string? rejectReason { get; set; }
     }
 }

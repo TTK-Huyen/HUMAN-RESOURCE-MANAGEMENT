@@ -21,7 +21,9 @@ namespace HrmApi.Services
 
             var summary = await _employeeRequestRepository.GetDashboardSummaryAsync(
                 filter.DepartmentId,
-                filter.Keyword);
+                filter.Keyword,
+                filter.ManagerId,
+                filter.OnlyDirectReports);
 
             if (summary == null)
             {

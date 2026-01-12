@@ -18,14 +18,14 @@ namespace HrmApi.Security
         public string GenerateToken(string employeeCode, string roleCode)
         {
             var jwtSection = _config.GetSection("Jwt");
-            var key = jwtSection["Key"] ?? "supersecretkey";    
-            var issuer = jwtSection["Issuer"] ?? "hrmapi";
-            var audience = jwtSection["Audience"] ?? "hrmapi-client";
+            var key = _config["Jwt:Secret"] ?? "YourSuperSecretKeyThatIsAtLeast32CharactersLongForHS256";    
+            var issuer = _config["Jwt:Issuer"] ?? "HRMApi";
+            var audience = _config["Jwt:Audience"] ?? "HRMClient";
             var expires = DateTime.UtcNow.AddHours(8);
 
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, employeeCode),
+                new Claim(ClaimTypes.NameIdentifier, employeeCode),
                 new Claim(ClaimTypes.Role, roleCode),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };

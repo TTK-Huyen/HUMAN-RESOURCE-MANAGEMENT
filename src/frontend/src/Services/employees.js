@@ -154,9 +154,29 @@ export const HRService = {
     });
   },
 
-
-
-
-  }
+  // 11. Lấy danh sách nhân viên thuộc cùng phòng ban
+  fetchEmployeesByDepartment: (departmentId) => {
+    return api
+      .get("/employees", {
+        params: {
+          departmentId: departmentId,
+          pageSize: 1000, // Lấy tất cả trong phòng ban
+          status: "active"
+        },
+        headers: { Accept: "application/json, text/plain, */*" }
+      })
+      .then((response) => {
+        // Handle paginated response
+        if (response.data && response.data.data && Array.isArray(response.data.data)) {
+          return response.data.data;
+        }
+        // Handle direct array response
+        if (Array.isArray(response.data)) {
+          return response.data;
+        }
+        return [];
+      });
+  },
+}
 
   

@@ -6,10 +6,12 @@ namespace HrmApi.Services
     public class RequestStatusService : IRequestStatusService
     {
         private readonly IEmployeeRequestRepository _repo;
+        private readonly IEmployeeRepository _employeeRepository;
 
-        public RequestStatusService(IEmployeeRequestRepository repo)
+        public RequestStatusService(IEmployeeRequestRepository repo, IEmployeeRepository employeeRepository)
         {
             _repo = repo;
+            _employeeRepository = employeeRepository;
         }
 
         public async Task<IReadOnlyList<EmployeeRequestListItemDto>> GetRequestsByEmployeeAsync(
@@ -30,20 +32,31 @@ namespace HrmApi.Services
 
             var r = leave.Request;
 
+            // Map HandoverEmployeeId to employee code
+            string? handoverEmployeeCode = null;
+            if (leave.HandoverEmployeeId.HasValue)
+            {
+                var handoverEmp = await _employeeRepository.GetByIdAsync(leave.HandoverEmployeeId.Value);
+                if (handoverEmp != null)
+                {
+                    handoverEmployeeCode = handoverEmp.EmployeeCode;
+                }
+            }
+
             return new LeaveRequestDetailDto
             {
                 RequestId            = leave.RequestId,
                 Status               = r.Status,
                 CreatedAt            = r.CreatedAt,
-                ApprovedAt           = null, // chưa có cột trong DB
+                ApprovedAt           = r.ApprovedAt,
                 ApproverName         = r.Approver?.FullName,
-                RejectReason         = null, // chưa có cột trong DB
+                RejectReason         = leave.rejectReason,
                 LeaveType            = leave.LeaveType,
                 StartDate            = leave.StartDate,
                 EndDate              = leave.EndDate,
-                HandoverToEmployeeId = leave.HandoverEmployeeId,
+                HandoverToEmployeeCode = handoverEmployeeCode,
                 AttachmentPath       = leave.AttachmentPath,
-                Reason               = null
+                Reason               = leave.Reason
             };
         }
 
@@ -63,7 +76,7 @@ namespace HrmApi.Services
                 RequestId     = ot.RequestId,
                 Status        = r.Status,
                 CreatedAt     = r.CreatedAt,
-                ApprovedAt    = null,
+                ApprovedAt    = r.ApprovedAt,
                 ApproverName  = r.Approver?.FullName,
                 RejectReason  = null,
                 OtDate        = ot.OtDate,
@@ -91,7 +104,7 @@ namespace HrmApi.Services
                 RequestId              = rg.RequestId,
                 Status                 = r.Status,
                 CreatedAt              = r.CreatedAt,
-                ApprovedAt             = null,
+                ApprovedAt             = r.ApprovedAt,
                 ApproverName           = r.Approver?.FullName,
                 RejectReason           = null,
                 ProposedLastWorkingDate = rg.ProposedLastWorkingDate,

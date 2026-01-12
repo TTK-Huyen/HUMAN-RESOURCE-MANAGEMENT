@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { fetchCampaignDetail, registerCampaign, getRegistrationStatus } from "../../../Services/campaigns";
 import Loading from "../../../components/common/Loading";
 import StatusBadge from "../../../components/common/StatusBadge";
@@ -10,6 +10,17 @@ import { ArrowLeft, Calendar, Users, Info } from 'lucide-react';
 
 export default function CampaignDetail() {
   const { id: campaignCode } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleBack = () => {
+    const role = (localStorage.getItem("role") || "").toUpperCase();
+
+    // fallback nếu user vào thẳng URL (không có state.from)
+    const fallback = role === "HR" ? "/hr/campaigns" : "/employee/campaigns";
+
+    navigate(location.state?.from || fallback);
+  };
   const [campaign, setCampaign] = useState(null);
   const [isRegistering, setIsRegistering] = useState(false);
   const [toast, setToast] = useState(null);
@@ -48,10 +59,10 @@ export default function CampaignDetail() {
 
   const fmt = (d) => {
     if (!d) return "-";
-    try { return new Date(d).toLocaleString('vi-VN'); } catch { return d; }
+    try { return new Date(d).toLocaleString('en-GB'); } catch { return d; }
   };
 
-  if (!campaign) return <Loading fullScreen text="Đang tải chi tiết chiến dịch..." />;
+  if (!campaign) return <Loading fullScreen text="Loading campaign details..." />;
 
   const max = campaign.maxParticipants;
   const current = campaign.currentParticipants ?? 0;
@@ -92,19 +103,33 @@ export default function CampaignDetail() {
       {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
       <ConfirmDialog
         isOpen={showConfirmDialog}
-        title="Xác nhận đăng ký"
-        message={`Bạn có chắc chắn muốn đăng ký cho chiến dịch "${campaign?.campaignName}"?`}
-        warningMessage="Lưu ý: Để hủy đăng ký sau này, bạn cần sự phê duyệt của HR."
-        confirmLabel="Đăng ký"
-        cancelLabel="Hủy"
+        title="Confirm registration"
+        message={`Are you sure you want to register for campaign "${campaign?.campaignName}"?`}
+        warningMessage="Note: To cancel later, HR approval is required."
+        confirmLabel="Register"
+        cancelLabel="Cancel"
         type="info"
         onConfirm={handleConfirmRegister}
         onCancel={() => setShowConfirmDialog(false)}
       />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-        <Link to="/employee/campaigns" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: '#334155' }}>
-          <ArrowLeft size={18} /> Quay lại
-        </Link>
+        <button
+          type="button"
+          onClick={handleBack}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            background: "transparent",
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+            color: "#334155",
+          }}
+        >
+          <ArrowLeft size={18} /> Back
+        </button>
+
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           <StatusBadge status={campaign.status} />
           <Button
@@ -114,16 +139,16 @@ export default function CampaignDetail() {
             disabled={Boolean(isRegistered || isFull)}
             isLoading={isRegistering}
           >
-            {isRegistered ? 'Đã đăng ký' : (isFull ? 'Đã đầy' : 'Đăng ký')}
+            {isRegistered ? 'Registered' : (isFull ? 'Full' : 'Register')}
           </Button>
           <style>{`.detail-register-btn:hover { transform: translateY(-2px); } .detail-register-btn:disabled { opacity: 0.75; cursor: not-allowed; }`}</style>
         </div>
       </div>
 
-      <div style={{ marginBottom: 6 }}>
+        <div style={{ marginBottom: 6 }}>
         <h1 style={{ margin: 0, color: '#0b1220', fontSize: 28, fontWeight: 800, letterSpacing: '-0.5px' }}>{campaign.campaignName}</h1>
         <div style={{ marginTop: 8, display: 'flex', gap: 12, alignItems: 'center' }}>
-          <span style={{ color: '#64748b', fontWeight: 600 }}>Mã chiến dịch:</span>
+          <span style={{ color: '#64748b', fontWeight: 600 }}>Campaign code:</span>
           <span style={{ color: '#0f172a', fontWeight: 700 }}>{campaign.campaignCode}</span>
         </div>
       </div>
@@ -134,23 +159,23 @@ export default function CampaignDetail() {
           <section style={{ marginBottom: 18 }}>
             <h3 style={{ margin: '8px 0', color: '#0b1220', textTransform: 'uppercase', fontSize: 13, letterSpacing: '1px', display: 'flex', alignItems: 'center' }}>
               <span style={{ width: 6, height: 24, background: '#3b82f6', display: 'inline-block', marginRight: 10, borderRadius: 4 }}></span>
-              <Calendar size={16} style={{ marginRight: 8 }} /> Ngày
+              <Calendar size={16} style={{ marginRight: 8 }} /> Dates
             </h3>
             <div style={{ color: '#475569' }}>
-              <div><strong>Thông báo:</strong> {fmt(campaign.announcementDate)}</div>
-              <div><strong>Bắt đầu:</strong> {fmt(campaign.startDate)}</div>
-              <div><strong>Kết thúc:</strong> {fmt(campaign.endDate)}</div>
+              <div><strong>Announcement:</strong> {fmt(campaign.announcementDate)}</div>
+              <div><strong>Start:</strong> {fmt(campaign.startDate)}</div>
+              <div><strong>End:</strong> {fmt(campaign.endDate)}</div>
             </div>
           </section>
 
           <section style={{ marginBottom: 18 }}>
             <h3 style={{ margin: '8px 0', color: '#0b1220', textTransform: 'uppercase', fontSize: 13, letterSpacing: '1px', display: 'flex', alignItems: 'center' }}>
               <span style={{ width: 6, height: 24, background: '#10b981', display: 'inline-block', marginRight: 10, borderRadius: 4 }}></span>
-              <Users size={16} style={{ marginRight: 8 }} /> Người tham gia
+              <Users size={16} style={{ marginRight: 8 }} /> Participants
             </h3>
             <div style={{ color: '#475569' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div><strong>{current}</strong> / {max ?? 'Không giới hạn'}</div>
+                <div><strong>{current}</strong> / {max ?? 'Unlimited'}</div>
                 {percent !== null && <div style={{ color: '#94a3b8' }}>{percent}%</div>}
               </div>
 
@@ -164,17 +189,17 @@ export default function CampaignDetail() {
           <section style={{ marginBottom: 18 }}>
             <h3 style={{ margin: '8px 0', color: '#0b1220', textTransform: 'uppercase', fontSize: 13, letterSpacing: '1px', display: 'flex', alignItems: 'center' }}>
               <span style={{ width: 6, height: 24, background: '#f59e0b', display: 'inline-block', marginRight: 10, borderRadius: 4 }}></span>
-              <Info size={16} style={{ marginRight: 8 }} /> Quy tắc & Phần thưởng
+              <Info size={16} style={{ marginRight: 8 }} /> Rules & Rewards
             </h3>
             <div style={{ color: '#475569', lineHeight: 1.6 }}>
               <div style={{ marginBottom: 12 }}>
-                <strong>Quy tắc đăng ký</strong>
-                <div style={{ marginTop: 6 }}>{campaign.registrationRules ?? 'Không có quy tắc cụ thể.'}</div>
+                <strong>Registration rules</strong>
+                <div style={{ marginTop: 6 }}>{campaign.registrationRules ?? 'No specific rules.'}</div>
               </div>
 
               <div>
-                <strong>Phần thưởng</strong>
-                <div style={{ marginTop: 6 }}>{campaign.rewardDescription ?? 'Chưa có thông tin phần thưởng.'}</div>
+                <strong>Rewards</strong>
+                <div style={{ marginTop: 6 }}>{campaign.rewardDescription ?? 'No reward information yet.'}</div>
               </div>
             </div>
           </section>
@@ -183,12 +208,12 @@ export default function CampaignDetail() {
 
         <aside style={{ borderLeft: '1px solid #eef2f7', paddingLeft: 18 }}>
           <div style={{ background: '#f8fafc', padding: 12, borderRadius: 8, marginBottom: 12 }}>
-            <div style={{ color: '#6b7280', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.8px' }}>Mã chiến dịch</div>
+            <div style={{ color: '#6b7280', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.8px' }}>Campaign code</div>
             <div style={{ fontWeight: 800, color: '#0b1220', fontSize: 16 }}>{campaign.campaignCode}</div>
           </div>
 
           <div style={{ background: '#f8fafc', padding: 12, borderRadius: 8, marginBottom: 12 }}>
-            <div style={{ color: '#6b7280', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.8px' }}>Trạng thái</div>
+            <div style={{ color: '#6b7280', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.8px' }}>Status</div>
             <div style={{ marginTop: 6 }}><StatusBadge status={campaign.status} /></div>
           </div>
 

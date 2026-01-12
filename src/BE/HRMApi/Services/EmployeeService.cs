@@ -192,6 +192,9 @@ namespace HrmApi.Services
             if (cccdDigits.Length != 13)
                 throw new ArgumentException("citizenIdNumber");
 
+            // ===== CHECK 1: Contract Type & Date Validation =====
+            ValidateContractType(dto);
+
             // 2) Generate employeeCode -> username = employeeCode
             var employeeCode = await GenerateNextEmployeeCodeAsync();
             var username = employeeCode;
@@ -471,6 +474,77 @@ namespace HrmApi.Services
                 DepartmentName = emp.Department?.Name,
                 JobTitleName = emp.JobTitle?.Title
             }).ToList();
+        }
+
+        // ===== CONTRACT VALIDATION LOGIC =====
+        /// <summary>
+        /// Luồng validation hợp đồng:
+        /// 1. Nếu loại Permanent: set ContractEndDate = NULL
+        /// 2. Nếu Fixed-term hoặc Probation: validate ContractEndDate
+        ///    - Không null
+        ///    - ContractEndDate > ContractStartDate
+        ///    - Duration check: Fixed-term max 36 tháng, Probation max 180 ngày
+        /// </summary>
+        private void ValidateContractType(CreateEmployeeDto dto)
+        {
+            // Không có ContractType thì không cần validate
+            if (string.IsNullOrWhiteSpace(dto.ContractType))
+                return;
+
+            var contractType = dto.ContractType.Trim().ToLower();
+
+            // CHECK 1: Nếu là Permanent
+            if (contractType == "permanent")
+            {
+                // Gán cứng ContractEndDate = NULL (bỏ qua dữ liệu từ client)
+                dto.ContractEndDate = null;
+                return; // Không cần check thêm
+            }
+
+            // CHECK 2: Nếu là Fixed-term hoặc Probation
+            if (contractType == "fixed-term" || contractType == "probation")
+            {
+                // CHECK 2.1: Null check - ContractEndDate bắt buộc có
+                if (dto.ContractEndDate == null)
+                    throw new ArgumentException($"ContractEndDate is required for {contractType} contract. Please enter end date.");
+
+                // CHECK 3: Logic check - ContractEndDate > ContractStartDate
+                if (dto.ContractStartDate.Date >= dto.ContractEndDate.Value.Date)
+                    throw new ArgumentException("ContractEndDate must be after ContractStartDate.");
+
+                // CHECK 4: Duration check - tùy loại hợp đồng
+                if (contractType == "fixed-term")
+                {
+                    var durationMonths = CalculateMonthsBetween(dto.ContractStartDate, dto.ContractEndDate.Value);
+                    if (durationMonths > 36)
+                        throw new ArgumentException("Fixed-term contract cannot exceed 36 months.");
+                }
+                else if (contractType == "probation")
+                {
+                    var durationDays = (dto.ContractEndDate.Value.Date - dto.ContractStartDate.Date).Days;
+                    if (durationDays > 180)
+                        throw new ArgumentException("Probation period cannot exceed 180 days.");
+                }
+            }
+            // Nếu contractType không phải permanent, fixed-term, hoặc probation thì bỏ qua
+        }
+
+        /// <summary>
+        /// Tính số tháng giữa hai ngày
+        /// </summary>
+        private int CalculateMonthsBetween(DateTime startDate, DateTime endDate)
+        {
+            int monthCount = 0;
+            DateTime tempDate = startDate;
+
+            while (tempDate < endDate)
+            {
+                tempDate = tempDate.AddMonths(1);
+                if (tempDate <= endDate)
+                    monthCount++;
+            }
+
+            return monthCount;
         }
     }
 }

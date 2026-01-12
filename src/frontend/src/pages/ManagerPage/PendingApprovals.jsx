@@ -3,20 +3,22 @@ import { Eye, Calendar, Clock, LogOut, FileText, Search } from "lucide-react";
 import "./PendingApprovals.css";
 
 import StatsGrid from "../../components/common/StatsGrid";
-import FilterBar from "../../components/common/FilterBar"; // Nếu bạn chưa có thì có thể comment lại
+import FilterBar from "../../components/common/FilterBar"; // You can comment this out if not available
 import DetailModal from "../../components/features/request/DetailModal";
 import Pagination from "../../components/common/Pagination";
 import StatusBadge from "../../components/common/StatusBadge";
+import Button from "../../components/common/Button";
+import EmptyState from "../../components/common/EmptyState";
 
 const API_BASE = "/api/v1";
 const PAGE_SIZE = 10;
 const IS_DEMO = false; // 👈 DEMO MODE DISABLED - Using real backend data
 
-// --- DỮ LIỆU GIẢ LẬP (MOCK DATA) ---
+// --- MOCK DATA ---
 const MOCK_DEPARTMENTS = [
-  { id: "IT", name: "Phòng Kỹ thuật (IT)" },
-  { id: "HR", name: "Phòng Nhân sự (HR)" },
-  { id: "SALES", name: "Phòng Kinh doanh" },
+  { id: "IT", name: "IT Department" },
+  { id: "HR", name: "Human Resources" },
+  { id: "SALES", name: "Sales Department" },
 ];
 
 const MOCK_REQUESTS = [
@@ -27,6 +29,7 @@ const MOCK_REQUESTS = [
     decidedAt: null,
     effectiveDate: "2023-10-25",
     status: "PENDING",
+    createdAt: "2023-10-24T15:30:00",
   },
   {
     requestCode: "OT-2023-089",
@@ -35,6 +38,7 @@ const MOCK_REQUESTS = [
     decidedAt: "2023-10-20",
     effectiveDate: "2023-10-22",
     status: "APPROVED",
+    createdAt: "2023-10-19T10:00:00",
   },
   {
     requestCode: "RR-2023-012",
@@ -43,6 +47,7 @@ const MOCK_REQUESTS = [
     decidedAt: "2023-10-15",
     effectiveDate: "2023-11-01",
     status: "REJECTED",
+    createdAt: "2023-10-14T09:30:00",
   },
   {
     requestCode: "LR-2023-004",
@@ -55,6 +60,7 @@ const MOCK_REQUESTS = [
     decidedAt: null,
     effectiveDate: "2023-10-26",
     status: "PENDING",
+    createdAt: "2023-10-24T16:45:00",
   },
   {
     requestCode: "OT-2023-090",
@@ -63,46 +69,48 @@ const MOCK_REQUESTS = [
     decidedAt: null,
     effectiveDate: "2023-10-27",
     status: "PENDING",
+    createdAt: "2023-10-24T17:20:00",
   },
-  // ... Bạn có thể copy paste thêm nhiều dòng để test phân trang
+  // ... More sample data
 ];
 
-// Tạo thêm 15 dòng dữ liệu giả nữa để test phân trang
+// Create additional 15 rows of mock data for pagination testing
 for (let i = 6; i <= 25; i++) {
   MOCK_REQUESTS.push({
     requestCode: `REQ-2023-${i.toString().padStart(3, "0")}`,
     requestType: i % 2 === 0 ? "Leave Request" : "Overtime Request",
     employee: {
       id: `EMP00${i}`,
-      fullName: `Nhân viên Demo ${i}`,
+      fullName: `Employee Demo ${i}`,
       departmentName: i % 3 === 0 ? "HR" : "IT",
     },
     decidedAt: null,
     effectiveDate: "2023-11-05",
     status: i % 5 === 0 ? "APPROVED" : "PENDING",
+    createdAt: new Date(2023, 9, 24, 12, i).toISOString(),
   });
 }
 
-// [QUAN TRỌNG] Config Mapping theo Request Type để Modal biết gọi API nào
+// [IMPORTANT] Config Mapping by Request Type for Modal to know which API to call
 const getTypeConfig = (typeStr) => {
   const t = typeStr?.toLowerCase() || "";
   if (t.includes("leave"))
     return {
-      label: "Nghỉ phép",
+      label: "Leave Request",
       icon: <Calendar size={18} />,
       colorClass: "bg-blue",
       apiApprovePath: "manager/leave-requests",
     };
   if (t.includes("overtime") || t === "ot")
     return {
-      label: "Làm thêm giờ",
+      label: "Overtime",
       icon: <Clock size={18} />,
       colorClass: "bg-orange",
       apiApprovePath: "overtime-requests",
     };
   if (t.includes("resignation"))
     return {
-      label: "Thôi việc",
+      label: "Resignation",
       icon: <LogOut size={18} />,
       colorClass: "bg-red",
       apiApprovePath: "resignation-requests",
@@ -117,8 +125,36 @@ const getTypeConfig = (typeStr) => {
 
 const formatDate = (dateString) => {
   if (!dateString) return "--";
-  return new Date(dateString).toLocaleDateString("vi-VN");
+  return new Date(dateString).toLocaleDateString("en-US");
 };
+
+// Sort requests: PENDING first, then by createdAt desc (newest first)
+const sortRequests = (reqs = []) => {
+  const norm = (s) => (s ?? "").toString().trim().toUpperCase();
+
+  return [...reqs].sort((a, b) => {
+    const sa = norm(a?.status);
+    const sb = norm(b?.status);
+
+    const aIsPending = sa === "PENDING";
+    const bIsPending = sb === "PENDING";
+
+    // PENDING first
+    if (aIsPending && !bIsPending) return -1;
+    if (!aIsPending && bIsPending) return 1;
+
+    // Same pending-ness -> createdAt desc
+    const ta = new Date(a?.createdAt ?? 0).getTime();
+    const tb = new Date(b?.createdAt ?? 0).getTime();
+
+    // invalid date safety
+    const safeTa = Number.isFinite(ta) ? ta : 0;
+    const safeTb = Number.isFinite(tb) ? tb : 0;
+
+    return safeTb - safeTa;
+  });
+};
+
 
 export default function PendingApprovals() {
   const [stats, setStats] = useState({
@@ -203,13 +239,22 @@ export default function PendingApprovals() {
         };
 
         setStats(newStats);
-        setRequests(filtered);
+        setRequests(sortRequests(filtered));
         setCurrentPage(1);
       } else {
         // --- LOGIC GỌI API THẬT ---
         const params = new URLSearchParams();
         if (keyword) params.append("keyword", keyword);
         if (deptId) params.append("DepartmentId", deptId);
+        // Nếu role là MANAGER, tự động gửi ManagerId và chỉ lấy báo cáo trực tiếp
+        try {
+          const role = localStorage.getItem("role");
+          const employeeId = localStorage.getItem("employeeId");
+          if (role && role.toUpperCase() === "MANAGER" && employeeId) {
+            params.append("ManagerId", parseInt(employeeId, 10));
+            params.append("OnlyDirectReports", true);
+          }
+        } catch {}
         const query = params.toString();
 
         const [summaryRes, listRes] = await Promise.all([
@@ -250,7 +295,7 @@ export default function PendingApprovals() {
         if (listRes.ok) {
           try {
             const listData = await listRes.json();
-            setRequests(listData.items || []);
+            setRequests(sortRequests(listData.items || []));
           } catch (e) {
             console.error("Failed to parse list response:", e);
             console.error(
@@ -334,7 +379,7 @@ export default function PendingApprovals() {
             />
             <input
               type="text"
-              placeholder="Tìm theo tên nhân viên..."
+              placeholder="Search by employee name..."
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               style={{
@@ -345,6 +390,7 @@ export default function PendingApprovals() {
               }}
             />
           </div>
+          {/* 
           <select
             value={deptId}
             onChange={(e) => setDeptId(e.target.value)}
@@ -355,13 +401,14 @@ export default function PendingApprovals() {
               minWidth: 150,
             }}
           >
-            <option value="">Tất cả phòng ban</option>
+            <option value="">All Departments</option>
             {departments.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.name}
               </option>
             ))}
           </select>
+          */}
         </div>
 
         {/* Bảng dữ liệu */}
@@ -369,12 +416,12 @@ export default function PendingApprovals() {
           <table className="pa-table">
             <thead>
               <tr>
-                <th>Loại yêu cầu</th>
-                <th>Nhân viên</th>
-                <th>Phòng ban</th>
-                <th>Thời gian</th>
-                <th>Trạng thái</th>
-                <th style={{ textAlign: "center" }}>Hành động</th>
+                <th>Request Type</th>
+                <th>Employee</th>
+                <th>Department</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th style={{ textAlign: "center" }}>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -384,20 +431,13 @@ export default function PendingApprovals() {
                     colSpan="6"
                     style={{ textAlign: "center", padding: "2rem" }}
                   >
-                    Đang tải dữ liệu Demo...
+                    Loading data...
                   </td>
                 </tr>
               ) : requests.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan="6"
-                    style={{
-                      textAlign: "center",
-                      padding: "2rem",
-                      color: "#64748b",
-                    }}
-                  >
-                    Không tìm thấy yêu cầu nào.
+                  <td colSpan="6" style={{ padding: "2rem" }}>
+                    <EmptyState message="No requests found" subMessage="No pending requests at the moment" />
                   </td>
                 </tr>
               ) : (
@@ -453,7 +493,7 @@ export default function PendingApprovals() {
                       <td>
                         <div className="date-cell">
                           <div className="date-row">
-                            <span className="date-label">Quyết định:</span>{" "}
+                            <span className="date-label">Decision Date:</span>{" "}
                             <span
                               className="date-val"
                               style={{
@@ -464,7 +504,7 @@ export default function PendingApprovals() {
                             </span>
                           </div>
                           <div className="date-row">
-                            <span className="date-label">Hiệu lực:</span>{" "}
+                            <span className="date-label">Effective Date:</span>{" "}
                             <span className="date-val">
                               {formatDate(req.effectiveDate)}
                             </span>
@@ -475,25 +515,13 @@ export default function PendingApprovals() {
                         <StatusBadge status={req.status} />
                       </td>
                       <td style={{ textAlign: "center" }}>
-                        <button
-                          className="btn-view"
+                        <Button
+                          variant="ghost"
                           onClick={() => setSelectedReq(req)}
-                          style={{
-                            background: "#eff6ff",
-                            border: "none",
-                            padding: "6px 12px",
-                            borderRadius: 6,
-                            color: "#2563eb",
-                            cursor: "pointer",
-                            fontWeight: 500,
-                          }}
+                          icon={Eye}
                         >
-                          <Eye
-                            size={16}
-                            style={{ verticalAlign: "middle", marginRight: 4 }}
-                          />{" "}
-                          Xem
-                        </button>
+                          View
+                        </Button>
                       </td>
                     </tr>
                   );

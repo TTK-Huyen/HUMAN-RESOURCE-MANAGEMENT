@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using HrmApi.Messaging;
 using HrmApi.Messaging.RabbitMq;
 using HrmApi.Consumers.Requests;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 var builder = WebApplication.CreateBuilder(args);
@@ -24,6 +27,31 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+});
+
+// --- JWT Authentication Configuration ---
+var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "YourSuperSecretKeyThatIsAtLeast32CharactersLongForHS256";
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "HRMApi";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "HRMClient";
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+        ClockSkew = TimeSpan.Zero
+    };
 });
 
 // --- 2. Đăng ký Services (DI) ---
@@ -66,11 +94,17 @@ builder.Services.AddScoped<ICampaignService, CampaignService>();
 builder.Services.AddScoped<ICampaignRegistrationService, CampaignRegistrationService>();
 builder.Services.AddScoped<ICampaignDetailService, CampaignDetailService>();
 builder.Services.AddScoped<ICampaignListService, CampaignListService>();
+
+// Point System Services
+builder.Services.AddScoped<IPointService, PointService>();
+builder.Services.AddScoped<MonthlyPointAllocationService>();
+
 builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection("RabbitMq"));
 builder.Services.AddSingleton<IEventBus, RabbitMqEventBus>();
 
 // consumer chạy nền
 builder.Services.AddHostedService<RequestSubmittedNotificationConsumer>();
+
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -119,6 +153,7 @@ app.UseSwaggerUI(c =>
 
 app.UseStaticFiles();
 app.UseCors(MyAllowSpecificOrigins);
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 

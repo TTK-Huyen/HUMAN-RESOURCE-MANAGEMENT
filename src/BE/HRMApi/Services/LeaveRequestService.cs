@@ -42,19 +42,22 @@ namespace HrmApi.Services
             string employeeCode,
             CreateLeaveRequestDto dto)
         {
-            // 1. Tìm và Validate nhân viên
+            // 1. Validate and retrieve employee
             var employee = await _employeeRepository.GetByCodeAsync(employeeCode)
                            ?? throw new InvalidOperationException("Employee not found");
 
-            // 2. Validate người bàn giao
-            if (dto.HandoverPersonId.HasValue)
+            // 2. Validate handover person
+            int? handoverEmployeeId = null;
+            if (!string.IsNullOrEmpty(dto.HandoverPersonCode))
             {
-                var handoverEmp = await _employeeRepository.GetByIdAsync(dto.HandoverPersonId.Value);
+                var handoverEmp = await _employeeRepository.GetByCodeAsync(dto.HandoverPersonCode);
                 if (handoverEmp == null)
-                    throw new ArgumentException($"Nhân viên bàn giao ID {dto.HandoverPersonId} không tồn tại.");
+                    throw new ArgumentException($"Handover employee with code {dto.HandoverPersonCode} does not exist.");
                 
                 if (handoverEmp.Id == employee.Id)
-                    throw new ArgumentException("Không thể bàn giao cho chính mình.");
+                    throw new ArgumentException("Cannot handover to yourself.");
+                
+                handoverEmployeeId = handoverEmp.Id;
             }
 
             // 3. Xử lý File Upload (BASE64) - Sửa đoạn này để hết lỗi dto.File
@@ -66,10 +69,19 @@ namespace HrmApi.Services
                     // Convert Base64 -> Byte Array
                     var fileBytes = Convert.FromBase64String(dto.AttachmentsBase64);
                     
-                    // Tạo tên file ngẫu nhiên (vì Base64 ko có tên gốc, ta tự đặt đuôi .png/.jpg/.pdf hoặc mặc định)
-                    // Ở đây mình để mặc định là bin hoặc bạn có thể check header base64 để đoán đuôi.
-                    // Để đơn giản, mình giả định là file ảnh hoặc doc.
-                    var fileName = $"{Guid.NewGuid()}_attachment.dat"; 
+                    // --- SỬA ĐOẠN NÀY ---
+                    // Lấy đuôi file gốc (ví dụ .pdf, .png) từ dto.FileName
+                    // Nếu không có tên file thì mặc định là .dat
+                    string extension = ".dat";
+                    if (!string.IsNullOrEmpty(dto.FileName))
+                    {
+                        // Path.GetExtension sẽ lấy cả dấu chấm, ví dụ ".pdf"
+                        extension = Path.GetExtension(dto.FileName);
+                    }
+
+                    // Đặt tên file: Guid + đuôi file gốc (để tránh trùng tên nhưng vẫn mở được)
+                    var fileName = $"{Guid.NewGuid()}{extension}"; 
+                    // --------------------
                     
                     string rootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
                     var uploadFolder = Path.Combine(rootPath, "uploads");
@@ -112,7 +124,7 @@ namespace HrmApi.Services
                     StartDate         = dto.StartDate,
                     EndDate           = dto.EndDate,
                     Reason            = dto.Reason,
-                    HandoverEmployeeId = dto.HandoverPersonId, // Đã có trong DTO
+                    HandoverEmployeeId = handoverEmployeeId,
                     AttachmentPath    = savedFilePath,
                     Status            = RequestStatus.Pending,
                     CreatedAt         = DateTime.UtcNow
@@ -139,7 +151,7 @@ namespace HrmApi.Services
                     ManagerEmail = manager?.PersonalEmail,
                     RequesterEmail = employee.PersonalEmail,
                     Status = "Pending",
-                    Message = $"Nhân viên {employee.FullName} đã gửi yêu cầu nghỉ phép mới."
+                    Message = $"Employee {employee.FullName} has submitted a new leave request."
                 };
 
                 await _eventBus.PublishAsync(ev, "request.submitted.LEAVE");

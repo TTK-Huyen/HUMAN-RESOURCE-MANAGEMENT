@@ -34,8 +34,8 @@ namespace HrmApi.Dtos.RequestStatus
         [JsonPropertyName("endDate")]
         public DateTime EndDate { get; set; }
 
-        [JsonPropertyName("handoverToEmployeeId")]
-        public int? HandoverToEmployeeId { get; set; }
+        [JsonPropertyName("handoverToEmployeeCode")]
+        public string? HandoverToEmployeeCode { get; set; }
 
         [JsonPropertyName("attachment")]
         public string? AttachmentPath { get; set; }

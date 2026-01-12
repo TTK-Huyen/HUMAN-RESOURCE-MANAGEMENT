@@ -9,8 +9,11 @@ import HRDirectoryPage from "./HRDirectoryPage.jsx";
 import HRAddEmployeePage from "./HRAddEmployeePage.jsx";
 import HRUploadExcelPage from "./HRUploadExcelPage.jsx";
 import HRViewProfilePage from "./HRViewProfilePage.jsx";
+import RedemptionRequests from "./Reward/RedemptionRequests";
 import HRAddCampaignPage from "./HRAddCampaignPage.jsx";
 import HRCampaignListPage from "./HRCampaignListPage.jsx";
+import CampaignDetail from "../EmployeePage/Campaigns/CampaignDetail.jsx";
+
 export default function HrApp() {
   return (
     <Routes>
@@ -25,6 +28,8 @@ export default function HrApp() {
       */}
       <Route path="profile-requests" element={<HrProfileUpdateRequestListPage />} />
       <Route path="profile-requests/:requestId" element={<HrProfileUpdateRequestDetailPage />} />
+      {/* HR Reward: Pending redemptions (Approve / Reject) */}
+      <Route path="rewards/redemptions" element={<RedemptionRequests />} />
       
       {/* ✅ 3. NHÓM QUẢN LÝ DANH BẠ (DIRECTORY)
         Path: /hr/directory...
@@ -45,6 +50,8 @@ export default function HrApp() {
       {/* ✅ NHÓM QUẢN LÝ CAMPAIGN */}
       <Route path="campaigns/add" element={<HRAddCampaignPage />} />
       <Route path="campaigns" element={<HRCampaignListPage />} />
+      <Route path="campaigns/:id" element={<CampaignDetail />} />
+
       <Route path="*" element={<Navigate to="/hr/profile-requests" replace />} />
     </Routes>
   );

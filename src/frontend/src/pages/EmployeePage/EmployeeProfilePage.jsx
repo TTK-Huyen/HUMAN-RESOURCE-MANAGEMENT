@@ -4,10 +4,6 @@ import { fetchEmployeeProfile } from "../../Services/requests";
 import { FormRow } from "../../components/common/FormRow";
 import ViolationBanner from "../../components/common/ViolationBanner";
 
-// Read employee code from auth-localStorage; do not default to EMP001 unless explicitly set
-const STORED_EMPLOYEE_CODE =
-  localStorage.getItem("employeeCode") || localStorage.getItem("employee_code") || "";
-
 function formatDate(dateStr) {
   if (!dateStr) return "";
   const d = new Date(dateStr);
@@ -32,9 +28,29 @@ export default function EmployeeProfilePage() {
       setError("");
       setViolations([]);
       
-      if (!STORED_EMPLOYEE_CODE) {
-        setError("Không tìm thấy employee code trong phiên đăng nhập.");
+      // ✅ DEBUG: Check token first
+      const token = localStorage.getItem("token");
+      console.log("🔐 Token present:", !!token);
+      
+      if (!token) {
+        setError("Session expired. Please log in again.");
         setLoading(false);
+        // Redirect to login after 2 seconds
+        setTimeout(() => navigate("/login"), 2000);
+        return;
+      }
+      
+      // ✅ FIX: Read from localStorage INSIDE useEffect, not at top level
+      const STORED_EMPLOYEE_CODE =
+        localStorage.getItem("employeeCode") || localStorage.getItem("employee_code") || localStorage.getItem("employeeId") || "";
+      
+      console.log("🔍 STORED_EMPLOYEE_CODE:", STORED_EMPLOYEE_CODE);
+      
+      if (!STORED_EMPLOYEE_CODE) {
+        setError("Employee code not found in session. Please log in again.");
+        setLoading(false);
+        // Redirect to login after 2 seconds
+        setTimeout(() => navigate("/login"), 2000);
         return;
       }
 
