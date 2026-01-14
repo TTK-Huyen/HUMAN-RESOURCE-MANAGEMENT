@@ -13,13 +13,9 @@ namespace HrmApi.Models
         [Column("position_name")]
         public string Title { get; set; } = default!;
         
-        // Giữ lại nếu DB có cột 'level', nếu không thì xóa hoặc thêm [NotMapped]
         [Column("level")]
         public string? Level { get; set; } 
 
-        // --- CÁC DÒNG GÂY LỖI ĐÃ ĐƯỢC XỬ LÝ ---
-        // Đã xóa PositionId và PositionName vì Id và Title đã đảm nhận vai trò này.
-        
         // Navigation Property
         public ICollection<Employee> Employees { get; set; } = new List<Employee>();
     }

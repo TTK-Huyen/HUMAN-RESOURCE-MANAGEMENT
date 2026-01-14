@@ -39,7 +39,6 @@ function toISODate(dateStr) {
   const n2 = Number(p2);
   if (!yyyy || !n1 || !n2) return "";
 
-  // nếu phần đầu > 12 => DD/MM/YYYY, ngược lại coi là MM/DD/YYYY
   const isDDMM = n1 > 12;
   const dd = String(isDDMM ? n1 : n2).padStart(2, "0");
   const mm = String(isDDMM ? n2 : n1).padStart(2, "0");
@@ -64,7 +63,6 @@ function addDaysISO(isoDate, days) {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-// Rule đơn giản: nếu jobTitle có "manager/lead/head" thì 45, còn lại 30
 function getNoticeDays(position) {
   const p = (position || "").toLowerCase();
   const isManagerial = /manager|lead|head|supervisor/.test(p);
@@ -92,7 +90,6 @@ export default function ResignationRequestPage() {
 
       const profile = await fetchEmployeeProfile(employeeCodeLS);
 
-      // Map đúng theo response swagger bạn gửi
       setF((prev) => ({
         ...prev,
         employeeCode: profile.employeeCode || employeeCodeLS,
@@ -104,7 +101,7 @@ export default function ResignationRequestPage() {
 
       setErrs([]);
     } catch (err) {
-      console.error("Không load được profile:", err);
+      console.error("Cannot load employee profile", err);
       setErrs(["Cannot load employee profile. Please try again."]);
     }
   }
@@ -162,7 +159,7 @@ export default function ResignationRequestPage() {
     setSubmitting(true);
     try {
       const payload = {
-        proposedLastWorkingDate: f.resignationDate, // ✅ Map đúng với backend DTO
+        proposedLastWorkingDate: f.resignationDate, 
         reason: f.reason,
       };
 

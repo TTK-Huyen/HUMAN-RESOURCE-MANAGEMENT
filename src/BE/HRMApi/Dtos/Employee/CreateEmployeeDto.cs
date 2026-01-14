@@ -65,7 +65,7 @@ namespace HrmApi.Dtos.Employee
         public DateTime? ContractEndDate { get; set; }
 
         [Required]
-        public int RoleId { get; set; } // UI đã gửi roleId
+        public int RoleId { get; set; } 
     }
 
     public class PhoneNumberInfo

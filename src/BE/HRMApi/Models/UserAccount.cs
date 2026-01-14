@@ -22,7 +22,7 @@ public class UserAccount
     public int EmployeeId { get; set; }
     
     // role_id (Khóa ngoại)
-    public int RoleId { get; set; } // RoleId là cần thiết
+    public int RoleId { get; set; } 
     
     // status
     public AccountStatus Status { get; set; } = AccountStatus.ACTIVE;
@@ -33,6 +33,5 @@ public class UserAccount
     // Navigation Properties
     public Employee Employee { get; set; } = default!;
     
-    // BỎ COMMENT: Cần thiết để JOIN lấy RoleCode cho LoginResponseDto
     public Role Role { get; set; } = default!; 
 }

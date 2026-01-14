@@ -6,7 +6,7 @@ using HrmApi.Repositories;
 
 namespace HrmApi.Services
 {
-    // Chịu trách nhiệm: nghiệp vụ liên quan đến Department
+
     public class DepartmentService : IDepartmentService
     {
         private readonly IDepartmentRepository _departmentRepository;

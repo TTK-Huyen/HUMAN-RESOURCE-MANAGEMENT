@@ -80,7 +80,7 @@ namespace HrmApi.Services
                 throw new KeyNotFoundException("Request not found");
             }
 
-            // ✅ NẾU APPROVED THÌ APPLY THAY ĐỔI VÀO EMPLOYEE
+            // NẾU APPROVED THÌ APPLY THAY ĐỔI VÀO EMPLOYEE
             if (normalizedStatus == "APPROVED")
             {
                 var employee = await _employeeRepo.FindByIdAsync(request.EmployeeId)
@@ -88,7 +88,6 @@ namespace HrmApi.Services
 
                 foreach (var d in request.Details)
                 {
-                    // Map đúng FieldName được gửi từ Frontend (ProfileUpdateRequestPage.jsx)
                     switch (d.FieldName)
                     {
                         // --- Nhóm Thông Tin Liên Hệ ---
@@ -147,9 +146,6 @@ namespace HrmApi.Services
                             employee.Gender = d.NewValue;
                             break;
 
-                        // Lưu ý: BankAccount phức tạp vì là Collection, 
-                        // thường HR sẽ đọc request và update thủ công ở tab Lương thưởng,
-                        // hoặc cần logic riêng để update vào bảng EmployeeBankAccounts.
                         default:
                             break;
                     }
@@ -158,7 +154,7 @@ namespace HrmApi.Services
                 await _employeeRepo.SaveAsync(employee);
             }
 
-            // ✅ Update status + reviewed_by + reviewed_at + reject_reason của Request
+            // Update status + reviewed_by + reviewed_at + reject_reason của Request
             var intId = checked((int)requestId);
             await _requestRepo.UpdateStatusAsync(
                 intId,
@@ -181,10 +177,9 @@ namespace HrmApi.Services
             
             if (dto.Details == null || !dto.Details.Any()) return false;
             
-            // Validate sơ bộ
             foreach (var detail in dto.Details)
             {
-                if (string.IsNullOrWhiteSpace(detail.FieldName)) // NewValue có thể null/empty nếu user muốn xóa data
+                if (string.IsNullOrWhiteSpace(detail.FieldName)) 
                     return false;
             }
 

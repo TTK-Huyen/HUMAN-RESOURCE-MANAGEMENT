@@ -30,26 +30,26 @@ namespace HrmApi.Models
         [Column("end_time")]
         public TimeSpan EndTime { get; set; }
 
-        // Tổng giờ OT (code 2 dùng decimal, mình đổi theo DB)
+        // Tổng giờ OT 
         [Column("total_hours")]
         public decimal TotalHours { get; set; }
 
-        // Lý do OT (map với ot_reason trong code 2)
+        // Lý do OT
         [Column("ot_reason")]
         public string Reason { get; set; } = default!;
 
-        // project_name (từ code 2) – giữ thêm ProjectId của code 1 nếu bạn cần
+        // project_name
         [Column("project_name")]
         public string? ProjectName { get; set; }
 
-        // project_id theo user story (nếu DB có cột thì thêm [Column("project_id")])
+        // project_id 
         public string? ProjectId { get; set; }
 
         // Navigation đến Request (FK = request_id)
         [ForeignKey(nameof(Id))]
         public Request Request { get; set; } = default!;
 
-        // Các field riêng của code 1 (nếu map DB thì bổ sung [Column] tương ứng)
+
         // [Column("status")]
         public RequestStatus Status { get; set; } = RequestStatus.Pending;
 

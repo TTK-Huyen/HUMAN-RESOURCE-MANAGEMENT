@@ -17,9 +17,7 @@ namespace HrmApi.Repositories
 
         Task<ResignationRequest?> GetResignationRequestAsync(string employeeCode, int requestId);
         
-        // --- BỔ SUNG DÒNG NÀY ĐỂ FIX LỖI CS1061 ---
         Task<LeaveRequest?> GetLeaveRequestByIdAsync(int requestId);
-        // ------------------------------------------
 
         Task AddAsync(Request request);
         Task<Request?> GetByIdAsync(int id);

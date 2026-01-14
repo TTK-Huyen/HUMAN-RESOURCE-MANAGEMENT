@@ -29,7 +29,7 @@ namespace HrmApi.Repositories
                     r.CreatedAt,
                     r.Status,
                     r.ApproverId,
-                    r.ApprovedAt // cần có cột approved_at + property ApprovedAt
+                    r.ApprovedAt 
                 })
                 .FirstOrDefaultAsync();
 
@@ -57,7 +57,7 @@ namespace HrmApi.Repositories
             // Chỉ add khi request đã có quyết định
             if (!string.Equals(req.Status, "Pending", StringComparison.OrdinalIgnoreCase))
             {
-                // approver + approvedAt có thể null nếu DB chưa lưu
+                
                 if (req.ApproverId.HasValue)
                 {
                     var approver = await _db.Employees

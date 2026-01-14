@@ -3,9 +3,8 @@
 using HrmApi.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-// Sử dụng entity
 
-namespace HrmApi.Repositories // Đặt trong namespace chung cho Repository Interfaces
+namespace HrmApi.Repositories 
 {
     public interface IUserAccountRepository
     {

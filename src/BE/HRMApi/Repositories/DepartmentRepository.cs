@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HrmApi.Repositories
 {
-    // Chịu trách nhiệm duy nhất: truy vấn Department từ DB
     public class DepartmentRepository : IDepartmentRepository
     {
         private readonly AppDbContext _context;

@@ -160,9 +160,9 @@ namespace HrmApi.Services
                 StartTime = otRequest.StartTime.ToString(@"hh\:mm"),
                 EndTime = otRequest.EndTime.ToString(@"hh\:mm"),
                 TotalHours = Math.Round(totalHours, 2),
-                Project = otRequest.ProjectName ?? "N/A", // Map vào key "project"
+                Project = otRequest.ProjectName ?? "N/A", 
                 Reason = otRequest.Reason,
-                OtDaysThisMonth = otDaysMonth,   // Data thật
+                OtDaysThisMonth = otDaysMonth, 
                 Status = otRequest.Request.Status
             };
         }
@@ -175,7 +175,6 @@ namespace HrmApi.Services
             var request = otRequest.Request;
             if (request.Status != "Pending") throw new InvalidOperationException($"Request is already {request.Status}");
 
-            // Chuẩn hóa input
             var statusInput = dto.NewStatus?.Trim().ToUpper();
             string newStatus;
             if (statusInput == "APPROVED") newStatus = "Approved";

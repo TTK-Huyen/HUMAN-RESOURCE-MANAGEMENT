@@ -1,13 +1,9 @@
 import axios from "axios";
-import api from "./client.js"; // Uncomment khi có file client.js thật
+import api from "./client.js"; 
 
-// ⚡ CỜ CẤU HÌNH: Đặt true để chạy Mock (Test), false để chạy API thật (Prod)
 const USE_MOCK = false; 
 
-/**
- * Hàm Login chính (Gateway)
- * Tự động điều hướng sang Mock hoặc Real API dựa vào biến USE_MOCK
- */
+
 export async function login(data) {
     if (USE_MOCK) {
         console.log("⚠️ Đang chạy chế độ MOCK DATA (Không gọi Server)");
@@ -18,26 +14,21 @@ export async function login(data) {
 }
 
 /**
- * 1. LOGIN THẬT (Gọi Backend)
+ * 1. LOGIN 
  */
 async function loginReal({ username, password }) {
-    // Nếu bạn chưa có file client.js, dùng axios trực tiếp
     const res = await api.post("/auth/login", { username, password });
     
     console.log("✅ Backend Response:", res);
     console.log("✅ Response Data:", res.data);
     
-    // ✅ FIX: Handle both response.data and response.data.data
     const data = res.data?.data || res.data;
     console.log("✅ Extracted Data:", data);
     
     return data;
 }
 
-/**
- * 2. LOGIN GIẢ LẬP (Mock Data)
- * Dành cho lúc mất mạng, server sập, hoặc đang dev frontend
- */
+
 async function loginMock({ username, password }) {
     // Giả lập độ trễ mạng 0.8s cho giống thật
     await new Promise(r => setTimeout(r, 800));
@@ -96,8 +87,6 @@ async function loginMock({ username, password }) {
             });
             return;
         }
-
-        // 3. Login thành công -> Trả về dữ liệu y hệt Backend thật
         const responseData = {
             token: "mock-jwt-token-" + Date.now(), // Token giả
             role: user.role,
@@ -106,8 +95,6 @@ async function loginMock({ username, password }) {
             employeeId: user.id
         };
 
-        // Lưu luôn vào LocalStorage ở đây (hoặc để component lo cũng được)
-        // Nhưng tốt nhất để component lo việc lưu storage để code service được 'pure'
         
         resolve(responseData);
     });

@@ -48,14 +48,12 @@ namespace HrmApi.Repositories
             if (!string.IsNullOrWhiteSpace(keyword))
             {
                 keyword = keyword.Trim();
-                // Lưu ý: dùng FullName (mapped) chứ không dùng EmployeeName (NotMapped)
+                
                 q = q.Where(r =>
                     r.Employee.EmployeeCode.Contains(keyword) ||
                     r.Employee.FullName.Contains(keyword));
             }
 
-            // NOTE về requestCode:
-            // DB/model Request hiện chưa có RequestCode column, nên tạm dùng "REQ-{requestId}"
             return await q
                 .OrderByDescending(r => r.CreatedAt)
                 .Select(r => new DashboardRequestItemDto

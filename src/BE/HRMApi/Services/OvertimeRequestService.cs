@@ -36,7 +36,7 @@ namespace HrmApi.Services
             var employee = await _employeeRepo.GetByCodeAsync(employeeCode)
                            ?? throw new InvalidOperationException("Employee not found");
 
-            // 2. Validate và Parse giờ (Logic mới của bạn)
+            // 2. Validate và Parse giờ 
             if (!TimeSpan.TryParse(dto.StartTime, out var startTime))
                 throw new ArgumentException("Invalid StartTime format (expected HH:mm)");
 
@@ -54,7 +54,7 @@ namespace HrmApi.Services
             var request = new Request
             {
                 EmployeeId = employee.Id,
-                RequestType = "OT", // Lưu thống nhất là OT (khớp với Notification)
+                RequestType = "OT", 
                 Status = RequestStatus.Pending.ToString(), // Chuyển enum sang string
                 CreatedAt = DateTime.UtcNow
             };
@@ -62,7 +62,7 @@ namespace HrmApi.Services
             await _requestRepo.AddAsync(request);
             await _requestRepo.SaveChangesAsync(); // Save để lấy RequestId
             
-            // 4. Tạo Overtime Request chi tiết (Bảng con)
+            // 4. Tạo Overtime Request chi tiết 
             var otRequest = new OvertimeRequest
             {
                 Id = request.RequestId, // Link 1-1 với bảng Request
@@ -93,7 +93,7 @@ namespace HrmApi.Services
             var ev = new RequestSubmittedEvent
             {
                 RequestId = request.RequestId,
-                RequestType = "OT", // giữ đúng như bạn đang lưu RequestType = "OT"
+                RequestType = "OT", 
                 ActorUserId = employee.Id,
                 ActorName = employee.FullName,
                 ManagerUserId = employee.DirectManagerId,
@@ -114,7 +114,7 @@ namespace HrmApi.Services
             };
         }
 
-        // Hàm tách riêng logic gửi thông báo để code gọn hơn
+        
         /*private async Task SendNotificationAsync(Employee employee, Request request)
         {
             try

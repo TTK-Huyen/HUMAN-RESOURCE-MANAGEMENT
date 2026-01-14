@@ -11,7 +11,6 @@ const REQUEST_TYPES = ["ALL", "LEAVE", "OVERTIME", "RESIGNATION"];
 const STATUS_OPTIONS = ["ALL", "PENDING", "APPROVED", "REJECTED", "CANCELLED"];
 const PAGE_SIZE = 10;
  
-// [ĐÃ SỬA] Format ngày giờ: Ép buộc giờ Việt Nam (+7)
 function formatDateTime(value) {
   if (!value) return "";
   try {
@@ -64,7 +63,6 @@ function getApprovedTime(item) {
   return null;
 }
 
-// [ĐÃ SỬA] Format ngày: Ép buộc giờ Việt Nam (+7)
 function formatDate(value) {
   if (!value) return "";
   try {
@@ -582,7 +580,7 @@ export default function RequestStatusPage() {
                     </dl>
                   </section>
 
-                  {/* Type-specific detail (sau khi load xong detail) */}
+                  {/* Type-specific detail */}
                   {!detailLoading && renderTypeSpecificDetail(r)}
 
                   <p className="status-detail-note">

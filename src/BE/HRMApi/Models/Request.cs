@@ -31,7 +31,7 @@ namespace HrmApi.Models
 
         public Employee? Approver { get; set; }
 
-        // Navigation 1–1 đến bảng con (optional nhưng nên có)
+        // Navigation 1–1 
         public ResignationRequest? ResignationRequest { get; set; }
         public TimesheetUpdateRequest? TimesheetUpdateRequest { get; set; }
         // Quan hệ 1–1 với từng bảng con

@@ -14,7 +14,7 @@ import Button from "../../components/common/Button";
 import StatusBadge from "../../components/common/StatusBadge";
 import Loading from "../../components/common/Loading";
 import EmptyState from "../../components/common/EmptyState";
-import Pagination from "../../components/common/Pagination"; // Giả định bạn đã có component này
+import Pagination from "../../components/common/Pagination"; 
 
 export default function HRDirectoryPage() {
   const navigate = useNavigate();
@@ -29,14 +29,14 @@ export default function HRDirectoryPage() {
     totalCount: 0,
   });
 
-  // -- State Filter (Giống hệt prototype) --
+  // -- State Filter--
   const [filters, setFilters] = useState({
     SearchKeyword: "",
     DepartmentId: "",
     Status: "",
     Gender: "",
     EmploymentType: "",
-    ContractType: "", // ✅ Đã có trường này
+    ContractType: "",
     SortBy: "CreatedDate",
     SortDirection: "Desc"
   });
@@ -44,7 +44,6 @@ export default function HRDirectoryPage() {
   const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
   const [debouncedKeyword, setDebouncedKeyword] = useState("");
   
-  // Fake departments (Hoặc gọi API)
   const departments = [
     { id: 1, name: "IT" },
     { id: 2, name: "HR" },
@@ -54,7 +53,7 @@ export default function HRDirectoryPage() {
     { id: 6, name: "Operations" }
   ];
 
-  // -- Debounce Search --
+
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedKeyword(filters.SearchKeyword), 500);
     return () => clearTimeout(handler);
@@ -79,7 +78,6 @@ export default function HRDirectoryPage() {
       console.log("Fetching Params:", params);
       const response = await HRService.fetchAllEmployees(params);
 
-      // Xử lý response (Array hoặc Object có pagination)
       if (response && (Array.isArray(response.data) || Array.isArray(response))) {
         const dataList = Array.isArray(response) ? response : response.data;
         setEmployees(dataList);
@@ -115,7 +113,7 @@ export default function HRDirectoryPage() {
     filters.Status, 
     filters.Gender, 
     filters.EmploymentType, 
-    filters.ContractType, // ✅ Trigger khi đổi loại hợp đồng
+    filters.ContractType, 
     filters.SortBy, 
     filters.SortDirection
   ]);
@@ -149,7 +147,7 @@ export default function HRDirectoryPage() {
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
-  // -- Cấu hình Cột cho Table Component --
+
   const columns = [
     {
       title: <div onClick={() => handleSort("EmployeeCode")} className="flex items-center gap-1 cursor-pointer">Code <ArrowUpDown size={14} className="opacity-50"/></div>,
@@ -188,7 +186,7 @@ export default function HRDirectoryPage() {
       width: "15%"
     },
     {
-      // ✅ Cột Contract Type giống prototype
+ 
       title: <div onClick={() => handleSort("ContractType")} className="flex items-center gap-1 cursor-pointer">Contract <ArrowUpDown size={14} className="opacity-50"/></div>,
       key: "contractType",
       width: "12%",
@@ -289,7 +287,7 @@ export default function HRDirectoryPage() {
         {/* Row 2: Advanced Filters (Hiện/Ẩn) */}
         {showAdvancedFilter && (
           <div className="pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-4">
-             {/* ✅ Filter Contract Type */}
+             {/*Filter Contract Type */}
              <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Contract Type</label>
                 <select name="ContractType" value={filters.ContractType} onChange={handleFilterChange} className={`${selectClass} w-full`}>

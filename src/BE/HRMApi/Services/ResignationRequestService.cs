@@ -45,16 +45,15 @@ namespace HrmApi.Services
                 RequestType = "RESIGNATION",
                 CreatedAt   = DateTime.UtcNow,
                 Status      = "Pending",
-                ApproverId  = null  // sau này flow duyệt sẽ set
+                ApproverId  = null  
             };
 
-            // Nếu bạn có RequestRepository:
             await _employeeRequestRepository.AddAsync(request);
             await _employeeRequestRepository.SaveChangesAsync();
             // 2. Map DTO -> Entity
             var entity = new ResignationRequest
             {
-                Id                      = request.RequestId, // Sử dụng RequestId vừa tạo
+                Id                      = request.RequestId, 
                 EmployeeId              = employee.Id,       // FK
                 ResignationDate         = dto.ProposedLastWorkingDate,
                 Reason                  = dto.Reason,

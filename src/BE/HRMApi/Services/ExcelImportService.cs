@@ -243,13 +243,13 @@ namespace HrmApi.Services
                     throw new ArgumentException("Số điện thoại 1 phải đúng 10 chữ số");
             }
 
-            // Business rules: conditional required
+        
             if (!string.IsNullOrEmpty(rowData.ContractType) && 
                 (rowData.ContractType.Equals("Có thời hạn", StringComparison.OrdinalIgnoreCase) ||
                  rowData.ContractType.Equals("Fixed-term", StringComparison.OrdinalIgnoreCase)))
             {
                 if (!rowData.ContractEndDate.HasValue)
-                    throw new ArgumentException("Ngày kết thúc hợp đồng là bắt buộc khi loại hợp đồng là 'Có thời hạn'");
+                    throw new ArgumentException("ContractEndDate is required for Fixed-term contract.");
             }
 
             // Build CurrentAddress from province + district if not provided
@@ -275,7 +275,7 @@ namespace HrmApi.Services
             {
                 department = departments.FirstOrDefault(d => d.DepartmentCode == rowData.DepartmentCode);
                 if (department == null)
-                    throw new ArgumentException($"Không tìm thấy phòng ban với mã: {rowData.DepartmentCode}");
+                    throw new ArgumentException($"Department not found with code: {rowData.DepartmentCode}");
             }
 
             JobTitle? jobTitle = null;
@@ -283,7 +283,7 @@ namespace HrmApi.Services
             {
                 jobTitle = jobTitles.FirstOrDefault(j => j.Id.ToString() == rowData.JobTitleCode);
                 if (jobTitle == null)
-                    throw new ArgumentException($"Không tìm thấy chức danh với mã: {rowData.JobTitleCode}");
+                    throw new ArgumentException($"Job title not found with code: {rowData.JobTitleCode}");
             }
 
             Role? role = null;
@@ -292,7 +292,7 @@ namespace HrmApi.Services
                 // Role model uses RoleName and RoleId
                 role = roles.FirstOrDefault(r => r.RoleName == rowData.RoleName);
                 if (role == null)
-                    throw new ArgumentException($"Không tìm thấy role với tên: {rowData.RoleName}");
+                    throw new ArgumentException($"Role not found with name: {rowData.RoleName}");
             }
 
             // Lookup direct manager if provided
@@ -302,7 +302,7 @@ namespace HrmApi.Services
                 directManager = await _context.Employees
                     .FirstOrDefaultAsync(e => e.EmployeeCode == rowData.DirectManagerCode);
                 if (directManager == null)
-                    throw new ArgumentException($"Không tìm thấy quản lý trực tiếp với mã: {rowData.DirectManagerCode}");
+                    throw new ArgumentException($"Direct manager not found with code: {rowData.DirectManagerCode}");
             }
 
             if (isUpdate)
@@ -433,7 +433,7 @@ namespace HrmApi.Services
                 .FirstOrDefaultAsync(e => e.CitizenIdNumber == data.CitizenIdNumber);
 
             if (existingEmployee != null)
-                throw new ArgumentException($"CCCD '{data.CitizenIdNumber}' đã tồn tại trong hệ thống");
+                throw new ArgumentException($"Citizen ID Number: '{data.CitizenIdNumber}' already exists in the system.");
 
             // ===== TỰ ĐỘNG TẠO EmployeeCode =====
             var employeeCode = await GenerateNextEmployeeCodeAsync();

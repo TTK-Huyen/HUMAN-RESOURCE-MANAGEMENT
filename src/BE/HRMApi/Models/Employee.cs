@@ -27,7 +27,7 @@ namespace HrmApi.Models
         }
 
 
-        // Ngày sinh (cho nullable cho khớp DB code 2)
+        // Ngày sinh 
         [Column("date_of_birth")]
         public DateTime? DateOfBirth { get; set; }
 
@@ -35,7 +35,7 @@ namespace HrmApi.Models
         [Column("gender")]
         public string? Gender { get; set; } // Male / Female / Other
 
-        // Quốc tịch (code 2 không có, nếu DB có cột thì thêm [Column] đúng tên)
+        // Quốc tịch
         public string Nationality { get; set; } = default!;
 
         // Thông tin liên lạc
@@ -45,7 +45,7 @@ namespace HrmApi.Models
         [Column("personal_email")]
         public string? PersonalEmail { get; set; }
 
-        // THÊM từ code 2: PhoneNumber
+        // PhoneNumber
         [Column("phone_number")]
         public string? PhoneNumber { get; set; }
 
@@ -56,7 +56,7 @@ namespace HrmApi.Models
         [Column("has_children")]
         public bool HasChildren { get; set; }
 
-        // Requests (từ code 2) - NHÂN VIÊN LÀ NGƯỜI GỬI
+        // NHÂN VIÊN LÀ NGƯỜI GỬI
         [InverseProperty(nameof(Request.Employee))]
         public ICollection<Request> Requests { get; set; } = new List<Request>();
 
@@ -99,7 +99,7 @@ namespace HrmApi.Models
         public string? BirthPlaceDistrict { get; set; }
 
         [Column("status")]
-        public string Status { get; set; } = "ACTIVE"; // default như code 2
+        public string Status { get; set; } = "ACTIVE"; 
 
         // Bộ phận & Chức danh
         [Column("department_id")]

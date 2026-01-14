@@ -32,7 +32,6 @@ namespace HrmApi.Services.Notifications
             }
             catch (Exception ex)
             {
-                // Không throw để không làm fail nghiệp vụ chính
                 Console.WriteLine($"[NotificationPublisher] Failed: {ex.Message}");
             }
         }

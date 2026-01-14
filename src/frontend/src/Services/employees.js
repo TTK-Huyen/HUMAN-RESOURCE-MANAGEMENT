@@ -1,27 +1,14 @@
 import api from './client.js';
 import axios from 'axios';
-// ============================================================
-// REAL API SETUP (Giữ lại cấu hình này để dùng sau)
 
-// ============================================================
 
 export const EmployeeService = {
-  // 1. Xem hồ sơ – dùng API thật (Swagger profile)
   getProfile: (employeeCode) => {
-    // Trả về đúng DTO từ backend
     return api.get(`/employees/${employeeCode}/profile`);
-    // Response data chính là:
-    // {
-    //   employeeName, employeeCode, dateOfBirth, gender, nationality, ...
-    // }
+   
   },
 
-  // 2. Gửi yêu cầu cập nhật – dùng API thật
-  // payload phải giống Swagger:
-  // {
-  //   reason: "string",
-  //   details: [{ fieldName, oldValue, newValue }]
-  // }
+  // 2. Gửi yêu cầu cập nhật
   sendUpdateRequest: (employeeCode, payload) => {
     return api.post(
       `/employees/${employeeCode}/profile-update-requests`,
@@ -58,16 +45,11 @@ export const HRService = {
     return api.get(`/hr/profile-update-requests/${requestId}`, {
       headers: { Accept: "application/json, text/plain, */*" },
     });
-    // data:
-    // {
-    //   request_id, employee_id, request_status,
-    //   details: [{ field_name, old_value, new_value }]
-    // }
+   
   },
 
   // 5. HR duyệt / từ chối
   updateRequestStatus: (requestId, statusData) => {
-    // statusData phải có: { new_status, reject_reason, Employee_ID }
     return api.patch(
       `/hr/profile-update-requests/${requestId}/status`,
       statusData,
@@ -77,10 +59,10 @@ export const HRService = {
   },
 
   // 6. HR lấy tất cả nhân viên
-  fetchAllEmployees: (params) => { // <--- 1. Thêm tham số params vào hàm
+  fetchAllEmployees: (params) => {
     return api
       .get("/employees", { 
-        params: params, // <--- 2. Truyền params vào cấu hình của axios
+        params: params, 
         headers: { Accept: "application/json, text/plain, */*" } 
       })
       .then((response) => response.data);
@@ -116,25 +98,21 @@ export const HRService = {
     .then(async (response) => {
       const contentType = response.headers?.["content-type"] || "";
 
-      // ✅ Nếu backend trả JSON/HTML lỗi (401/500/404...), đừng save thành .xlsx
       if (!contentType.includes("spreadsheetml")) {
-        // cố đọc message lỗi từ blob
+   
         let msg = "Không tải được file mẫu. Vui lòng thử lại.";
         try {
           const text = await response.data.text();
-          // nếu là JSON {"message": "..."}
           try {
             const json = JSON.parse(text);
             msg = json?.message || msg;
           } catch {
-            // nếu là HTML hoặc text thường
             if (text?.trim()) msg = text;
           }
         } catch {}
         throw new Error(msg);
       }
 
-      // Lấy filename từ header nếu có
       const disposition = response.headers["content-disposition"] || "";
       const match = disposition.match(/filename\*=UTF-8''([^;]+)|filename="([^"]+)"/i);
       const fileName = `employee_import_template_${Date.now()}.xlsx`;

@@ -12,7 +12,6 @@ export default function HRViewProfilePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // ✅ FIX: Use URL param first, fall back to localStorage
     const code = paramCode || localStorage.getItem("employeeCode");
     
     if (!code) {

@@ -27,7 +27,7 @@ namespace HrmApi.Services
             IEmployeeRequestRepository employeeRequestRepository,
             IEventBus eventBus,
             IWebHostEnvironment env,
-            AppDbContext context // Inject Context vào đây
+            AppDbContext context
             )
         {
             _repository = repository;
@@ -60,7 +60,7 @@ namespace HrmApi.Services
                 handoverEmployeeId = handoverEmp.Id;
             }
 
-            // 3. Xử lý File Upload (BASE64) - Sửa đoạn này để hết lỗi dto.File
+            // 3. Xử lý File Upload (BASE64) 
             string? savedFilePath = null;
             if (!string.IsNullOrEmpty(dto.AttachmentsBase64))
             {
@@ -69,19 +69,18 @@ namespace HrmApi.Services
                     // Convert Base64 -> Byte Array
                     var fileBytes = Convert.FromBase64String(dto.AttachmentsBase64);
                     
-                    // --- SỬA ĐOẠN NÀY ---
+        
                     // Lấy đuôi file gốc (ví dụ .pdf, .png) từ dto.FileName
                     // Nếu không có tên file thì mặc định là .dat
                     string extension = ".dat";
                     if (!string.IsNullOrEmpty(dto.FileName))
                     {
-                        // Path.GetExtension sẽ lấy cả dấu chấm, ví dụ ".pdf"
+                        
                         extension = Path.GetExtension(dto.FileName);
                     }
 
-                    // Đặt tên file: Guid + đuôi file gốc (để tránh trùng tên nhưng vẫn mở được)
                     var fileName = $"{Guid.NewGuid()}{extension}"; 
-                    // --------------------
+                   
                     
                     string rootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
                     var uploadFolder = Path.Combine(rootPath, "uploads");
@@ -168,7 +167,6 @@ namespace HrmApi.Services
             }
         }
 
-        // Tách hàm gửi thông báo cho code gọn gàng hơn
        /* private async Task SendNotificationAsync(Employee employee, Request request)
         {
             try

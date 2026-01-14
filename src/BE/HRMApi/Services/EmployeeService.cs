@@ -177,7 +177,7 @@ namespace HrmApi.Services
 
         public async Task<CreateEmployeeResponseDto> CreateEmployeeAsync(CreateEmployeeDto dto)
         {
-            // 1) Validate tối thiểu phía service (để chắc chắn dù UI có bug)
+            
             if (string.IsNullOrWhiteSpace(dto.EmployeeName))
                 throw new ArgumentException("employeeName");
 
@@ -202,14 +202,12 @@ namespace HrmApi.Services
             // 3) password = EMP + last4 CCCD
             var rawPassword = $"EMP{cccdDigits[^4..]}";
 
-            // 4) Uniqueness checks (AC-05)
             // 4.1 username
             var existingUser = await _userAccountRepository.FindAccountByUsernameAsync(username);
             if (existingUser != null)
                 throw new ArgumentException("username");
 
             // 4.2 companyEmail
-            // ✅ cần implement method ExistsByCompanyEmailAsync trong EmployeeRepository
             if (!string.IsNullOrWhiteSpace(dto.CompanyEmail))
             {
                 var dupEmail = await _employeeRepository.ExistsByCompanyEmailAsync(dto.CompanyEmail);
@@ -218,7 +216,6 @@ namespace HrmApi.Services
             }
 
             // 4.3 citizenIdNumber
-            // ✅ cần implement method ExistsByCitizenIdAsync trong EmployeeRepository
             var dupCitizen = await _employeeRepository.ExistsByCitizenIdAsync(cccdDigits);
             if (dupCitizen)
                 throw new ArgumentException("citizenIdNumber");
@@ -238,7 +235,7 @@ namespace HrmApi.Services
                 MaritalStatus = dto.MaritalStatus,
                 HasChildren = dto.HasChildren,
 
-                CitizenIdNumber = cccdDigits,          // store digits only (recommended)
+                CitizenIdNumber = cccdDigits,          
                 PersonalTaxCode = dto.PersonalTaxCode,
                 SocialInsuranceNumber = dto.SocialInsuranceNumber,
                 
@@ -257,12 +254,11 @@ namespace HrmApi.Services
                 EmploymentType = dto.EmploymentType,
                 ContractType = dto.ContractType,
                 ContractStartDate = dto.ContractStartDate,
-                ContractEndDate = dto.ContractEndDate   // can be null
+                ContractEndDate = dto.ContractEndDate   
             };
 
             await _employeeRepository.AddAsync(employee);
 
-            // 🔥 Need to save FIRST to get employee.Id for phone/bank/user relationships
             try
             {
                 var saved = await _employeeRepository.SaveChangesAsync();
@@ -274,7 +270,6 @@ namespace HrmApi.Services
                 var innerException = ex.InnerException;
                 var fullError = innerException?.Message ?? ex.Message;
                 
-                // Traverse all inner exceptions
                 while (innerException?.InnerException != null)
                 {
                     innerException = innerException.InnerException;
@@ -323,7 +318,6 @@ namespace HrmApi.Services
                 LastLoginAt = null
             };
 
-            // 🔥 Add all remaining entities and save ONCE (transaction)
             try
             {
                 foreach (var phone in phoneNumbers)
@@ -338,7 +332,6 @@ namespace HrmApi.Services
 
                 await _userAccountRepository.AddAsync(userAccount);
 
-                // Save all at once - if any fails, none are saved
                 var savedAll = await _employeeRepository.SaveChangesAsync();
                 if (savedAll <= 0)
                     throw new Exception("Failed to save phone numbers, bank account, and user account.");
@@ -349,7 +342,6 @@ namespace HrmApi.Services
                 throw new Exception($"Failed to save phone numbers, bank account, or user account: {dbError}");
             }
 
-            // 9) Return credentials (chỉ trả về lúc tạo)
             return new CreateEmployeeResponseDto
             {
                 EmployeeId = employee.Id,
@@ -363,13 +355,7 @@ namespace HrmApi.Services
 
         private async Task<string> GenerateNextEmployeeCodeAsync()
         {
-            // Simple approach: EMP000001, EMP000002...
-            // Implement in repository for better performance if needed.
-            // For now we query using EF Core if repository exposes IQueryable.
-            // If your repository doesn't support it, move this logic into repository.
-
-            // ✅ Fallback: use EF Core context via repository if available
-            // If you have no direct access, implement GetLatestEmployeeCodeAsync() in repository.
+        
             var all = await _employeeRepository.GetAllEmployeesAsync();
             var last = all
                 .Select(e => e.EmployeeCode)
@@ -493,26 +479,24 @@ namespace HrmApi.Services
 
             var contractType = dto.ContractType.Trim().ToLower();
 
-            // CHECK 1: Nếu là Permanent
+            // Nếu là Permanent
             if (contractType == "permanent")
             {
-                // Gán cứng ContractEndDate = NULL (bỏ qua dữ liệu từ client)
+                
                 dto.ContractEndDate = null;
-                return; // Không cần check thêm
+                return; 
             }
 
-            // CHECK 2: Nếu là Fixed-term hoặc Probation
+            // Nếu là Fixed-term hoặc Probation
             if (contractType == "fixed-term" || contractType == "probation")
             {
-                // CHECK 2.1: Null check - ContractEndDate bắt buộc có
+                
                 if (dto.ContractEndDate == null)
                     throw new ArgumentException($"ContractEndDate is required for {contractType} contract. Please enter end date.");
 
-                // CHECK 3: Logic check - ContractEndDate > ContractStartDate
                 if (dto.ContractStartDate.Date >= dto.ContractEndDate.Value.Date)
                     throw new ArgumentException("ContractEndDate must be after ContractStartDate.");
 
-                // CHECK 4: Duration check - tùy loại hợp đồng
                 if (contractType == "fixed-term")
                 {
                     var durationMonths = CalculateMonthsBetween(dto.ContractStartDate, dto.ContractEndDate.Value);
@@ -526,7 +510,6 @@ namespace HrmApi.Services
                         throw new ArgumentException("Probation period cannot exceed 180 days.");
                 }
             }
-            // Nếu contractType không phải permanent, fixed-term, hoặc probation thì bỏ qua
         }
 
         /// <summary>

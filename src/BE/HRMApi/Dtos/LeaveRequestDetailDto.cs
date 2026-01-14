@@ -40,7 +40,6 @@ namespace HrmApi.Dtos.RequestStatus
         [JsonPropertyName("attachment")]
         public string? AttachmentPath { get; set; }
 
-        // Lý do nghỉ (nếu bạn có cột Reason ở Request)
         [JsonPropertyName("reason")]
         public string? Reason { get; set; }
     }

@@ -53,7 +53,6 @@ namespace HrmApi.Models
         [Column("status")]
         public CampaignStatus Status { get; set; } = CampaignStatus.UPCOMING;
 
-        // --- Hai trường bạn yêu cầu thêm ---
         [Column("max_participants")]
         public int? MaxParticipants { get; set; } // Null = không giới hạn
 

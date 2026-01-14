@@ -13,11 +13,8 @@ const ManagerGivePointsPage = () => {
     useEffect(() => {
         const loadData = async () => {
             try {
-                // --- BƯỚC 1: LẤY MANAGER CODE ---
-                // Dựa trên log của bạn, key 'employeeCode' có sẵn trong localStorage
                 let currentManagerCode = localStorage.getItem('employeeCode');
 
-                // Nếu không thấy, thử lấy từ Token (phòng hờ) với key chuẩn SOAP
                 if (!currentManagerCode) {
                     const token = localStorage.getItem('token');
                     if (token) {
@@ -28,8 +25,7 @@ const ManagerGivePointsPage = () => {
                                 '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
                             ).join(''));
                             const payload = JSON.parse(jsonPayload);
-                            
-                            // Lấy key dài ngoằng từ log bạn gửi
+                           
                             currentManagerCode = payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
                         } catch (e) {
                             console.error("Error parsing token fallback", e);
@@ -44,11 +40,9 @@ const ManagerGivePointsPage = () => {
 
                 console.log("Manager Code identified:", currentManagerCode);
 
-                // --- BƯỚC 2: TẢI DATA & LỌC ---
                 const res = await HRService.fetchAllEmployees({ pageIndex: 1, pageSize: 1000 }); 
                 const allEmployees = res.data?.items || res.data || [];
 
-                // Tìm thông tin Manager để lấy DepartmentId
                 const managerProfile = allEmployees.find(e => e.employeeCode === currentManagerCode);
 
                 if (managerProfile) {

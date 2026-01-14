@@ -13,11 +13,9 @@ public class Role
     public int RoleId { get; set; }
     
     [Column("role_code")]
-    public string RoleCode { get; set; } = default!; // Ví dụ: EMP, MANAGER, HR (Cần cho LoginResponseDto)
-    
+    public string RoleCode { get; set; } = default!; //  EMP, MANAGER, HR 
     [Column("role_name")]
     public string RoleName { get; set; } = default!;
 
-    // Navigation Property: Danh sách UserAccount có vai trò này (Tùy chọn)
-    // public ICollection<UserAccount> UserAccounts { get; set; } = new List<UserAccount>();
+    
 }

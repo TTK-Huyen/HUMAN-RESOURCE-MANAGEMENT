@@ -15,7 +15,6 @@ export default function LoginPage() {
 
       console.log("Login Response:", { token, role, employeeCode, employeeName, employeeId });
 
-      // FIX: Remove old keys but DON'T use clear() - it may interfere
       localStorage.removeItem("token");
       localStorage.removeItem("role");
       localStorage.removeItem("employeeCode");
@@ -43,10 +42,7 @@ export default function LoginPage() {
 
       // Chuyển hướng dựa vào role - không phân biệt chữ hoa/thường
       const normalizedRole = role?.trim().toUpperCase();
-      
-      // FIX: Increase delay and verify token exists before navigate
       setTimeout(() => {
-        // Double-check token still exists
         const finalToken = localStorage.getItem("token");
         if (!finalToken) {
           console.error("Token disappeared!");
@@ -88,16 +84,16 @@ export default function LoginPage() {
   // Demo accounts (from DataSeeder)
   const demoAccounts = [
     // ===== ADMIN =====
-    { role: "🛡️ Admin", name: "System Administrator", username: "admin"},
+    { role: "🛡️ Admin", username: "admin"},
     // ===== MANAGERS (4 tài khoản) =====
-    { role: "👔 Manager", name: "Trần Văn IT Manager", username: "EMP001"},
+    { role: "👔 Manager", username: "EMP001"},
     
     // ===== HR SPECIALISTS (4 tài khoản) =====
-    { role: "💼 HR Admin", name: "Trương Thị IT HR", username: "EMP005"},
+    { role: "💼 HR Admin", username: "EMP005"},
     
     // ===== EMPLOYEES - IT TEAM (5 tài khoản) =====
-    { role: "👤 Employee", name: "Trần Văn A Dev", username: "EMP009"},
-    { role: "👤 Employee", name: "Hoàng Thị B Dev", username: "EMP010"},
+    { role: "👤 Employee", username: "EMP009"},
+    { role: "👤 Employee", username: "EMP010"},
     
     
   ];

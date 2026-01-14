@@ -28,7 +28,6 @@ export default function EmployeeProfilePage() {
       setError("");
       setViolations([]);
       
-      // ✅ DEBUG: Check token first
       const token = localStorage.getItem("token");
       console.log("🔐 Token present:", !!token);
       
@@ -40,7 +39,6 @@ export default function EmployeeProfilePage() {
         return;
       }
       
-      // ✅ FIX: Read from localStorage INSIDE useEffect, not at top level
       const STORED_EMPLOYEE_CODE =
         localStorage.getItem("employeeCode") || localStorage.getItem("employee_code") || localStorage.getItem("employeeId") || "";
       
@@ -76,7 +74,6 @@ export default function EmployeeProfilePage() {
     };
   }, []);
 
-  // Bạn có thể validate thêm (VD: thiếu citizen_id, v.v.) và đẩy vào violation banner
   useEffect(() => {
     const v = [];
     if (profile && !profile.current_address) {

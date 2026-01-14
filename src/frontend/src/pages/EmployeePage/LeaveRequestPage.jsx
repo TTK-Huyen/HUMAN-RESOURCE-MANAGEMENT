@@ -48,23 +48,20 @@ export default function LeaveRequestPage() {
     const employeeCode = localStorage.getItem("employeeCode") || "";
     const employeeName = localStorage.getItem("employeeName") || "";
 
-    // Fill nhanh name/code từ login response
     setF((prev) => ({
       ...prev,
       employeeCode,
       employeeName,
     }));
 
-    // Nếu chưa có employeeCode -> chưa login hoặc storage mất
     if (!employeeCode) {
       setErrs(["Missing employeeCode. Please login again."]);
       return;
     }
 
-    // Gọi API thật để lấy department
     try {
       const profile = await HRService.fetchEmployeeProfileByCode(employeeCode);
-      console.log("Employee profile:", profile); // Debug: xem response từ API
+      console.log("Employee profile:", profile); 
 
       setF((prev) => ({
         ...prev,
@@ -146,24 +143,22 @@ export default function LeaveRequestPage() {
         const file = f.attachment;
         attachmentBase64 = await new Promise((resolve, reject) => {
           const reader = new FileReader();
-          reader.onload = () => resolve(reader.result.split(",")[1]); // chỉ lấy base64
+          reader.onload = () => resolve(reader.result.split(",")[1]); 
           reader.onerror = reject;
           reader.readAsDataURL(file);
         });
       }
 
-      // Build payload đúng theo API backend
       const payload = {
         leaveType: f.leaveType,
         startDate: new Date(f.startDate).toISOString(),
         endDate: new Date(f.endDate).toISOString(),
         reason: f.reason,
-        handoverPersonCode: f.handoverPerson, // backend yêu cầu số
+        handoverPersonCode: f.handoverPerson, 
         attachmentsBase64: attachmentBase64,
         fileName: f.attachment ? f.attachment.name : null
       };
 
-      // Gọi API thực
       await createLeaveRequest(f.employeeCode, payload);
 
       setToast({ message: "Leave request created successfully!", type: "success" });

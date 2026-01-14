@@ -1,8 +1,6 @@
 import axios from "axios";
 
-// Prefer an env var for base URL (set REACT_APP_API_BASE_URL).
-// If not set, choose http for local dev (localhost) to avoid SSL protocol errors,
-// otherwise default to HTTPS for non-local environments.
+
 let BASE_URL = process.env.REACT_APP_API_BASE_URL;
 if (!BASE_URL) {
     if (typeof window !== 'undefined') {
@@ -19,7 +17,6 @@ api.interceptors.request.use(config => {
     const token = localStorage.getItem('token');
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
-        // don't log the token value to avoid leakage in console
         console.debug('[API Request] Authorization header attached');
     } else {
         console.debug('[API Request] No token present');

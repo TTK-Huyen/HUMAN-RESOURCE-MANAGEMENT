@@ -10,13 +10,13 @@ namespace HrmApi.Dtos.Employee
         public string Password { get; set; } = string.Empty;       // Tự động tạo từ CCCD
 
         // ===== THÔNG TIN CÁ NHÂN =====
-        [Required(ErrorMessage = "Họ tên là bắt buộc")]
+        [Required(ErrorMessage = "Full name is required.")]
         public string FullName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Ngày sinh là bắt buộc")]
+        [Required(ErrorMessage = "Date of birth is required.")]
         public DateTime? DateOfBirth { get; set; }
 
-        [Required(ErrorMessage = "Giới tính là bắt buộc")]
+        [Required(ErrorMessage = "Gender is required.")]
         public string? Gender { get; set; }
 
         public string? Nationality { get; set; } = "Việt Nam";
@@ -24,7 +24,7 @@ namespace HrmApi.Dtos.Employee
         public bool? HasChildren { get; set; } = false;
 
         // ===== THÔNG TIN PHÁP LÝ =====
-        [Required(ErrorMessage = "CCCD là bắt buộc")]
+        [Required(ErrorMessage = "Citizen ID Number is required.")]
         public string? CitizenIdNumber { get; set; }
 
         public string? PersonalTaxCode { get; set; }
@@ -34,61 +34,60 @@ namespace HrmApi.Dtos.Employee
         // CompanyEmail sẽ được backend tự động tạo, không cần nhập trong Excel
         public string? CompanyEmail { get; set; }
 
-        [EmailAddress(ErrorMessage = "Email cá nhân không hợp lệ")]
+        [EmailAddress(ErrorMessage = "Personal email is invalid.")]
         public string? PersonalEmail { get; set; }
 
-        // Phone numbers (ít nhất 1 số bắt buộc)
-        [Required(ErrorMessage = "Số điện thoại 1 là bắt buộc")]
+        // Phone numbers (at least 1 number is required)
+        [Required(ErrorMessage = "Phone number 1 is required.")]
         public string? PhoneNumber1 { get; set; }
         public string? PhoneNumber1Description { get; set; }
         public string? PhoneNumber2 { get; set; }
         public string? PhoneNumber2Description { get; set; }
 
-        // Tương thích ngược
         public string? PhoneNumber => PhoneNumber1;
 
         // ===== ĐỊA CHỈ =====
         // Birth place (nơi sinh) - BẮT BUỘC
-        [Required(ErrorMessage = "Tỉnh/Thành phố nơi sinh là bắt buộc")]
+        [Required(ErrorMessage = "Place of birth (province/city) is required.")]
         public string? BirthPlaceProvince { get; set; }
         
-        [Required(ErrorMessage = "Quận/Huyện nơi sinh là bắt buộc")]
+        [Required(ErrorMessage = "Place of birth (district) is required.")]
         public string? BirthPlaceDistrict { get; set; }
 
         // Current address (địa chỉ hiện tại) - BẮT BUỘC
-        [Required(ErrorMessage = "Tỉnh/Thành phố địa chỉ hiện tại là bắt buộc")]
+        [Required(ErrorMessage = "Current address (province/city) is required.")]
         public string? CurrentAddressProvince { get; set; }
         
-        [Required(ErrorMessage = "Quận/Huyện địa chỉ hiện tại là bắt buộc")]
+        [Required(ErrorMessage = "Current address (district) is required.")]
         public string? CurrentAddressDistrict { get; set; }
 
         public string? CurrentAddress { get; set; }  // Có thể để trống, sẽ build từ province + district
 
         // ===== NGÂN HÀNG =====
-        [Required(ErrorMessage = "Tên ngân hàng là bắt buộc")]
+        [Required(ErrorMessage = "Bank name is required.")]
         public string? BankName { get; set; }
         
-        [Required(ErrorMessage = "Số tài khoản ngân hàng là bắt buộc")]
+        [Required(ErrorMessage = "Bank account number is required.")]
         public string? BankAccountNumber { get; set; }
 
         // ===== CÔNG VIỆC =====
-        [Required(ErrorMessage = "Mã phòng ban là bắt buộc")]
+        [Required(ErrorMessage = "Department code is required.")]
         public string? DepartmentCode { get; set; }
 
-        [Required(ErrorMessage = "Mã chức danh là bắt buộc")]
+        [Required(ErrorMessage = "Job title code is required.")]
         public string? JobTitleCode { get; set; }
 
         public string? DirectManagerCode { get; set; }
         public string? EmploymentType { get; set; } = "Toàn thời gian";
         public string? ContractType { get; set; } = "Vĩnh viễn";
 
-        [Required(ErrorMessage = "Ngày bắt đầu hợp đồng là bắt buộc")]
+        [Required(ErrorMessage = "The contract start date is mandatory.")]
         public DateTime? ContractStartDate { get; set; }
 
         public DateTime? ContractEndDate { get; set; }  // Bắt buộc nếu ContractType == "Có thời hạn"
 
         // ===== PHÂN QUYỀN =====
-        [Required(ErrorMessage = "Phân quyền (RoleName) là bắt buộc")]
+        [Required(ErrorMessage = "Role name is required.")]
         public string? RoleName { get; set; }
 
         // ===== METADATA =====

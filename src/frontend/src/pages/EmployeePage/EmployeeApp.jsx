@@ -1,8 +1,6 @@
 import React from "react";
 import { Routes, Route, NavLink, Navigate } from "react-router-dom";
-import { FileText, Clock, LogOut } from "lucide-react"; // Dùng icon cho đẹp (nếu bạn đã cài lucide-react)
-
-// Import các trang chức năng
+import { FileText, Clock, LogOut } from "lucide-react"; 
 import LeaveRequestPage from "./LeaveRequestPage";
 import OTRequestPage from "./OTRequestPage";
 import ResignationRequestPage from "./ResignationRequestPage";
@@ -154,7 +152,6 @@ function CreateGrid() {
 // --- MAIN EMPLOYEE APP ---
 export default function EmployeeApp() {
   return (
-    // ❌ IMPORTANT: Removed <EmployeeLayout> because App.js already wraps MainLayout
     <Routes>
       {/* Default /employee redirects to /employee/create */}
       <Route index element={<Navigate to="create" replace />} />
