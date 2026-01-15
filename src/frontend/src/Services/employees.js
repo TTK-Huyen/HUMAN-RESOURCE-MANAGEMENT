@@ -39,13 +39,17 @@ export const HRService = {
     //   { request_id, employee_code, full_name, created_at, request_status }, ...
     // ]
   },
-
-  // 4. HR xem chi tiết
+  // 4. HR xem chi tiết yêu cầu (endpoint /detailed)
   getRequestDetail: (requestId) => {
-    return api.get(`/hr/profile-update-requests/${requestId}`, {
+    return api.get(`/hr/profile-update-requests/${requestId}/detailed`, {
       headers: { Accept: "application/json, text/plain, */*" },
     });
-   
+    // data:
+    // {
+    //   request_id, employee_id, employee_code, employee_name, request_date,
+    //   request_status, reviewed_by, reviewed_at, reject_reason, comment,
+    //   details: [{ field_name, old_value, new_value }]
+    // }
   },
 
   // 5. HR duyệt / từ chối

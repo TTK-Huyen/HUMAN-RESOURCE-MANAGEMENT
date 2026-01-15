@@ -55,6 +55,43 @@ namespace HrmApi.Services
             };
         }
 
+        // ========= API #2: GET DETAIL (ENRICHED) =========
+        public async Task<ProfileUpdateRequestDetailDto> GetDetailEnrichedAsync(long requestId)
+        {
+            var request = await _requestRepo.FindByIdWithDetailsAsync(requestId);
+            if (request == null)
+            {
+                throw new KeyNotFoundException("Request not found");
+            }
+
+            var reviewedByName = string.Empty;
+            if (request.ReviewedBy.HasValue)
+            {
+                var reviewer = await _employeeRepo.FindByIdAsync(request.ReviewedBy.Value);
+                reviewedByName = reviewer?.EmployeeName ?? "Unknown";
+            }
+
+            return new ProfileUpdateRequestDetailDto
+            {
+                RequestId = request.UpdateRequestId,
+                EmployeeId = request.EmployeeId,
+                EmployeeCode = request.Employee?.EmployeeCode ?? string.Empty,
+                EmployeeName = request.Employee?.EmployeeName ?? string.Empty,
+                RequestDate = request.RequestDate,
+                Status = request.Status,
+                ReviewedByName = reviewedByName,
+                ReviewedAt = request.ReviewedAt,
+                RejectReason = request.RejectReason,
+                Comment = request.Comment,
+                Details = request.Details.Select(d => new ProfileUpdateRequestDetailItemDto
+                {
+                    FieldName = d.FieldName,
+                    OldValue = d.OldValue,
+                    NewValue = d.NewValue
+                }).ToList()
+            };
+        }
+
         // ========= API #3: PATCH STATUS =========
         public async Task<RequestStatusResponseDto> ChangeStatusAsync(
             int hrId,

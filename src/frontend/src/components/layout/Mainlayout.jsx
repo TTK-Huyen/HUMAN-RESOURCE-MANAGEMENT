@@ -144,13 +144,12 @@ const MENU_CONFIG = {
   HR: {
     title: "HR Administration",
     subtitle: "System Management",
-    groups: [
-      {
+    groups: [      {
         key: "profile",
         label: "Profile",
         items: [
           { to: "/employee/profile", label: "View Profile", icon: User },
-          //{ to: "/hr/profile-requests", label: "Profile Requests", icon: FileText },
+          { to: "/hr/profile-requests", label: "Profile Requests", icon: FileText },
           { to: "/hr/directory", label: "Employee Directory", icon: Users },
         ],
       },
