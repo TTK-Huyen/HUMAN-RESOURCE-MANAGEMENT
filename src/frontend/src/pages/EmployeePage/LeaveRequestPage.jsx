@@ -24,7 +24,7 @@ const INITIAL_FORM = {
   startDate: "",
   endDate: "",
   reason: "",
-  handoverPersonCode: "",
+  handoverPerson: "", // ✅ FIX: đồng bộ với input/validate/payload
   attachment: null,
 };
 
@@ -44,34 +44,38 @@ export default function LeaveRequestPage() {
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
-  (async () => {
-    const employeeCode = localStorage.getItem("employeeCode") || "";
-    const employeeName = localStorage.getItem("employeeName") || "";
-
-    setF((prev) => ({
-      ...prev,
-      employeeCode,
-      employeeName,
-    }));
-
-    if (!employeeCode) {
-      setErrs(["Missing employeeCode. Please login again."]);
-      return;
-    }
-
-    try {
-      const profile = await HRService.fetchEmployeeProfileByCode(employeeCode);
-      console.log("Employee profile:", profile); 
+    (async () => {
+      const employeeCode = localStorage.getItem("employeeCode") || "";
+      const employeeName = localStorage.getItem("employeeName") || "";
 
       setF((prev) => ({
         ...prev,
-        department: profile.Department || profile.departmentName || profile.department || "",
+        employeeCode,
+        employeeName,
       }));
-    } catch (e) {
-      console.error("Error loading employee data:", e);
-      setErrs(["Cannot load employee profile. Please try again."]);
-    }
-  })();
+
+      if (!employeeCode) {
+        setErrs(["Missing employeeCode. Please login again."]);
+        return;
+      }
+
+      try {
+        const profile = await HRService.fetchEmployeeProfileByCode(employeeCode);
+        console.log("Employee profile:", profile);
+
+        setF((prev) => ({
+          ...prev,
+          department:
+            profile.Department ||
+            profile.departmentName ||
+            profile.department ||
+            "",
+        }));
+      } catch (e) {
+        console.error("Error loading employee data:", e);
+        setErrs(["Cannot load employee profile. Please try again."]);
+      }
+    })();
   }, []);
 
   function onChange(e) {
@@ -135,7 +139,6 @@ export default function LeaveRequestPage() {
     setSubmitting(true);
 
     try {
-
       // Convert file -> base64 nếu có
       let attachmentBase64 = null;
 
@@ -143,7 +146,7 @@ export default function LeaveRequestPage() {
         const file = f.attachment;
         attachmentBase64 = await new Promise((resolve, reject) => {
           const reader = new FileReader();
-          reader.onload = () => resolve(reader.result.split(",")[1]); 
+          reader.onload = () => resolve(reader.result.split(",")[1]);
           reader.onerror = reject;
           reader.readAsDataURL(file);
         });
@@ -154,9 +157,9 @@ export default function LeaveRequestPage() {
         startDate: new Date(f.startDate).toISOString(),
         endDate: new Date(f.endDate).toISOString(),
         reason: f.reason,
-        handoverPersonCode: f.handoverPerson, 
+        handoverPersonCode: f.handoverPerson,
         attachmentsBase64: attachmentBase64,
-        fileName: f.attachment ? f.attachment.name : null
+        fileName: f.attachment ? f.attachment.name : null,
       };
 
       await createLeaveRequest(f.employeeCode, payload);
@@ -164,15 +167,12 @@ export default function LeaveRequestPage() {
       setToast({ message: "Leave request created successfully!", type: "success" });
       setErrs([]);
       setTimeout(() => navigate(-1), 2000);
-
     } catch (err) {
       setErrs(["Failed to create leave request"]);
     } finally {
       setSubmitting(false);
     }
   }
-
-
 
   function resetForm() {
     navigate(-1);
@@ -185,32 +185,20 @@ export default function LeaveRequestPage() {
   const minDate = todayStr();
 
   return (
-    <div
-      style={{
-        padding: "24px",
-        maxWidth: "1200px",
-        margin: "0 auto",
-      }}
-    >
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+    <div className="request-page">
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
       <div className="card form-card fade-in-up">
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "24px",
-            paddingBottom: "16px",
-            borderBottom: "1px solid #e2e8f0",
-          }}
-        >
+        <div className="form-header">
           <div>
-            <h2 style={{ margin: "0 0 4px 0", fontSize: "1.5rem", color: "#0f172a" }}>
-              Leave request
-            </h2>
-            <p style={{ margin: 0, fontSize: "0.9rem", color: "#64748b" }}>
-              Submit a leave request for approval
-            </p>
+            <h2>Leave request</h2>
+            <p>Submit a leave request for approval</p>
           </div>
         </div>
 
@@ -291,22 +279,8 @@ export default function LeaveRequestPage() {
             />
           </FormRow>
 
-          <div
-            style={{
-              gridColumn: "1 / -1",
-              display: "flex",
-              justifyContent: "flex-end",
-              gap: "12px",
-              marginTop: "16px",
-              paddingTop: "16px",
-              borderTop: "1px solid #e2e8f0",
-            }}
-          >
-            <Button
-              variant="ghost"
-              onClick={resetForm}
-              disabled={submitting}
-            >
+          <div className="form-actions">
+            <Button variant="ghost" onClick={resetForm} disabled={submitting}>
               Cancel
             </Button>
             <Button

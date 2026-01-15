@@ -69,8 +69,6 @@ function getNoticeDays(position) {
   return isManagerial ? 45 : 30;
 }
 
-
-
 export default function ResignationRequestPage() {
   const navigate = useNavigate();
   const [f, setF] = useState(INITIAL_FORM);
@@ -79,36 +77,36 @@ export default function ResignationRequestPage() {
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
-  async function loadProfile() {
-    try {
-      const employeeCodeLS = localStorage.getItem("employeeCode") || "";
+    async function loadProfile() {
+      try {
+        const employeeCodeLS = localStorage.getItem("employeeCode") || "";
 
-      if (!employeeCodeLS) {
-        setErrs(["Missing employeeCode. Please login again."]);
-        return;
+        if (!employeeCodeLS) {
+          setErrs(["Missing employeeCode. Please login again."]);
+          return;
+        }
+
+        const profile = await fetchEmployeeProfile(employeeCodeLS);
+
+        setF((prev) => ({
+          ...prev,
+          employeeCode: profile.employeeCode || employeeCodeLS,
+          employeeName:
+            profile.employeeName || localStorage.getItem("employeeName") || "",
+          department: profile.department || "",
+          position: profile.jobTitle || "",
+          contractEnd: profile.contractEndDate || "",
+        }));
+
+        setErrs([]);
+      } catch (err) {
+        console.error("Cannot load employee profile", err);
+        setErrs(["Cannot load employee profile. Please try again."]);
       }
-
-      const profile = await fetchEmployeeProfile(employeeCodeLS);
-
-      setF((prev) => ({
-        ...prev,
-        employeeCode: profile.employeeCode || employeeCodeLS,
-        employeeName: profile.employeeName || localStorage.getItem("employeeName") || "",
-        department: profile.department || "",
-        position: profile.jobTitle || "",
-        contractEnd: profile.contractEndDate || "",
-      }));
-
-      setErrs([]);
-    } catch (err) {
-      console.error("Cannot load employee profile", err);
-      setErrs(["Cannot load employee profile. Please try again."]);
     }
-  }
 
-  loadProfile();
+    loadProfile();
   }, []);
-
 
   function onChange(e) {
     const { name, value } = e.target;
@@ -125,12 +123,18 @@ export default function ResignationRequestPage() {
       const minDate = addDaysISO(today, noticeDays);
 
       const contractEndISO = toISODate(f.contractEnd);
-      if (contractEndISO && f.resignationDate && f.resignationDate > contractEndISO) {
+      if (
+        contractEndISO &&
+        f.resignationDate &&
+        f.resignationDate > contractEndISO
+      ) {
         m.push("Final working day must be on or before the contract end date.");
       }
 
       if (f.resignationDate < minDate) {
-        m.push(`Final working day must be at least ${noticeDays} days from today.`);
+        m.push(
+          `Final working day must be at least ${noticeDays} days from today.`
+        );
       }
       const todayD = new Date();
       todayD.setHours(0, 0, 0, 0);
@@ -159,13 +163,16 @@ export default function ResignationRequestPage() {
     setSubmitting(true);
     try {
       const payload = {
-        proposedLastWorkingDate: f.resignationDate, 
+        proposedLastWorkingDate: f.resignationDate,
         reason: f.reason,
       };
 
       await createResignationRequest(f.employeeCode, payload);
       setErrs([]);
-      setToast({ message: "Resignation request submitted successfully!", type: "success" });
+      setToast({
+        message: "Resignation request submitted successfully!",
+        type: "success",
+      });
       setTimeout(() => navigate(-1), 2000);
     } catch (err) {
       console.error(err);
@@ -186,32 +193,20 @@ export default function ResignationRequestPage() {
   const contractEndISO = toISODate(f.contractEnd);
 
   return (
-    <div
-      style={{
-        padding: "24px",
-        maxWidth: "1200px",
-        margin: "0 auto",
-      }}
-    >
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+    <div className="request-page">
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
       <div className="card form-card fade-in-up">
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "24px",
-            paddingBottom: "16px",
-            borderBottom: "1px solid #e2e8f0",
-          }}
-        >
+        <div className="form-header">
           <div>
-            <h2 style={{ margin: "0 0 4px 0", fontSize: "1.5rem", color: "#0f172a" }}>
-              Resignation request
-            </h2>
-            <p style={{ margin: 0, fontSize: "0.9rem", color: "#64748b" }}>
-              Submit a resignation request for approval
-            </p>
+            <h2>Resignation request</h2>
+            <p>Submit a resignation request for approval</p>
           </div>
         </div>
 
@@ -234,7 +229,10 @@ export default function ResignationRequestPage() {
             <input className="input" value={f.position} readOnly />
           </FormRow>
 
-          <FormRow label="Contract end date" style={{ opacity: f.contractEnd ? 1 : 0.5 }}>
+          <FormRow
+            label="Contract end date"
+            style={{ opacity: f.contractEnd ? 1 : 0.5 }}
+          >
             <input
               className="input"
               type="date"
@@ -243,7 +241,6 @@ export default function ResignationRequestPage() {
               disabled
             />
           </FormRow>
-
 
           <FormRow label="Resignation date" required>
             <input
@@ -266,22 +263,8 @@ export default function ResignationRequestPage() {
             />
           </FormRow>
 
-          <div
-            style={{
-              gridColumn: "1 / -1",
-              display: "flex",
-              justifyContent: "flex-end",
-              gap: "12px",
-              marginTop: "16px",
-              paddingTop: "16px",
-              borderTop: "1px solid #e2e8f0",
-            }}
-          >
-            <Button
-              variant="ghost"
-              onClick={resetForm}
-              disabled={submitting}
-            >
+          <div className="form-actions">
+            <Button variant="ghost" onClick={resetForm} disabled={submitting}>
               Cancel
             </Button>
             <Button

@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createOvertimeRequest  } from "../../Services/requests";
+import { createOvertimeRequest } from "../../Services/requests";
 import ViolationBanner from "../../components/common/ViolationBanner";
 import { FormRow } from "../../components/common/FormRow";
 import Button from "../../components/common/Button";
 import Toast from "../../components/common/Toast";
 import "./RequestForm.css";
-
 
 const INITIAL_FORM = {
   date: "",
@@ -81,7 +80,10 @@ export default function OTRequestPage() {
 
       await createOvertimeRequest(employeeCode, payload);
 
-      setToast({ message: "Overtime request created successfully!", type: "success" });
+      setToast({
+        message: "Overtime request created successfully!",
+        type: "success",
+      });
       setErrs([]);
       setTimeout(() => navigate(-1), 2000);
     } catch (err) {
@@ -98,32 +100,20 @@ export default function OTRequestPage() {
   const minDate = todayStr();
 
   return (
-    <div
-      style={{
-        padding: "24px",
-        maxWidth: "1200px",
-        margin: "0 auto",
-      }}
-    >
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+    <div className="request-page">
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
       <div className="card form-card fade-in-up">
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "24px",
-            paddingBottom: "16px",
-            borderBottom: "1px solid #e2e8f0",
-          }}
-        >
+        <div className="form-header">
           <div>
-            <h2 style={{ margin: "0 0 4px 0", fontSize: "1.5rem", color: "#0f172a" }}>
-              Overtime request
-            </h2>
-            <p style={{ margin: 0, fontSize: "0.9rem", color: "#64748b" }}>
-              Submit an overtime request for approval
-            </p>
+            <h2>Overtime request</h2>
+            <p>Submit an overtime request for approval</p>
           </div>
         </div>
 
@@ -179,22 +169,8 @@ export default function OTRequestPage() {
             />
           </FormRow>
 
-          <div
-            style={{
-              gridColumn: "1 / -1",
-              display: "flex",
-              justifyContent: "flex-end",
-              gap: "12px",
-              marginTop: "16px",
-              paddingTop: "16px",
-              borderTop: "1px solid #e2e8f0",
-            }}
-          >
-            <Button
-              variant="ghost"
-              onClick={resetForm}
-              disabled={submitting}
-            >
+          <div className="form-actions">
+            <Button variant="ghost" onClick={resetForm} disabled={submitting}>
               Cancel
             </Button>
             <Button

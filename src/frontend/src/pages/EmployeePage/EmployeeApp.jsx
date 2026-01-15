@@ -9,6 +9,7 @@ import MyProfilePage from "./MyProfilePage";
 import ProfileUpdateRequestPage from "./ProfileUpdateRequestPage";
 import CampaignsList from "./Campaigns/CampaignsList";
 import CampaignDetail from "./Campaigns/CampaignDetail";
+import "./EmployeeApp.css";
 
 // --- COMPONENT MENU LƯỚI (DASHBOARD CỦA NHÂN VIÊN) ---
 function CreateGrid() {
@@ -34,112 +35,21 @@ function CreateGrid() {
   ];
 
   return (
-    <div
-      className="fade-in-up"
-      style={{
-        width: "100%",
-        boxSizing: "border-box",
-        padding: "24px",
-        maxWidth: 1200,
-        margin: "0 auto",
-        overflowX: "hidden",
-      }}
-    >
-      <div style={{ marginBottom: 24 }}>
-        <h2
-          style={{
-            fontSize: "1.5rem",
-            fontWeight: "bold",
-            color: "#1e293b",
-            marginBottom: 8,
-          }}
-        >
-          What request would you like to create?
-        </h2>
-        <p style={{ color: "#64748b", margin: 0 }}>
-          Select a request type below to start the process.
-        </p>
+    <div className="employee-container fade-in-up">
+      <div className="employee-header">
+        <h2>What request would you like to create?</h2>
+        <p>Select a request type below to start the process.</p>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-          gap: 20,
-          width: "100%",
-          boxSizing: "border-box",
-        }}
-      >
+      <div className="tile-grid">
         {tiles.map((t) => (
-          <NavLink
-            key={t.to}
-            to={t.to}
-            style={{ textDecoration: "none", display: "block", minWidth: 0 }}
-          >
-            <div
-              className="tile-card"
-              style={{
-                background: "white",
-                padding: 24,
-                borderRadius: 12,
-                border: "1px solid #e2e8f0",
-                transition: "all 0.2s",
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-                gap: 12,
-                cursor: "pointer",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
-                minWidth: 0,
-                boxSizing: "border-box",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-4px)";
-                e.currentTarget.style.boxShadow =
-                  "0 10px 15px -3px rgba(0, 0, 0, 0.1)";
-                e.currentTarget.style.borderColor = "#3b82f6";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.02)";
-                e.currentTarget.style.borderColor = "#e2e8f0";
-              }}
-            >
-              <div
-                style={{
-                  width: 50,
-                  height: 50,
-                  borderRadius: 10,
-                  background: "#f8fafc",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                {t.icon}
-              </div>
+          <NavLink key={t.to} to={t.to} className="tile-link">
+            <div className="tile-card">
+              <div className="tile-icon">{t.icon}</div>
 
-              <div style={{ minWidth: 0 }}>
-                <h3
-                  style={{
-                    margin: "0 0 4px",
-                    fontSize: "1.1rem",
-                    color: "#0f172a",
-                  }}
-                >
-                  {t.title}
-                </h3>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: "0.9rem",
-                    color: "#64748b",
-                    lineHeight: 1.5,
-                  }}
-                >
-                  {t.desc}
-                </p>
+              <div>
+                <h3 className="tile-title">{t.title}</h3>
+                <p className="tile-desc">{t.desc}</p>
               </div>
             </div>
           </NavLink>
