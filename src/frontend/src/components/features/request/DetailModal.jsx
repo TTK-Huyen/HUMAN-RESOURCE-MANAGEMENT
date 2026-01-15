@@ -166,14 +166,9 @@ const DetailModal = ({ req, typeConfig, onClose, onRefresh }) => {
       if (!detailData) return <p style={{color:'#64748b', padding:'10px'}}>No detail data available.</p>;
 
       const type = req.requestType?.toLowerCase() || "";
-
-      // CASE 1: LEAVE [ĐÃ SỬA: Cập nhật cách đọc attachment]
       if (type.includes('leave')) {
-          // Lấy đúng trường "attachment" từ API response (dựa theo ảnh image_74412b.png)
           const rawPath = detailData.attachment || detailData.attachmentPath || detailData.AttachmentPath;
           const fileUrl = getAttachmentUrl(rawPath);
-          
-          // Lấy tên file từ đường dẫn để hiển thị (ví dụ: file.pdf)
           const fileName = rawPath ? rawPath.split('/').pop() : "View Document";
 
           return (
@@ -355,7 +350,7 @@ const DetailModal = ({ req, typeConfig, onClose, onRefresh }) => {
       
       <ConfirmDialog
   isOpen={confirmAction.show}
-  title={null}   // hoặc ""
+  title={null}   
   message={`Are you sure you want to ${
     confirmAction.type === "APPROVED" ? "approve" : "reject"
   } this request?`}

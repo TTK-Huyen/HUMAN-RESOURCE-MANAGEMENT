@@ -15,12 +15,6 @@ namespace HrmApi.Controllers
         {
             _approvalService = approvalService;
         }
-
-        // =============================================
-        // PHẦN 1: LEAVE REQUEST (NGHỈ PHÉP)
-        // =============================================
-
-        // GET: /api/v1/manager/leave-requests/{id}
         [HttpGet("manager/leave-requests/{id}")]
         public async Task<ActionResult<ManagerLeaveRequestDetailDto>> GetLeaveRequestDetail(int id)
         {
@@ -59,10 +53,6 @@ namespace HrmApi.Controllers
                 return BadRequest(new { error = ex.Message });
             }
         }
-
-        // =============================================
-        // PHẦN 2: OVERTIME REQUEST (LÀM THÊM GIỜ)
-        // =============================================
 
         // GET: /api/v1/getdetail-overtime-requests/{code}
         [HttpGet("getdetail-overtime-requests/{code}")]
@@ -105,19 +95,12 @@ namespace HrmApi.Controllers
             }
         }
 
-        // ... (Các endpoint Leave và Overtime cũ giữ nguyên) ...
-
-        // =============================================
-        // PHẦN 3: RESIGNATION REQUEST (NGHỈ VIỆC) - MỚI
-        // =============================================
-
         // GET: /api/v1/getdetail-resignation-requests/{code}
         [HttpGet("getdetail-resignation-requests/{code}")]
         public async Task<ActionResult<ManagerResignationRequestDetailDto>> GetResignationRequestDetail(int code)
         {
             try
             {
-                // code ở đây là requestId
                 var result = await _approvalService.GetResignationRequestDetailAsync(code);
                 return Ok(result);
             }

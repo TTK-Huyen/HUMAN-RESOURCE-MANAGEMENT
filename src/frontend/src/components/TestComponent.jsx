@@ -11,8 +11,6 @@ import KPIs from '../components/common/KPIs';
 import Pagination from '../components/common/Pagination';
 import { FormRow } from '../components/common/FormRow';
 import DetailModal from './features/request/DetailModal';
-
-// 👇 [MỚI] Import thêm các component vừa bổ sung
 import Table from '../components/common/Table';
 import StatusBadge from '../components/common/StatusBadge';
 import Toolbar from '../components/common/Toolbar';
@@ -20,9 +18,8 @@ import ViolationBanner from '../components/common/ViolationBanner';
 
 import ApprovalModal from '../components/features/request/ApprovalModal';
 import ProfileView from './features/employee/ProfileView';
-// ==========================================
-// 1. CẦU CHÌ BẮT LỖI (Giữ nguyên)
-// ==========================================
+
+// 1. CẦU CHÌ BẮT LỖI 
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { hasError: false, error: null }; }
   static getDerivedStateFromError(error) { return { hasError: true, error }; }
@@ -35,9 +32,7 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-// ==========================================
 // 2. KHUNG ĐÓNG MỞ (Wrapper)
-// ==========================================
 const ComponentBox = ({ name, children, defaultOpen = false }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   return (
@@ -54,12 +49,10 @@ const ComponentBox = ({ name, children, defaultOpen = false }) => {
   );
 };
 
-// ==========================================
 // 3. TRANG TEST CHÍNH
-// ==========================================
+
 
 const TestPage = () => {
-    // State cơ bản
     const [keyword, setKeyword] = useState('');
     const [deptId, setDeptId] = useState('');
     const [page, setPage] = useState(1);
@@ -102,8 +95,6 @@ const TestPage = () => {
         <div style={{ padding: '30px', background: '#f1f5f9', minHeight: '100vh', fontFamily: 'sans-serif' }}>
             <h2 style={{ marginBottom: 20 }}>Danh sách Component (Bấm để xem)</h2>
 
-            {/* --- NHÓM HIỂN THỊ DỮ LIỆU --- */}
-
             <ComponentBox name="<Table /> (Bảng dữ liệu)" defaultOpen={true}>
                 <Table columns={mock.tableCols} data={mock.tableData} />
             </ComponentBox>
@@ -132,7 +123,6 @@ const TestPage = () => {
 
             <ComponentBox name="<Toolbar /> (Thanh công cụ)">
                 <Toolbar>
-                    {/* Toolbar là wrapper nên cần bỏ nút vào trong */}
                     <button style={{ marginRight: 10, padding: '5px 10px' }}>+ Thêm mới</button>
                     <button style={{ padding: '5px 10px' }}>Xuất Excel</button>
                 </Toolbar>
@@ -151,19 +141,13 @@ const TestPage = () => {
                     <FormRow label="Họ và tên" required={true}><input style={{ width: '100%', padding: 8 }} /></FormRow>
                 </div>
             </ComponentBox>
-
-            {/* --- NHÓM KHÁC --- */}
-
             <ComponentBox name="<KPIs />">
                 <div style={{ background: '#eee', padding: 20 }}><KPIs pending={mock.kpis.pending} history={mock.kpis.history} /></div>
             </ComponentBox>
 
             <ComponentBox name="<NavItem />">
                 <div style={{ background: '#333', padding: 10, display: 'flex' }}>
-                    {/* Style tạm để giả lập class active */}
                     <style>{`a { color: #aaa; margin-right: 15px; text-decoration: none } a.active { color: white; font-weight: bold }`}</style>
-                    
-                    {/* NavItem sẽ tự dùng Router của App.js */}
                     <NavItem to="/" label="Dashboard (Active)" />
                     <NavItem to="/user" label="Users" />
                 </div>
@@ -180,9 +164,6 @@ const TestPage = () => {
                 
                 {/* Render Modals */}
                 <ConfirmDialog isOpen={modal === 'confirm'} title="Xác nhận" message="Bạn chắc chưa?" onCancel={() => setModal(null)} onConfirm={() => setModal(null)} />
-                
-                {/* Lưu ý: ApprovalModal trong file bạn gửi đang bị comment hết code. 
-                    Nếu bạn uncomment file đó thì dòng dưới mới chạy được. */}
                 <ApprovalModal open={modal === 'approval'} row={mock.approvalRow} onClose={() => setModal(null)} onAction={() => setModal(null)} />
                 
                 {modal === 'detail' && <DetailModal req={mock.reqDetail} typeConfig={{ apiApprovePath: 'test' }} onClose={() => setModal(null)} onRefresh={() => {}} />}
