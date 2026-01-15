@@ -61,6 +61,33 @@
   overflow-y: auto; /* Cho phép cuộn nếu menu quá dài */
 }
 
+/* ===== CUSTOM SCROLLBAR STYLING ===== */
+/* For Chrome, Edge, Safari */
+.sidebar-nav::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* For Firefox */
+.sidebar-nav {
+  scrollbar-color: #475569 transparent;
+  scrollbar-width: thin;
+}
+
 /* Style cho các thẻ Link/NavItem bên trong */
 .sidebar-nav a {
   display: flex;

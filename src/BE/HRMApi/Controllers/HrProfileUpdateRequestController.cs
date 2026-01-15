@@ -52,6 +52,22 @@ namespace HrmApi.Controllers
             }
         }
 
+        // ========= API #2B: GET DETAIL (ENRICHED - FOR HR APPROVAL) =========
+        // GET /api/v1/hr/profile-update-requests/{requestId}/detailed
+        [HttpGet("{requestId:long}/detailed")]
+        public async Task<ActionResult<ProfileUpdateRequestDetailDto>> GetRequestDetailEnriched(long requestId)
+        {
+            try
+            {
+                var dto = await _service.GetDetailEnrichedAsync(requestId);
+                return Ok(dto); // 200
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { error_message = "Request not found" }); // 404
+            }
+        }
+
         // ========= API #3: PATCH STATUS =========
         // PATCH /api/v1/hr/profile-update-requests/{requestId}/status
         [HttpPatch("{requestId:long}/status")]
