@@ -2,8 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { Eye, Calendar, Clock, LogOut, FileText, Search } from "lucide-react";
 import "./PendingApprovals.css";
 
-import StatsGrid from "../../components/common/StatsGrid";
-import FilterBar from "../../components/common/FilterBar"; // You can comment this out if not available
+import StatsGrid from "../../components/common/StatsGrid"; 
 import DetailModal from "../../components/features/request/DetailModal";
 import Pagination from "../../components/common/Pagination";
 import StatusBadge from "../../components/common/StatusBadge";
@@ -12,7 +11,7 @@ import EmptyState from "../../components/common/EmptyState";
 
 const API_BASE = "/api/v1";
 const PAGE_SIZE = 10;
-const IS_DEMO = false; // 👈 DEMO MODE DISABLED - Using real backend data
+const IS_DEMO = false; 
 
 // --- MOCK DATA ---
 const MOCK_DEPARTMENTS = [
@@ -91,7 +90,7 @@ for (let i = 6; i <= 25; i++) {
   });
 }
 
-// [IMPORTANT] Config Mapping by Request Type for Modal to know which API to call
+// Config Mapping by Request Type for Modal to know which API to call
 const getTypeConfig = (typeStr) => {
   const t = typeStr?.toLowerCase() || "";
   if (t.includes("leave"))
@@ -163,15 +162,15 @@ export default function PendingApprovals() {
     approvedCount: 0,
     rejectedCount: 0,
   });
-  const [departments, setDepartments] = useState([]);
+  const [ setDepartments] = useState([]);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [keyword, setKeyword] = useState("");
-  const [deptId, setDeptId] = useState("");
+  const [deptId] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedReq, setSelectedReq] = useState(null);
 
-  // LISTEN EVENT từ NotificationBell: click notification → mở y như bấm con mắt
+  // LISTEN EVENT từ NotificationBell: click notification → bấm con mắt
   useEffect(() => {
     const handler = async (ev) => {
       const { requestId, requestType } = ev.detail || {};
@@ -218,7 +217,7 @@ export default function PendingApprovals() {
       if (IS_DEMO) {
         // --- LOGIC GIẢ LẬP ---
         console.log("⚡ Đang chạy chế độ Demo...");
-        await new Promise((r) => setTimeout(r, 600)); // Giả vờ delay 0.6s cho giống thật
+        await new Promise((r) => setTimeout(r, 600)); 
 
         // Lọc dữ liệu theo keyword
         let filtered = MOCK_REQUESTS.filter(
@@ -390,25 +389,6 @@ export default function PendingApprovals() {
               }}
             />
           </div>
-          {/* 
-          <select
-            value={deptId}
-            onChange={(e) => setDeptId(e.target.value)}
-            style={{
-              padding: "8px 12px",
-              borderRadius: 8,
-              border: "1px solid #cbd5e1",
-              minWidth: 150,
-            }}
-          >
-            <option value="">All Departments</option>
-            {departments.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name}
-              </option>
-            ))}
-          </select>
-          */}
         </div>
 
         {/* Bảng dữ liệu */}
