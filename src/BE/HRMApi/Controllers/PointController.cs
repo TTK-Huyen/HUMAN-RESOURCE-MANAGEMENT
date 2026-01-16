@@ -177,7 +177,7 @@ namespace HrmApi.Controllers
                 return Ok(new 
                 { 
                     Success = true, 
-                    Message = "Yêu cầu đổi điểm thành công",
+                    Message = "Redeem request created successfully",
                     Data = redemption 
                 });
             }
@@ -192,7 +192,7 @@ namespace HrmApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error redeeming points");
-                return StatusCode(500, new { Message = "Lỗi hệ thống" });
+                return StatusCode(500, new { Message = "Internal server error" });
             }
         }
 
@@ -219,7 +219,7 @@ namespace HrmApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting redemptions");
-                return StatusCode(500, new { Message = "Lỗi hệ thống" });
+                return StatusCode(500, new { Message = "Internal server error" });
             }
         }
 
@@ -236,7 +236,7 @@ namespace HrmApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting pending redemptions");
-                return StatusCode(500, new { Message = "Lỗi hệ thống" });
+                return StatusCode(500, new { Message = "Internal server error" });
             }
         }
 
@@ -254,7 +254,7 @@ namespace HrmApi.Controllers
                 if (hr == null) return NotFound(new { Message = "HR user not found" });
 
                 var updated = await _pointService.ApproveRedemptionAsync(id, hr.Id);
-                return Ok(new { Success = true, Message = "Duyệt thành công", Data = updated });
+                return Ok(new { Success = true, Message = "Approval successful", Data = updated });
             }
             catch (ArgumentException ex)
             {
@@ -267,7 +267,7 @@ namespace HrmApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error approving redemption");
-                return StatusCode(500, new { Message = "Lỗi hệ thống" });
+                return StatusCode(500, new { Message = "Internal server error" });
             }
         }
 
@@ -285,7 +285,7 @@ namespace HrmApi.Controllers
                 if (hr == null) return NotFound(new { Message = "HR user not found" });
 
                 var updated = await _pointService.RejectRedemptionAsync(id, hr.Id, request?.Notes);
-                return Ok(new { Success = true, Message = "Từ chối thành công và hoàn điểm", Data = updated });
+                return Ok(new { Success = true, Message = "Rejection successful and points refunded", Data = updated });
             }
             catch (ArgumentException ex)
             {
@@ -298,7 +298,7 @@ namespace HrmApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error rejecting redemption");
-                return StatusCode(500, new { Message = "Lỗi hệ thống" });
+                return StatusCode(500, new { Message = "Internal server error" });
             }
         }
 
@@ -325,11 +325,11 @@ namespace HrmApi.Controllers
                     request.EmployeeId, 
                     request.Points, 
                     "BONUS", 
-                    request.Reason ?? "Thưởng từ quản lý",
+                    request.Reason ?? "Bonus from manager",
                     manager.Id
                 );
 
-                return Ok(new { Success = true, Message = "Tặng điểm thành công" });
+                return Ok(new { Success = true, Message = "Points given successfully" });
             }
             catch (ArgumentException ex)
             {
@@ -338,7 +338,7 @@ namespace HrmApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error giving points");
-                return StatusCode(500, new { Message = "Lỗi hệ thống" });
+                return StatusCode(500, new { Message = "Internal server error" });
             }
         }
     }

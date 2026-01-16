@@ -41,6 +41,9 @@ export default function ProfileUpdateRequestPage() {
     socialInsuranceNumber: "",
     dateOfBirth: "",
     gender: "Male",
+    // Thêm trường ngân hàng
+    bankName: "",
+    accountNumber: "" 
   });
 
   // State lưu dữ liệu gốc để so sánh lấy OldValue
@@ -90,6 +93,9 @@ export default function ProfileUpdateRequestPage() {
           socialInsuranceNumber: data.socialInsuranceNumber || data.social_insurance_no || "",
           dateOfBirth: convertDateToISO(data.dateOfBirth),
           gender: data.gender || "Male",
+          // Map dữ liệu ngân hàng (lấy account đầu tiên hoặc primary)
+          bankName: data.bankAccount?.bankName || (data.bankAccounts?.[0]?.bankName) || "",
+          accountNumber: data.bankAccount?.accountNumber || (data.bankAccounts?.[0]?.accountNumber) || "",
         };
 
         setForm(mappedData);
@@ -161,7 +167,9 @@ export default function ProfileUpdateRequestPage() {
       personalTaxCode: "PersonalTaxCode",
       socialInsuranceNumber: "SocialInsuranceNumber",
       dateOfBirth: "DateOfBirth",
-      gender: "Gender"
+      gender: "Gender",
+      bankName: "BankName",
+      accountNumber: "BankAccountNumber"
     };
 
     // 2. So sánh từng trường và ĐÓNG GÓI OLD VALUE
@@ -204,9 +212,9 @@ export default function ProfileUpdateRequestPage() {
       
       setToast({ type: "success", message: "Profile update request submitted successfully!" });
       
-      // Đợi 1.5s rồi chuyển trang
+      // Đợi 1.5s rồi chuyển trang với query param để reload data
       setTimeout(() => {
-        navigate("/employee/profile");
+        navigate("/employee/profile?reload=1");
       }, 1500);
 
     } catch (error) {
@@ -292,6 +300,16 @@ export default function ProfileUpdateRequestPage() {
             </FormRow>
             <FormRow label="Social Insurance Number">
                 <input className="input border p-2 w-full rounded" name="socialInsuranceNumber" value={form.socialInsuranceNumber} onChange={handleChange} maxLength={10} placeholder="10 digits" />
+            </FormRow>
+            {/* THÊM SECTION BANK ACCOUNT */}
+            <h4 className="text-lg font-semibold text-gray-700 border-b pb-2 flex items-center mt-6">
+               Bank Information
+            </h4>
+            <FormRow label="Bank Name">
+                <input className="input border p-2 w-full rounded" name="bankName" value={form.bankName} onChange={handleChange} placeholder="e.g. Vietcombank" />
+            </FormRow>
+            <FormRow label="Account Number">
+                <input className="input border p-2 w-full rounded" name="accountNumber" value={form.accountNumber} onChange={handleChange} placeholder="Account Number" />
             </FormRow>
         </div>
 

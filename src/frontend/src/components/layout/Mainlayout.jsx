@@ -343,7 +343,6 @@ export default function MainLayout({ children }) {
                 fontSize: "1.2rem",
               }}
             >
-              {user.name.charAt(0).toUpperCase()}
             </div>
 
             <div className="user-info">

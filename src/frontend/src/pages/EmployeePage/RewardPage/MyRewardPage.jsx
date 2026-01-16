@@ -378,7 +378,12 @@ const MyRewardPage = () => {
       render: (row) => {
         // Lấy status từ row
         const status = row.status || "COMPLETED";
-        return <StatusBadge status="APPROVED" type="success" label={status} />;
+        let type = "default";
+        if (status === "PENDING") type = "warning";
+        if (status === "APPROVED") type = "success";
+        if (status === "REJECTED") type = "danger";
+        if (status === "COMPLETED") type = "success";
+        return <StatusBadge status={status} type={type} label={status} />;
       },
     },
   ];

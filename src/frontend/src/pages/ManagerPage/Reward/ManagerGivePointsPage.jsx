@@ -9,6 +9,7 @@ const ManagerGivePointsPage = () => {
     const [employees, setEmployees] = useState([]);
     const [formData, setFormData] = useState({ employeeId: '', points: '', reason: '' });
     const [toast, setToast] = useState(null);
+    const [employeeSearch, setEmployeeSearch] = useState('');
 
     useEffect(() => {
         const loadData = async () => {
@@ -69,10 +70,17 @@ const ManagerGivePointsPage = () => {
             await givePoints(formData);
             setToast({ type: 'success', message: 'Points awarded successfully!' });
             setFormData({ employeeId: '', points: '', reason: '' });
+            setEmployeeSearch('');
         } catch (error) {
             setToast({ type: 'error', message: 'An error occurred. Please try again.' });
         }
     };
+
+    // Filter employees based on search
+    const filteredEmployees = employees.filter(emp =>
+        emp.employeeName.toLowerCase().includes(employeeSearch.toLowerCase()) ||
+        emp.employeeCode.toLowerCase().includes(employeeSearch.toLowerCase())
+    );
 
     return (
         <div className="p-6 max-w-3xl mx-auto fade-in-up">
@@ -81,23 +89,37 @@ const ManagerGivePointsPage = () => {
             <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <FormRow label="Select Employee (Same Dept)" required>
-                        <select 
-                            className="w-full p-2.5 border border-gray-300 rounded bg-white focus:border-blue-500 outline-none"
-                            value={formData.employeeId}
-                            onChange={e => setFormData({...formData, employeeId: e.target.value})}
-                            required
-                        >
-                            <option value="">-- Select Employee --</option>
-                            {employees.length > 0 ? (
-                                employees.map(emp => (
-                                    <option key={emp.id} value={emp.id}>
-                                        {emp.employeeName} - {emp.employeeCode}
-                                    </option>
-                                ))
-                            ) : (
-                                <option value="" disabled>No employees found in your department</option>
+                        <div className="relative">
+                            <input 
+                                type="text"
+                                placeholder="Search and select employee..."
+                                className="w-full p-2.5 border border-gray-300 rounded focus:border-blue-500 outline-none"
+                                value={employeeSearch}
+                                onChange={e => setEmployeeSearch(e.target.value)}
+                                list="employeeList"
+                            />
+                            <datalist id="employeeList">
+                                {filteredEmployees.map(emp => (
+                                    <option key={emp.id} value={`${emp.employeeName} - ${emp.employeeCode}`} data-id={emp.id} />
+                                ))}
+                            </datalist>
+                            {employeeSearch && filteredEmployees.length > 0 && (
+                                <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 border-t-0 rounded-b z-10 max-h-48 overflow-y-auto">
+                                    {filteredEmployees.map(emp => (
+                                        <div 
+                                            key={emp.id}
+                                            className="p-2.5 hover:bg-blue-50 cursor-pointer text-sm"
+                                            onClick={() => {
+                                                setFormData({...formData, employeeId: emp.id});
+                                                setEmployeeSearch(`${emp.employeeName} - ${emp.employeeCode}`);
+                                            }}
+                                        >
+                                            {emp.employeeName} - {emp.employeeCode}
+                                        </div>
+                                    ))}
+                                </div>
                             )}
-                        </select>
+                        </div>
                     </FormRow>
 
                     <FormRow label="Points Amount" required>

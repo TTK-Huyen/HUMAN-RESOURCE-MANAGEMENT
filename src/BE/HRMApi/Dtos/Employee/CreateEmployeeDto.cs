@@ -40,8 +40,8 @@ namespace HrmApi.Dtos.Employee
 
         public bool HasChildren { get; set; }
 
-        [Required, RegularExpression(@"^\d{13}$", ErrorMessage = "Citizen ID Number must contain exactly 13 digits")]
-        public string? CitizenIdNumber { get; set; }
+        [Required, RegularExpression(@"^\d{12}$", ErrorMessage = "Citizen ID Number must contain exactly 12 digits")]
+            public string? CitizenIdNumber { get; set; }
 
         public string? PersonalTaxCode { get; set; }
         public string? SocialInsuranceNumber { get; set; }

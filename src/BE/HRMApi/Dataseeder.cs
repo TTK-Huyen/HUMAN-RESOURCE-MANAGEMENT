@@ -139,7 +139,7 @@ namespace HrmApi.Data
                 Gender = "Male",
                 DateOfBirth = new DateTime(1985, 3, 15),
                 CurrentAddress = "Ho Chi Minh",
-                CitizenIdNumber = "0851001234568",
+                CitizenIdNumber = "085100123458",
                 PersonalTaxCode = "0851001235",
                 SocialInsuranceNumber = "8501001235",
                 BirthPlaceProvince = "Ho Chi Minh",
@@ -174,7 +174,7 @@ namespace HrmApi.Data
                 Gender = "Female",
                 DateOfBirth = new DateTime(1988, 5, 20),
                 CurrentAddress = "Hanoi",
-                CitizenIdNumber = "0881005678901",
+                CitizenIdNumber = "088100567901",
                 PersonalTaxCode = "0881005678",
                 SocialInsuranceNumber = "8801005678",
                 BirthPlaceProvince = "Hanoi",
@@ -209,7 +209,7 @@ namespace HrmApi.Data
                 Gender = "Male",
                 DateOfBirth = new DateTime(1987, 7, 10),
                 CurrentAddress = "Da Nang",
-                CitizenIdNumber = "0871007654321",
+                CitizenIdNumber = "087100765321",
                 PersonalTaxCode = "0871007654",
                 SocialInsuranceNumber = "8701007654",
                 BirthPlaceProvince = "Da Nang",
@@ -246,7 +246,7 @@ namespace HrmApi.Data
                 Gender = "Female",
                 DateOfBirth = new DateTime(1989, 4, 12),
                 CurrentAddress = "Ho Chi Minh",
-                CitizenIdNumber = "0891001234569",
+                CitizenIdNumber = "089100124569",
                 PersonalTaxCode = "0891001236",
                 SocialInsuranceNumber = "8901001236",
                 BirthPlaceProvince = "Ho Chi Minh",
@@ -287,7 +287,7 @@ namespace HrmApi.Data
                 Gender = "Female",
                 DateOfBirth = new DateTime(1993, 3, 8),
                 CurrentAddress = "Ho Chi Minh",
-                CitizenIdNumber = "0930308234561",
+                CitizenIdNumber = "093030834561",
                 PersonalTaxCode = "0930308234",
                 SocialInsuranceNumber = "9303082345",
                 BirthPlaceProvince = "Ho Chi Minh",
@@ -322,7 +322,7 @@ namespace HrmApi.Data
                 Gender = "Female",
                 DateOfBirth = new DateTime(1992, 8, 25),
                 CurrentAddress = "Hanoi",
-                CitizenIdNumber = "0920825678902",
+                CitizenIdNumber = "092082568902",
                 PersonalTaxCode = "0920825678",
                 SocialInsuranceNumber = "9208256789",
                 BirthPlaceProvince = "Hanoi",
@@ -357,7 +357,7 @@ namespace HrmApi.Data
                 Gender = "Female",
                 DateOfBirth = new DateTime(1991, 11, 10),
                 CurrentAddress = "Da Nang",
-                CitizenIdNumber = "0911110987654",
+                CitizenIdNumber = "091110987654",
                 PersonalTaxCode = "0911110987",
                 SocialInsuranceNumber = "9111109876",
                 BirthPlaceProvince = "Da Nang",
@@ -392,7 +392,7 @@ namespace HrmApi.Data
                 Gender = "Female",
                 DateOfBirth = new DateTime(1994, 7, 20),
                 CurrentAddress = "Ho Chi Minh",
-                CitizenIdNumber = "0941001234571",
+                CitizenIdNumber = "094001234571",
                 PersonalTaxCode = "0941001238",
                 SocialInsuranceNumber = "9410012345",
                 BirthPlaceProvince = "Ho Chi Minh",
@@ -428,7 +428,7 @@ namespace HrmApi.Data
                 Gender = "Male",
                 DateOfBirth = new DateTime(1998, 6, 15),
                 CurrentAddress = "Hanoi",
-                CitizenIdNumber = "0980615234567", // 13 digits
+                CitizenIdNumber = "098065234567", // 13 digits
                 PersonalTaxCode = "0980615234",    // 10 digits
                 SocialInsuranceNumber = "9806152345", // 10 digits
                 BirthPlaceProvince = "Hanoi",
@@ -468,7 +468,7 @@ namespace HrmApi.Data
                 .RuleFor(e => e.PersonalEmail, (f, e) => RemoveSign(e.FullName).ToLower().Replace(" ", "") + "@hrm.com")
                 .RuleFor(e => e.DateOfBirth, f => f.Date.Past(25, DateTime.Now.AddYears(-22)))
                 .RuleFor(e => e.CurrentAddress, f => f.Address.City())
-                .RuleFor(e => e.CitizenIdNumber, f => f.Random.ReplaceNumbers("#############")) // 13 digits
+                .RuleFor(e => e.CitizenIdNumber, f => f.Random.ReplaceNumbers("############")) // 13 digits
                 .RuleFor(e => e.PersonalTaxCode, f => f.Random.ReplaceNumbers("##########")) // 10 digits
                 .RuleFor(e => e.SocialInsuranceNumber, f => f.Random.ReplaceNumbers("##########")) // 10 digits
                 .RuleFor(e => e.Gender, f => f.PickRandom(genderValues))
@@ -602,6 +602,44 @@ namespace HrmApi.Data
             }
             
             context.SaveChanges();
+
+            // --- Add ContractStartDate and PhoneNumbers/BankAccounts to all employees ---
+            Console.WriteLine("--> Adding phone numbers and bank accounts to employees...");
+            var allEmps = context.Employees.ToList();
+            var contractStartDate = new DateTime(2026, 1, 1);
+            var faker = new Faker();
+            var bankNames = new[] { "Vietcombank", "BIDV", "VietinBank", "Techcombank", "ACB", "MB Bank" };
+
+            foreach (var emp in allEmps)
+            {
+                // Set ContractStartDate
+                emp.ContractStartDate = contractStartDate;
+
+                // Add phone number to PhoneNumbers collection if not already exists
+                if (!emp.PhoneNumbers.Any() && !string.IsNullOrEmpty(emp.PhoneNumber))
+                {
+                    emp.PhoneNumbers.Add(new EmployeePhoneNumber
+                    {
+                        EmployeeId = emp.Id,
+                        PhoneNumber = emp.PhoneNumber,
+                        Description = "Personal"
+                    });
+                }
+
+                // Add bank account to BankAccounts collection if not already exists
+                if (!emp.BankAccounts.Any())
+                {
+                    emp.BankAccounts.Add(new EmployeeBankAccount
+                    {
+                        EmployeeId = emp.Id,
+                        BankName = faker.PickRandom(bankNames),
+                        AccountNumber = faker.Random.ReplaceNumbers("####################"), // 20 digit account
+                        IsPrimary = true
+                    });
+                }
+            }
+            context.SaveChanges();
+            Console.WriteLine("--> ✓ Added ContractStartDate, PhoneNumbers, and BankAccounts to all employees");
 
             // --- C. CREATE REQUESTS (Sample data for testing) ---
             Console.WriteLine("--> Creating random leave requests...");

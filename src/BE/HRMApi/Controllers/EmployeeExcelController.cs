@@ -34,7 +34,7 @@ namespace HrmApi.Controllers
 
                 return Ok(new
                 {
-                    message = "Import hoàn tất",
+                    message = "Import successful",
                     data = result
                 });
             }

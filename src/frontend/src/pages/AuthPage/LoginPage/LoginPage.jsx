@@ -84,16 +84,15 @@ export default function LoginPage() {
   // Demo accounts (from DataSeeder)
   const demoAccounts = [
     // ===== ADMIN =====
-    { role: "🛡️ Admin", username: "admin"},
+    { role: "1. Admin", username: "admin"},
     // ===== MANAGERS (4 tài khoản) =====
-    { role: "👔 Manager", username: "EMP001"},
+    { role: "2. Manager", username: "EMP001"},
     
     // ===== HR SPECIALISTS (4 tài khoản) =====
-    { role: "💼 HR Admin", username: "EMP005"},
+    { role: "3. HR", username: "EMP005"},
     
     // ===== EMPLOYEES - IT TEAM (5 tài khoản) =====
-    { role: "👤 Employee", username: "EMP009"},
-    { role: "👤 Employee", username: "EMP010"},
+    { role: "4. Employee", username: "EMP009"}
     
     
   ];
@@ -337,7 +336,7 @@ export default function LoginPage() {
 
             {/* Danh sách tài khoản Demo */}
             <div className="demo-accounts-section">
-              <div className="demo-accounts-title">📋 Demo Accounts (5 accounts) - Pass: 123456</div>
+              <div className="demo-accounts-title">Demo Accounts (4 accounts) - Pass: 123456</div>
               {demoAccounts.map((account, idx) => (
                 <div key={idx} className="demo-account-item">
                   <div className="demo-account-info">

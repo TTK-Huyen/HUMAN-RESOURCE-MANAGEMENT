@@ -28,7 +28,14 @@ namespace HrmApi.Services
         public async Task<EmployeeProfileDto?> GetProfileAsync(string employeeCode)
         {
             var employee = await _employeeRepository.GetProfileByCodeAsync(employeeCode);
-            if (employee == null) return null;            // Mapping từ Employee sang EmployeeProfileDto
+            if (employee == null) return null;
+            
+            // DEBUG LOG
+            Console.WriteLine($"[EmployeeService] Employee: {employee.EmployeeCode}");
+            Console.WriteLine($"[EmployeeService] PhoneNumbers count: {employee.PhoneNumbers?.Count ?? 0}");
+            Console.WriteLine($"[EmployeeService] BankAccounts count: {employee.BankAccounts?.Count ?? 0}");
+            
+            // Mapping từ Employee sang EmployeeProfileDto
             var dto = new EmployeeProfileDto
             {
                 Id = employee.Id,
@@ -45,6 +52,8 @@ namespace HrmApi.Services
                 PersonalTaxCode = employee.PersonalTaxCode,
                 SocialInsuranceNumber = employee.SocialInsuranceNumber,
                 CurrentAddress = employee.CurrentAddress,
+                BirthPlaceProvince = employee.BirthPlaceProvince,
+                BirthPlaceDistrict = employee.BirthPlaceDistrict,
                 Status = employee.Status,
                 Department = employee.Department?.Name ?? string.Empty,
                 JobTitle = employee.JobTitle?.Title ?? string.Empty,
@@ -108,6 +117,8 @@ namespace HrmApi.Services
                 PersonalTaxCode = employee.PersonalTaxCode,
                 SocialInsuranceNumber = employee.SocialInsuranceNumber,
                 CurrentAddress = employee.CurrentAddress,
+                BirthPlaceProvince = employee.BirthPlaceProvince,
+                BirthPlaceDistrict = employee.BirthPlaceDistrict,
                 Status = employee.Status,
                 Department = employee.Department?.Name ?? string.Empty,
                 JobTitle = employee.JobTitle?.Title ?? string.Empty,
@@ -116,11 +127,16 @@ namespace HrmApi.Services
                 ContractStartDate = employee.ContractStartDate?.ToString("dd/MM/yyyy"),
                 ContractEndDate = employee.ContractEndDate?.ToString("dd/MM/yyyy"),
                 DirectManager = employee.DirectManager?.FullName,
-                PhoneNumbers = employee.PhoneNumbers.Select(p => new EmployeePhoneNumberDto
-                {
-                    PhoneNumber = p.PhoneNumber,
-                    Description = p.Description
-                }).ToList(),
+                PhoneNumbers = string.IsNullOrEmpty(employee.PhoneNumber)
+                    ? new List<EmployeePhoneNumberDto>()
+                    : new List<EmployeePhoneNumberDto>
+                    {
+                        new EmployeePhoneNumberDto
+                        {
+                            PhoneNumber = employee.PhoneNumber,
+                            Description = "Personal"
+                        }
+                    },
                 BankAccounts = employee.BankAccounts.Select(b => new EmployeeBankAccountDto
                 {
                     BankName = b.BankName,
@@ -165,6 +181,7 @@ namespace HrmApi.Services
                 EmployeeId = employee.Id,
                 RequestDate = DateTime.UtcNow,
                 Status = "PENDING",
+                Comment = dto.Reason,
                 Details = dto.Details.Select(d => new ProfileUpdateRequestDetail
                 {
                     FieldName = d.FieldName,
@@ -187,9 +204,9 @@ namespace HrmApi.Services
             if (string.IsNullOrWhiteSpace(dto.CitizenIdNumber))
                 throw new ArgumentException("citizenIdNumber");
 
-            // CCCD must be 13 digits
+            // CCCD must be 12 digits
             var cccdDigits = new string(dto.CitizenIdNumber.Where(char.IsDigit).ToArray());
-            if (cccdDigits.Length != 13)
+            if (cccdDigits.Length != 12)
                 throw new ArgumentException("citizenIdNumber");
 
             // ===== CHECK 1: Contract Type & Date Validation =====

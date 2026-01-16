@@ -18,6 +18,8 @@ namespace HrmApi.Repositories
         public async Task<Employee?> FindByIdAsync(int id)
         {
             return await _context.Employees
+                .Include(e => e.PhoneNumbers)
+                .Include(e => e.BankAccounts)
                 .FirstOrDefaultAsync(e => e.Id == id);
         }
 

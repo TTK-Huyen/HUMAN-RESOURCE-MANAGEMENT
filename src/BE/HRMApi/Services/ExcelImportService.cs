@@ -231,7 +231,7 @@ namespace HrmApi.Services
             if (!string.IsNullOrEmpty(rowData.CitizenIdNumber))
             {
                 var cccdDigits = new string(rowData.CitizenIdNumber.Where(char.IsDigit).ToArray());
-                if (cccdDigits.Length != 13)
+                if (cccdDigits.Length != 12)
                     throw new ArgumentException("CCCD phải đúng 13 chữ số");
             }
 
@@ -633,7 +633,7 @@ namespace HrmApi.Services
             instructions.Cells[instructRow++, 1].Value = "   - Full Name (FullName)";
             instructions.Cells[instructRow++, 1].Value = "   - Date of Birth (DateOfBirth) - Format: YYYY-MM-DD";
             instructions.Cells[instructRow++, 1].Value = "   - Gender - Select: Male, Female, Other";
-            instructions.Cells[instructRow++, 1].Value = "   - Citizen ID Number (CitizenIdNumber) - Exactly 13 digits";
+            instructions.Cells[instructRow++, 1].Value = "   - Citizen ID Number (CitizenIdNumber) - Exactly 12 digits";
             instructions.Cells[instructRow++, 1].Value = "   - Phone Number 1 (PhoneNumber1) - 10 digits";
             instructions.Cells[instructRow++, 1].Value = "   - Birth Place Province (BirthPlaceProvince)";
             instructions.Cells[instructRow++, 1].Value = "   - Birth Place District (BirthPlaceDistrict)";
@@ -738,7 +738,7 @@ namespace HrmApi.Services
             worksheet.Cells[2, 4].Value = "Vietnam";                                         // Nationality
             worksheet.Cells[2, 5].Value = "Single";                                          // MaritalStatus
             worksheet.Cells[2, 6].Value = "No";                                              // HasChildren
-            worksheet.Cells[2, 7].Value = "0103456789123";                                   // CitizenIdNumber (13 digits - standard format)
+            worksheet.Cells[2, 7].Value = "010345678912";                                   // CitizenIdNumber (13 digits - standard format)
             worksheet.Cells[2, 8].Value = "7501234567";                                      // PersonalTaxCode (10 digits)
             worksheet.Cells[2, 9].Value = "9801234567";                                      // SocialInsuranceNumber (10 digits)
             worksheet.Cells[2, 10].Value = "tranminchau1998@email.com";                      // PersonalEmail

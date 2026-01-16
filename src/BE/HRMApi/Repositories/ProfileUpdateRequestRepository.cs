@@ -18,6 +18,7 @@ namespace HrmApi.Repositories
         {
             var query = _context.ProfileUpdateRequests
                 .Include(r => r.Employee)
+                .Include(r => r.Details)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(filter.Status))

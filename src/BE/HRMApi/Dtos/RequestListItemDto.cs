@@ -18,5 +18,11 @@ namespace HrmApi.Dtos
 
         [JsonPropertyName("request_status")]
         public string Status { get; set; } = null!;
+
+        [JsonPropertyName("reviewed_at")]
+        public DateTime? ReviewedAt { get; set; }
+
+        [JsonPropertyName("details")]
+        public List<RequestDetailItemDto>? Details { get; set; }
     }
 }

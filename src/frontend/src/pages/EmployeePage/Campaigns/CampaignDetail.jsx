@@ -80,7 +80,7 @@ export default function CampaignDetail() {
     try {
       const res = await registerCampaign(campaign.campaignCode);
       // Show success toast (use message from response when available)
-      const msg = res?.message || 'Đăng ký thành công.';
+      const msg = res?.message || 'Registered successfully.';
       setToast({ type: 'success', message: msg });
       // Refresh detail to reflect new participant count
       const updated = await fetchCampaignDetail(campaign.campaignCode);
@@ -92,7 +92,7 @@ export default function CampaignDetail() {
         setRegistrationInfo(res);
       }
     } catch (ex) {
-      const errMsg = ex?.response?.data?.message || ex?.message || 'Đăng ký thất bại. Vui lòng thử lại.';
+      const errMsg = ex?.response?.data?.message || ex?.message || 'Registration failed. Please try again.';
       setToast({ type: 'error', message: errMsg });
     } finally {
       setIsRegistering(false);

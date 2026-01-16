@@ -5,24 +5,26 @@ import {
   getLeaveRequestDetail,
   getOvertimeRequestDetail,
   getResignationRequestDetail,
+  // --- THÊM MỚI 2 HÀM NÀY (Đảm bảo bạn đã thêm vào Services/requests.js) ---
+  getMyProfileUpdateRequests,       
+  getMyProfileUpdateRequestDetail 
 } from "../../Services/requests";
 
-const REQUEST_TYPES = ["ALL", "LEAVE", "OVERTIME", "RESIGNATION"];
+// --- CẬP NHẬT: Thêm PROFILE_UPDATE ---
+const REQUEST_TYPES = ["ALL", "LEAVE", "OVERTIME", "RESIGNATION", "PROFILE UPDATE"];
 const STATUS_OPTIONS = ["ALL", "PENDING", "APPROVED", "REJECTED", "CANCELLED"];
 const PAGE_SIZE = 10;
- 
+
 function formatDateTime(value) {
   if (!value) return "";
   try {
     let safeDateStr = value;
-    // Nếu chuỗi thiếu 'Z' hoặc offset, thêm 'Z' để báo hiệu là UTC
     if (typeof safeDateStr === 'string' && !safeDateStr.endsWith('Z') && !safeDateStr.includes('+')) {
         safeDateStr += 'Z';
     }
     const d = new Date(safeDateStr);
     if (isNaN(d.getTime())) return "";
     
-    // Convert sang múi giờ Asia/Ho_Chi_Minh
     return d.toLocaleString("en-GB", {
       day: '2-digit', month: '2-digit', year: 'numeric',
       hour: '2-digit', minute: '2-digit',
@@ -32,28 +34,25 @@ function formatDateTime(value) {
   } catch { return ""; }
 }
 
-// Support multiple possible approved timestamp field names from backend
 function getApprovedTime(item) {
   if (!item) return null;
-  // direct top-level fields - check approvedAt first (from both list and detail API)
+  // Với Profile Update, BE trả về 'reviewedAt'
+  if (item.reviewedAt) return item.reviewedAt;
+
   if (item.approvedAt) return item.approvedAt;
   
   const direct = item.approved_at || item.decidedAt || item.decided_at || item.approved_on || item.approved_on_date || item.approvedOn;
   if (direct) return direct;
 
-  // helper to extract time from a history/log entry
   const extractFromLog = (log) => {
     if (!log) return null;
     return log.time || log.timeStamp || log.timestamp || log.approvedAt || log.approved_at || log.decidedAt || log.decided_at || log.createdAt || log.created_at || null;
   };
 
-  // possible history arrays returned by backend
   const histories = item.history || item.historyItems || item.histories || item.logs || item.approvalHistory;
   if (Array.isArray(histories)) {
-    // prefer APPROVED entry
     const approved = histories.find(h => (h.status || '').toString().toUpperCase() === 'APPROVED');
     if (approved) return extractFromLog(approved);
-    // fallback: most recent item with a timestamp
     for (let i = histories.length - 1; i >= 0; i--) {
       const t = extractFromLog(histories[i]);
       if (t) return t;
@@ -91,9 +90,10 @@ export default function RequestStatusPage() {
   });
 
   const [page, setPage] = useState(1);
-  const employeeCode = localStorage.getItem("employeeCode");
+  const employeeCode = localStorage.getItem("employeeCode") || "EMP001";
+  
+  console.log("Current employeeCode:", employeeCode);
 
-  // summary = data từ list, detail = data từ API chi tiết
   const [selectedSummary, setSelectedSummary] = useState(null);
   const [selectedDetail, setSelectedDetail] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -102,7 +102,7 @@ export default function RequestStatusPage() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState("");
 
-  // Gọi API list mỗi khi đổi type/status (server filter)
+  // --- CẬP NHẬT LOGIC LOAD DATA ---
   useEffect(() => {
     let cancelled = false;
 
@@ -111,14 +111,63 @@ export default function RequestStatusPage() {
       setError("");
 
       try {
-        const data = await getEmployeeRequests_1(employeeCode, {
-          type: filters.type,
-          status: filters.status,
-        });
+        // 1. Gọi API lấy request thường (Leave, OT, Resignation)
+        let regularRequestsPromise = Promise.resolve([]);
+        // Nếu filter không phải là PROFILE_UPDATE thì mới gọi API cũ
+        if (filters.type === "ALL" || filters.type !== "PROFILE UPDATE") {
+             regularRequestsPromise = getEmployeeRequests_1(employeeCode, {
+                type: filters.type === "PROFILE UPDATE" ? "NONE" : filters.type,
+                status: filters.status,
+             });
+        }
+
+        // 2. Gọi API lấy Profile Update Requests
+        let profileRequestsPromise = Promise.resolve([]);
+        // Nếu filter là ALL hoặc PROFILE_UPDATE thì gọi API mới
+        if (filters.type === "ALL" || filters.type === "PROFILE UPDATE") {
+             profileRequestsPromise = getMyProfileUpdateRequests(employeeCode);
+        }
+
+        // Chạy song song 2 API
+        const [regularData, profileData] = await Promise.all([regularRequestsPromise, profileRequestsPromise]);
+        console.log("Loaded Profile Update Requests:", profileData);
 
         if (!cancelled) {
-          setRequests(Array.isArray(data) ? data : []);
-          setPage(1); // reset về trang 1 khi đổi filter server-side
+          let combined = [];
+
+          // Gộp requests thường
+          if (Array.isArray(regularData)) combined = [...regularData];
+
+          // Gộp requests profile (chuẩn hóa dữ liệu cho khớp với bảng)
+          if (Array.isArray(profileData)) {
+             console.log("Raw Profile Data from API:", profileData);
+             const formattedProfiles = profileData.map(p => ({
+               // API trả về snake_case, map sang camelCase dùng trong UI
+               requestId: p.request_id,
+               type: "PROFILE UPDATE",
+               createdAt: p.created_at,
+               effectiveDate: p.created_at, // có hiệu lực ngay
+               status: p.request_status,
+               approverName: "HR Dept",
+               reviewedAt: p.reviewed_at, // Thời gian duyệt - hiển thị ở cột "Approved at"
+               // giữ nguyên details nếu có để hiển thị nhanh
+               details: p.details,
+               // merge còn lại đề phòng dùng ở chỗ khác
+               ...p
+             }));
+             combined = [...combined, ...formattedProfiles];
+          }
+
+          // Lọc lại Status phía Client (vì API Profile trả về tất cả status)
+          if (filters.status !== "ALL") {
+              combined = combined.filter(r => r.status?.toUpperCase() === filters.status);
+          }
+
+          // Sắp xếp giảm dần theo ngày tạo
+          combined.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+          setRequests(combined);
+          setPage(1);
         }
       } catch (err) {
         console.error(err);
@@ -136,15 +185,13 @@ export default function RequestStatusPage() {
     return () => {
       cancelled = true;
     };
-  }, [filters.type, filters.status]);
+  }, [filters.type, filters.status]); // Trigger lại khi filter thay đổi
 
-  // Lọc client-side (theo from/to/keyword)
   const filteredRequests = useMemo(() => {
     return requests.filter((r) => {
       if (filters.type !== "ALL" && r.type !== filters.type) return false;
       if (filters.status !== "ALL" && r.status !== filters.status) return false;
 
-      // BE đã trả sẵn effectiveDate
       if (filters.from && r.effectiveDate) {
         const from = new Date(filters.from);
         const eff = new Date(r.effectiveDate);
@@ -158,9 +205,8 @@ export default function RequestStatusPage() {
 
       if (filters.keyword) {
         const key = filters.keyword.toLowerCase();
-        const text = `${r.type} ${r.requestId} ${
-          r.projectName || ""
-        }`.toLowerCase();
+        // Thêm search cho reason của profile update
+        const text = `${r.type} ${r.requestId} ${r.projectName || ""} ${r.reason || ""} ${r.comment || ""}`.toLowerCase();
         if (!text.includes(key)) return false;
       }
 
@@ -188,40 +234,51 @@ export default function RequestStatusPage() {
     setSelectedDetail(null);
 
     try {
+      console.log("Loading detail for request:", request);
       let data;
       switch (request.type) {
         case "LEAVE":
-          data = await getLeaveRequestDetail(
-            employeeCode,
-            request.requestId
-          );
+          data = await getLeaveRequestDetail(employeeCode, request.requestId);
           break;
         case "OT":
-          data = await getOvertimeRequestDetail(
-            employeeCode,
-            request.requestId
-          );
+          data = await getOvertimeRequestDetail(employeeCode, request.requestId);
           break;
         case "RESIGNATION":
-          data = await getResignationRequestDetail(
-            employeeCode,
-            request.requestId
-          );
+          data = await getResignationRequestDetail(employeeCode, request.requestId);
+          break;
+        // --- CẬP NHẬT: Case mới cho Profile Update ---
+        case "PROFILE UPDATE":
+          console.log("Calling getMyProfileUpdateRequestDetail with employeeCode:", employeeCode, "requestId:", request.requestId);
+          data = await getMyProfileUpdateRequestDetail(employeeCode, request.requestId);
+          console.log("Profile Update Request Detail Data:", data);
+
+          if (data) {
+            // Chuẩn hóa snake_case từ API chi tiết sang camelCase dùng trong UI
+            data = {
+              ...data,
+              requestId: data.request_id ?? data.requestId ?? request.requestId,
+              createdAt: data.request_date ?? data.created_at ?? data.createdAt ?? request.createdAt,
+              status: data.request_status ?? data.status ?? request.status,
+              reviewedAt: data.reviewed_at ?? data.reviewedAt,
+              approverName: data.reviewed_by_name ?? data.reviewed_by ?? data.reviewedByName ?? data.reviewedBy ?? request.approverName,
+              rejectReason: data.reject_reason ?? data.rejectReason ?? request.rejectReason,
+              details: data.details ?? request.details,
+            };
+          }
           break;
         default:
           data = null;
       }
 
-      // Merge summary + detail để luôn có đủ field chung
       if (data) {
         setSelectedDetail({ ...request, ...data });
       } else {
         setSelectedDetail(request);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Error in loadDetail:", err);
       setDetailError(err.message || "Failed to load request details.");
-      setSelectedDetail(request); // vẫn hiển thị thông tin cơ bản
+      setSelectedDetail(request); 
     } finally {
       setDetailLoading(false);
     }
@@ -235,6 +292,7 @@ export default function RequestStatusPage() {
   }
 
   function handleCloseDetail() {
+    // Đóng modal - profile sẽ tự động update lần tới khi nhân viên đăng nhập
     setSelectedSummary(null);
     setSelectedDetail(null);
     setDetailError("");
@@ -250,7 +308,6 @@ export default function RequestStatusPage() {
     return "badge status-pending";
   }
 
-  // Render phần detail riêng cho từng loại request theo schema mới của BE
   function renderTypeSpecificDetail(r) {
     if (!r) return null;
 
@@ -259,36 +316,13 @@ export default function RequestStatusPage() {
         <section className="status-detail-section">
           <h4>Leave request details</h4>
           <dl className="status-detail-grid status-detail-grid--2cols">
-            <div>
-              <dt>Leave type</dt>
-              <dd>{r.leaveType}</dd>
-            </div>
-            <div>
-              <dt>Start date</dt>
-              <dd>{formatDate(r.startDate)}</dd>
-            </div>
-            <div>
-              <dt>End date</dt>
-              <dd>{formatDate(r.endDate)}</dd>
-            </div>
-            {r.halfDay && (
-              <div>
-                <dt>Half day</dt>
-                <dd>{r.halfDay}</dd>
-              </div>
-            )}
-            <div>
-              <dt>Handover to (employee Code)</dt>
-              <dd>{r.handoverToEmployeeCode ?? "-"}</dd>
-            </div>
-            <div>
-              <dt>Attachment</dt>
-              <dd>{r.attachment || "No attachment"}</dd>
-            </div>
-            <div className="full-row">
-              <dt>Reason</dt>
-              <dd>{r.reason || "-"}</dd>
-            </div>
+            <div><dt>Leave type</dt><dd>{r.leaveType}</dd></div>
+            <div><dt>Start date</dt><dd>{formatDate(r.startDate)}</dd></div>
+            <div><dt>End date</dt><dd>{formatDate(r.endDate)}</dd></div>
+            {r.halfDay && (<div><dt>Half day</dt><dd>{r.halfDay}</dd></div>)}
+            <div><dt>Handover to</dt><dd>{r.handoverToEmployeeCode ?? "-"}</dd></div>
+            <div><dt>Attachment</dt><dd>{r.attachment || "No attachment"}</dd></div>
+            <div className="full-row"><dt>Reason</dt><dd>{r.reason || "-"}</dd></div>
           </dl>
         </section>
       );
@@ -299,30 +333,12 @@ export default function RequestStatusPage() {
         <section className="status-detail-section">
           <h4>Overtime request details</h4>
           <dl className="status-detail-grid status-detail-grid--2cols">
-            <div>
-              <dt>OT date</dt>
-              <dd>{formatDate(r.otDate)}</dd>
-            </div>
-            <div>
-              <dt>Start time</dt>
-              <dd>{r.startTime}</dd>
-            </div>
-            <div>
-              <dt>End time</dt>
-              <dd>{r.endTime}</dd>
-            </div>
-            <div>
-              <dt>Total hours</dt>
-              <dd>{r.totalHours}</dd>
-            </div>
-            <div className="full-row">
-              <dt>Project name</dt>
-              <dd>{r.projectName || "-"}</dd>
-            </div>
-            <div className="full-row">
-              <dt>OT reason</dt>
-              <dd>{r.reason || "-"}</dd>
-            </div>
+            <div><dt>OT date</dt><dd>{formatDate(r.otDate)}</dd></div>
+            <div><dt>Start time</dt><dd>{r.startTime}</dd></div>
+            <div><dt>End time</dt><dd>{r.endTime}</dd></div>
+            <div><dt>Total hours</dt><dd>{r.totalHours}</dd></div>
+            <div className="full-row"><dt>Project name</dt><dd>{r.projectName || "-"}</dd></div>
+            <div className="full-row"><dt>OT reason</dt><dd>{r.reason || "-"}</dd></div>
           </dl>
         </section>
       );
@@ -333,24 +349,45 @@ export default function RequestStatusPage() {
         <section className="status-detail-section">
           <h4>Resignation request details</h4>
           <dl className="status-detail-grid status-detail-grid--2cols">
-            <div>
-              <dt>Proposed last working date</dt>
-              <dd>{formatDate(r.proposedLastWorkingDate)}</dd>
-            </div>
-            <div>
-              <dt>Completed handover?</dt>
-              <dd>{r.completedHandover ? "Yes" : "No"}</dd>
-            </div>
+            <div><dt>Proposed last working date</dt><dd>{formatDate(r.proposedLastWorkingDate)}</dd></div>
+            <div><dt>Completed handover?</dt><dd>{r.completedHandover ? "Yes" : "No"}</dd></div>
+            <div className="full-row"><dt>Resignation reason</dt><dd>{r.resignationReason || "-"}</dd></div>
+            {r.hrNote && (<div className="full-row"><dt>HR note</dt><dd>{r.hrNote}</dd></div>)}
+          </dl>
+        </section>
+      );
+    }
+
+    // --- CẬP NHẬT: Hiển thị chi tiết thay đổi Profile ---
+    if (r.type === "PROFILE UPDATE") {
+      return (
+        <section className="status-detail-section">
+          <h4>Profile Update Details</h4>
+          <dl className="status-detail-grid">
             <div className="full-row">
-              <dt>Resignation reason</dt>
-              <dd>{r.resignationReason || "-"}</dd>
+              <dt>Reason</dt>
+              {/* Profile update BE trả về comment hoặc reason */}
+              <dd>{r.comment || r.reason || "Update personal information"}</dd>
             </div>
-            {r.hrNote && (
-              <div className="full-row">
-                <dt>HR note</dt>
-                <dd>{r.hrNote}</dd>
-              </div>
-            )}
+            <div className="full-row mt-3">
+              <dt>Requested Changes</dt>
+              <dd>
+                <ul className="list-disc pl-5 space-y-1 text-sm text-gray-700 bg-gray-50 p-3 rounded border border-gray-100 mt-2">
+                  {r.details && r.details.length > 0 ? (
+                      r.details.map((d, idx) => (
+                        <li key={idx}>
+                          <span className="font-semibold text-gray-800">{d.field_name}: </span>
+                          <span className="line-through text-red-400 mx-1">{d.old_value || "(empty)"}</span>
+                          <span className="text-gray-400"> &rarr; </span>
+                          <span className="text-green-600 font-bold">{d.new_value}</span>
+                        </li>
+                      ))
+                  ) : (
+                      <li className="text-gray-400 italic">No detailed changes recorded.</li>
+                  )}
+                </ul>
+              </dd>
+            </div>
           </dl>
         </section>
       );
@@ -359,6 +396,7 @@ export default function RequestStatusPage() {
     return null;
   }
 
+  // --- RETURN JSX (Phần dưới này gần như giữ nguyên, chỉ thay đổi data source) ---
   return (
     <div className="status-page fade-in-up">
       <div className="card status-card">
@@ -366,8 +404,7 @@ export default function RequestStatusPage() {
           <div>
             <h2>Request status</h2>
             <p className="status-subtitle">
-              View all requests you have submitted and track their approval
-              status.
+              View all requests you have submitted and track their approval status.
             </p>
           </div>
           <div className="status-counter">
@@ -433,7 +470,7 @@ export default function RequestStatusPage() {
               <label>Search</label>
               <input
                 className="input"
-                placeholder="Search by type, project or ID…"
+                placeholder="Search..."
                 value={filters.keyword}
                 onChange={(e) =>
                   handleFilterChange("keyword", e.target.value)
@@ -469,7 +506,7 @@ export default function RequestStatusPage() {
               <tbody>
                 {pagedRequests.map((r) => (
                   <tr
-                    key={r.requestId}
+                    key={`${r.type}-${r.requestId}`} // Unique key an toàn hơn
                     className="status-row"
                     onClick={() => handleOpenDetail(r)}
                   >
@@ -534,9 +571,11 @@ export default function RequestStatusPage() {
                         </span>
                       </p>
                     </div>
-                    <button className="btn ghost" onClick={handleCloseDetail}>
-                      Close
-                    </button>
+                    <div className="flex gap-2">
+                      <button className="btn ghost" onClick={handleCloseDetail}>
+                        Close
+                      </button>
+                    </div>
                   </header>
 
                   {detailLoading && (
@@ -582,7 +621,8 @@ export default function RequestStatusPage() {
 
                   {/* Type-specific detail */}
                   {!detailLoading && renderTypeSpecificDetail(r)}
-
+                  
+                  {/* Note */}
                   <p className="status-detail-note">
                     This screen is read-only. Past requests cannot be edited.
                   </p>

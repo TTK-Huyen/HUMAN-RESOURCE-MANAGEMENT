@@ -1,6 +1,6 @@
 // src/pages/employee/MyProfilePage.jsx
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { fetchEmployeeProfile } from "../../Services/requests";
 import ProfileView from "../../components/features/employee/ProfileView";
 
@@ -9,6 +9,7 @@ const MyProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     let cancelled = false;
@@ -31,6 +32,14 @@ const MyProfilePage = () => {
         const apiData = await fetchEmployeeProfile(STORED_EMPLOYEE_CODE);
         console.log("[MyProfilePage] API data:", apiData);
 
+        // Normalize phone numbers list
+        const normalizedPhoneNumbers = (apiData.phoneNumbers || apiData.PhoneNumbers || apiData.phone_number || [])
+          .map((p) => ({
+            phoneNumber: p?.phoneNumber || p?.PhoneNumber || p?.number || p,
+            description: p?.description || p?.Description || "",
+          }))
+          .filter((p) => p.phoneNumber);
+
         // ✅ Align field names with AddEmployee page
         const mappedProfile = {
           // Personal Information
@@ -50,14 +59,31 @@ const MyProfilePage = () => {
           // Contact Information
           personalEmail: apiData.personalEmail || apiData.personal_email || "",
           companyEmail: apiData.companyEmail || apiData.company_email || "",
-          phoneNumbers: apiData.phoneNumbers || apiData.phone_number || [],
+          phoneNumbers: normalizedPhoneNumbers,
+          phoneNumberSingle: apiData.phoneNumber || apiData.phone_number || "",
 
           // Address Information
-          birthPlace: apiData.birthPlace || { province: "", district: "" },
+          birthPlace:
+            apiData.birthPlace ||
+            apiData.birth_place || {
+              province:
+                apiData.birthPlaceProvince ||
+                apiData.birth_place_province ||
+                "",
+              district:
+                apiData.birthPlaceDistrict ||
+                apiData.birth_place_district ||
+                "",
+            },
           currentAddress: apiData.currentAddress || apiData.current_address || { province: "", district: "" },
 
           // Bank Account
-          bankAccount: apiData.bankAccount || apiData.bank_accounts || { bankName: "", accountNumber: "" },
+          bankAccounts: apiData.bankAccounts || apiData.bank_accounts || [],
+          bankAccount:
+            apiData.bankAccount ||
+            apiData.bank_accounts?.[0] ||
+            (apiData.bankAccounts && apiData.bankAccounts[0]) ||
+            { bankName: "", accountNumber: "" },
 
           // Employment Information
           departmentId: apiData.departmentId || apiData.department_id || "",
@@ -71,7 +97,13 @@ const MyProfilePage = () => {
           // Display names
           departmentName: apiData.department || apiData.department_name || "",
           directManagerName: apiData.directManager || apiData.manager_name || "",
-          position: apiData.position || apiData.position_name || "",
+          jobTitle:
+            apiData.jobTitle ||
+            apiData.JobTitle ||
+            apiData.job_title ||
+            apiData.position ||
+            apiData.position_name ||
+            "",
           status: apiData.status || "",
           education: apiData.education || "",
         };
@@ -94,7 +126,7 @@ const MyProfilePage = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [searchParams]);
 
   if (loading) {
     return <div className="p-6">Loading data from system…</div>;

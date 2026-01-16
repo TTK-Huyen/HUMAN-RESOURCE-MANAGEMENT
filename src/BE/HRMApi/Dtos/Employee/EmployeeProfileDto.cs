@@ -47,6 +47,10 @@ namespace HrmApi.Dtos.Employee
         // Employee.CurrentAddress: string?
         public string? CurrentAddress { get; set; }
 
+        // Birth place (province/district)
+        public string? BirthPlaceProvince { get; set; }
+        public string? BirthPlaceDistrict { get; set; }
+
         // Map từ Employee.PhoneNumbers (collection) + Employee.PhoneNumber nếu cần
         public List<EmployeePhoneNumberDto> PhoneNumbers { get; set; } = new();
 

@@ -4,12 +4,23 @@ import StatusBadge from "../../common/StatusBadge.jsx";
 
 // Component con: Hiển thị trường thông tin (có hỗ trợ che/hiện)
 const SensitiveField = ({ label, val, isSensitive = false, full = false }) => {
-  const [isVisible, setIsVisible] = useState(!isSensitive); // Mặc định ẩn nếu là sensitive
+  const [isVisible, setIsVisible] = useState(!isSensitive);
 
   const displayValue = () => {
     if (val === undefined || val === null || val === "") return "—";
+    
+    // Nếu val là React Element (ví dụ danh sách sđt)
+    if (React.isValidElement(val)) {
+      // Nếu sensitive và hidden, che dấu toàn bộ element
+      if (isSensitive && !isVisible) {
+        return "••••••••••••";
+      }
+      return val;
+    }
+    
+    // String case
     if (isVisible) return val;
-    return "••••••••••••"; // Ký tự che
+    return "••••••••••••";
   };
 
   return (
@@ -55,7 +66,12 @@ const ProfileView = ({ profile }) => {
   const hasChildren = profile.hasChildren ?? profile.has_children;
 
   const department = profile.departmentName ?? profile.department ?? profile.department_name;
-  const jobTitle = profile.position ?? profile.job_title;
+  const jobTitle =
+    profile.jobTitle ||
+    profile.jobTitleName ||
+    profile.position ||
+    profile.job_title ||
+    profile.JobTitle;
   const directManager = profile.directManagerName ?? profile.directManager ?? profile.direct_manager;
   const employmentType = profile.employmentType ?? profile.employment_type;
   const status = profile.status;
@@ -63,12 +79,19 @@ const ProfileView = ({ profile }) => {
   const companyEmail = profile.companyEmail ?? profile.company_email;
   const personalEmail = profile.personalEmail ?? profile.personal_email;
 
-  const phoneNumber = Array.isArray(profile.phoneNumbers) && profile.phoneNumbers.length > 0
-    ? profile.phoneNumbers
-        .filter((p) => p && p.phoneNumber)
-        .map((p) => `${p.phoneNumber}${p.description ? ` (${p.description})` : ""}`)
-        .join(", ")
-    : profile.phone_number;
+const phoneNumber = Array.isArray(profile.phoneNumbers) && profile.phoneNumbers.length > 0
+    ? (
+        <div className="flex flex-col gap-1">
+          {profile.phoneNumbers
+            .filter((p) => p && p.phoneNumber)
+            .map((p, idx) => (
+              <span key={idx} className="block">
+                {p.phoneNumber}
+              </span>
+            ))}
+        </div>
+      )
+    : (profile.phone_number || "Chưa cập nhật");
 
   const currentAddressStr = profile.currentAddress 
     ? (typeof profile.currentAddress === 'object' 
@@ -77,17 +100,21 @@ const ProfileView = ({ profile }) => {
     : profile.current_address;
 
   const birthPlaceStr = profile.birthPlace
-    ? (typeof profile.birthPlace === 'object'
-        ? `${profile.birthPlace?.province}, ${profile.birthPlace?.district}`
+    ? (typeof profile.birthPlace === "object"
+        ? `${profile.birthPlace?.province || ""}${profile.birthPlace?.province && profile.birthPlace?.district ? ", " : ""}${profile.birthPlace?.district || ""}`.trim() || "—"
         : profile.birthPlace)
+    : profile.birthPlaceProvince || profile.birthPlaceDistrict
+    ? `${profile.birthPlaceProvince || ""}${profile.birthPlaceProvince && profile.birthPlaceDistrict ? ", " : ""}${profile.birthPlaceDistrict || ""}`
     : "—";
 
   const citizenId = profile.citizenIdNumber ?? profile.citizen_id ?? profile.citizenId;
   const personalTaxCode = profile.personalTaxCode ?? profile.personal_tax_code;
   const socialInsuranceNumber = profile.socialInsuranceNumber ?? profile.social_insurance_number;
 
-  const bankName = profile.bankAccount?.bankName || "—";
-  const accountNumber = profile.bankAccount?.accountNumber || "—";
+  const bankAccounts = profile.bankAccounts || profile.BankAccounts || [];
+  const primaryBank = bankAccounts.find((b) => b.isPrimary) || bankAccounts[0];
+  const bankName = primaryBank?.bankName || profile.bankAccount?.bankName || "Chưa cập nhật";
+  const accountNumber = primaryBank?.accountNumber || profile.bankAccount?.accountNumber || "Chưa cập nhật";
 
   const contractType = profile.contractType ?? profile.contract_type;
   const contractStartDate = profile.contractStartDate ?? profile.contract_start_date;
@@ -104,7 +131,7 @@ const ProfileView = ({ profile }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <SensitiveField label="Employee Code" val={employeeCode} />
           <SensitiveField label="Full Name" val={fullName} />
-          <SensitiveField label="Date of Birth" val={dateOfBirth} />
+          <SensitiveField label="Date of Birth" val={dateOfBirth} isSensitive={true} />
           <SensitiveField label="Gender" val={gender} />
           <SensitiveField label="Nationality" val={nationality} />
           <SensitiveField label="Marital Status" val={maritalStatus} />
@@ -132,7 +159,7 @@ const ProfileView = ({ profile }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <SensitiveField label="Company Email" val={companyEmail} />
           <SensitiveField label="Personal Email" val={personalEmail} />
-          <SensitiveField label="Main Phone Number" val={phoneNumber} />
+          <SensitiveField label="Phone Number (Personal)" val={phoneNumber} isSensitive={true}/>
           <SensitiveField label="Current Address" val={currentAddressStr} full={true} />
         </div>
       </section>

@@ -10,6 +10,7 @@ import { FormRow } from "../../components/common/FormRow";
 import Button from "../../components/common/Button";
 import ViolationBanner from "../../components/common/ViolationBanner";
 import Loading from "../../components/common/Loading";
+import ConfirmDialog from "../../components/common/ConfirmDialog";
 
 export default function HRAddEmployeePage() {
   const navigate = useNavigate();
@@ -91,6 +92,7 @@ export default function HRAddEmployeePage() {
   const [touched, setTouched] = useState({});
   const [generalError, setGeneralError] = useState("");
   const [emailLocked, setEmailLocked] = useState(true); // true = auto
+  const [successDialog, setSuccessDialog] = useState(null); // { code, password }
 
 
   // ===== Form state =====
@@ -180,7 +182,7 @@ export default function HRAddEmployeePage() {
   // ===== Regex =====
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const phoneRegex = /^[0-9]{10,11}$/; // 10-11 digits
-  const citizenIdRegex = /^[0-9]{13}$/; // exactly 13 digits
+  const citizenIdRegex = /^[0-9]{12}$/; // exactly 13 digits
   const taxCodeRegex = /^[0-9]{10}$/; // exactly 10 digits
   const socialInsuranceRegex = /^[0-9]{10}$/; // exactly 10 digits
 
@@ -220,7 +222,7 @@ export default function HRAddEmployeePage() {
 
     // format
     if (!message && name === "citizenIdNumber" && value && !citizenIdRegex.test(value)) {
-      message = "Citizen ID must be exactly 13 digits";
+      message = "Citizen ID must be exactly 12 digits";
     }
 
     if (!message && name === "personalTaxCode" && value && !taxCodeRegex.test(value)) {
@@ -449,13 +451,7 @@ export default function HRAddEmployeePage() {
       const newCode = response?.employeeCode || "(generated)";
       const initialPassword = response?.initialPassword || "EMP + last 4 digits of ID";
 
-      alert(
-        `Employee added successfully!\n` +
-          `Employee Code / Username: ${newCode}\n` +
-          `Initial Password: ${initialPassword}`
-      );
-
-      navigate("/hr/directory");
+      setSuccessDialog({ code: newCode, password: initialPassword });
     } catch (error) {
       const data = error.response?.data;
 
@@ -635,7 +631,7 @@ export default function HRAddEmployeePage() {
                 label="Citizen ID"
                 required
                 error={touched.citizenIdNumber ? errors.citizenIdNumber : null}
-                helpText="Exactly 13 digits"
+                helpText="Exactly 12 digits"
               >
                 <input
                   name="citizenIdNumber"
@@ -643,10 +639,10 @@ export default function HRAddEmployeePage() {
                   onChange={handleChange}
                   onBlur={handleBlur}
                   className={inputClass("citizenIdNumber")}
-                  maxLength={13}
-                  placeholder="00109xxxxxxxxx"
+                  maxLength={12}
+                  placeholder="00109xxxxxxxx"
                   inputMode="numeric"
-                  pattern="[0-9]{13}"
+                  pattern="[0-9]{12}"
                 />
               </FormRow>
 
@@ -1062,6 +1058,29 @@ export default function HRAddEmployeePage() {
           </div>
         </div>
       </div>
+
+      {/* Success Dialog */}
+      <ConfirmDialog
+        isOpen={!!successDialog}
+        title="Employee Added Successfully!"
+        message={
+          successDialog
+            ? `Employee Code / Username: ${successDialog.code}\nInitial Password: ${successDialog.password}`
+            : ""
+        }
+        type="info"
+        confirmLabel="Go to Directory"
+        cancelLabel="Add Another"
+        onConfirm={() => {
+          setSuccessDialog(null);
+          navigate("/hr/directory");
+        }}
+        onCancel={() => {
+          setSuccessDialog(null);
+          // Reset form for adding another employee
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }

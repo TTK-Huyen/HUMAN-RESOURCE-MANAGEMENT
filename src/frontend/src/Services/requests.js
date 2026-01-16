@@ -62,7 +62,7 @@ export async function hrFetchProfileUpdateRequests({ status = "ALL", employeeCod
 }
 
 export async function hrFetchProfileUpdateRequestDetail(requestId) {
-  const res = await api.get(`/hr/profile-update-requests/${requestId}`);
+  const res = await api.get(`/hr/profile-update-requests/${requestId}/detailed`);
   return res.data;
 }
 
@@ -111,5 +111,17 @@ export async function getOvertimeRequestDetail(employeeCode, requestId) {
 
 export async function getResignationRequestDetail(employeeCode, requestId) {
   const res = await api.get(`/employees/${employeeCode}/requests/resignation/${requestId}`);
+  return res.data;
+}
+
+export async function getMyProfileUpdateRequests(employeeCode) {
+  // Sử dụng API search hiện có, lọc theo employeeCode
+// Gọi vào endpoint của Employee thay vì HR để tránh lỗi quyền hạn (403 Forbidden)
+  const res = await api.get(`/employees/${employeeCode}/profile-update-requests`);
+  return res.data;
+}
+
+export async function getMyProfileUpdateRequestDetail(employeeCode, requestId) {
+  const res = await api.get(`/employees/${employeeCode}/profile-update-requests/${requestId}`);
   return res.data;
 }

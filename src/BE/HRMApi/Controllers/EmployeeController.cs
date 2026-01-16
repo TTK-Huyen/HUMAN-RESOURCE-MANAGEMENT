@@ -1,3 +1,4 @@
+using HrmApi.Dtos; // [QUAN TRỌNG] Thêm dòng này để dùng RequestFilterDto
 using HrmApi.Dtos.Employee;
 using HrmApi.Repositories;
 using HrmApi.Services;
@@ -36,6 +37,7 @@ namespace HrmApi.Controllers
             return Ok(profile);
         }
 
+        // API: Gửi yêu cầu cập nhật (Đã có)
         [HttpPost("{employeeCode}/profile-update-requests")]
         public async Task<IActionResult> SendProfileUpdateRequest(string employeeCode, [FromBody] ProfileUpdateRequestCreateDto dto)
         {
@@ -48,6 +50,48 @@ namespace HrmApi.Controllers
                 return BadRequest("Invalid request or access denied.");
             return Ok("Profile update request sent and pending approval.");
         }
+
+        // =========================================================================
+        // [THÊM MỚI] API: Lấy danh sách yêu cầu cập nhật của nhân viên
+        // =========================================================================
+        [HttpGet("{employeeCode}/profile-update-requests", Name = "GetMyProfileUpdateRequests")]
+        public async Task<IActionResult> GetMyProfileUpdateRequests(string employeeCode, [FromQuery] string? status)
+        {
+            // Tạo filter để Service tìm kiếm theo mã nhân viên
+            var filter = new RequestFilterDto
+            {
+                EmployeeCode = employeeCode,
+                Status = status
+            };
+
+            var result = await _profileUpdateRequestService.SearchAsync(filter);
+            return Ok(result);
+        }
+
+        // =========================================================================
+        // [THÊM MỚI] API: Lấy chi tiết yêu cầu cập nhật của nhân viên
+        // =========================================================================
+        [HttpGet("{employeeCode}/profile-update-requests/{requestId:long}", Name = "GetMyProfileUpdateRequestDetail")]
+        public async Task<IActionResult> GetMyProfileUpdateRequestDetail(string employeeCode, long requestId)
+        {
+            try
+            {
+                var detail = await _profileUpdateRequestService.GetDetailEnrichedAsync(requestId);
+                
+                // Kiểm tra xem request có thuộc về employee này không
+                if (detail.EmployeeCode != employeeCode)
+                {
+                    return Forbid();
+                }
+                
+                return Ok(detail);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { error_message = "Request not found" });
+            }
+        }
+        // =========================================================================
 
         /// <summary>
         /// Tạo nhân viên mới cùng với tài khoản đăng nhập
@@ -83,6 +127,7 @@ namespace HrmApi.Controllers
         }
 
 
+        /// <summary>
         /// Lấy danh sách nhân viên với filter và pagination
         /// </summary>
         [HttpGet]
@@ -109,10 +154,12 @@ namespace HrmApi.Controllers
             {
                 return StatusCode(500, new { message = "Internal server error: " + ex.Message });
             }
-        }        /// <summary>
-                 /// Lấy danh sách thông tin cơ bản của nhân viên (name, code, dob, gender, citizenID, phone, department, job title)
-                 /// </summary>
-                 /// <param name="employeeCode">Mã nhân viên cụ thể (optional). Nếu không truyền, trả về tất cả nhân viên</param>
+        }       
+        
+        /// <summary>
+        /// Lấy danh sách thông tin cơ bản của nhân viên (name, code, dob, gender, citizenID, phone, department, job title)
+        /// </summary>
+        /// <param name="employeeCode">Mã nhân viên cụ thể (optional). Nếu không truyền, trả về tất cả nhân viên</param>
         [HttpGet("essential")]
         public async Task<IActionResult> GetEssentialEmployeeInfo([FromQuery] string? employeeCode = null)
         {

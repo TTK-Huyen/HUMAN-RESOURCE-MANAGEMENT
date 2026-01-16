@@ -56,7 +56,7 @@ export default function RedemptionRequests() {
         { title: 'Requested', dataIndex: 'requestedAt', render: (r) => new Date(r.requestedAt).toLocaleString('en-US') },
         { title: 'Code - Name', dataIndex: 'employee', render: (r) => `${r.employee?.employeeCode || ''} - ${r.employee?.fullName || ''}` },
         { title: 'Points', dataIndex: 'pointsRedeemed', render: (r) => r.pointsRedeemed },
-        { title: 'Amount (USD)', dataIndex: 'cashAmount', render: (r) => '$' + (Number(r.cashAmount) || 0).toLocaleString() },
+        { title: 'Amount (VND)', dataIndex: 'cashAmount', render: (r) => '$' + (Number(r.cashAmount) || 0).toLocaleString() },
         { title: 'Status', dataIndex: 'status', render: (r) => {
             const st = r.status;
             let t = 'default';
@@ -79,7 +79,7 @@ export default function RedemptionRequests() {
             <div className="mb-4">
                 <Button onClick={fetchData} className="mr-2">Refresh</Button>
             </div>
-            <Table columns={columns} data={requests || []} emptyText={loading ? 'Đang tải...' : 'Không có yêu cầu'} />
+            <Table columns={columns} data={requests || []} emptyText={loading ? 'Loading...' : 'No requests'} />
             {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
         </div>
     );

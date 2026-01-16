@@ -139,7 +139,7 @@ namespace HrmApi.Services
                 EmployeeId = employeeId,
                 TransactionType = "REDEEM",
                 Points = -points, // Số âm
-                Description = $"Đổi {points} điểm sang tiền mặt",
+                Description = $"Redeem {points} points for cash",
                 CreatedAt = DateTime.Now
             };
             _context.PointTransactions.Add(transaction);
@@ -218,8 +218,8 @@ namespace HrmApi.Services
             {
                 EmployeeId = redemption.EmployeeId,
                 TransactionType = "REFUND",
-                Points = redemption.PointsRedeemed,
-                Description = $"Hoàn lại {redemption.PointsRedeemed} điểm do từ chối yêu cầu đổi điểm (#{redemption.RedemptionId})",
+                    Points = redemption.PointsRedeemed,
+                    Description = $" Refund {redemption.PointsRedeemed} points refunded due to rejection of redemption request (#{redemption.RedemptionId})",
                 CreatedAt = DateTime.Now,
                 CreatedBy = processedBy,
                 RelatedId = redemption.RedemptionId
