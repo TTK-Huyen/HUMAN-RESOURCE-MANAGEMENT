@@ -8,23 +8,54 @@ import Toast from "../../components/common/Toast";
 
 // --- SUB-COMPONENTS ---
 
+const formatFieldName = (fieldName) => {
+  if (!fieldName) return fieldName;
+  // Convert camelCase/PascalCase to readable format
+  // CitizenIdNumber → Citizen Id Number
+  // hasChildren → Has Children
+  return fieldName
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, str => str.toUpperCase())
+    .trim();
+};
+
+const formatValue = (value) => {
+  if (value === null || value === undefined) {
+    return <span className="text-slate-400 italic">--</span>;
+  }
+  if (typeof value === 'boolean') {
+    return (
+      <span className={`px-2 py-1 rounded text-xs font-semibold ${
+        value 
+          ? 'bg-green-100 text-green-700' 
+          : 'bg-red-100 text-red-700'
+      }`}>
+        {value ? 'Yes' : 'No'}
+      </span>
+    );
+  }
+  if (value === '' || value === 'null' || value === 'undefined') {
+    return <span className="text-slate-400 italic">Empty</span>;
+  }
+  return String(value);
+};
+
 const FieldChange = ({ fieldName, oldValue, newValue }) => (
   <div className="mb-4 pb-4 border-b border-slate-100 last:border-b-0">
     <div className="text-sm font-semibold text-slate-600 uppercase tracking-wide mb-2">
-      {fieldName}
-    </div>
-    <div className="flex items-center gap-4">
+      {formatFieldName(fieldName)}
+    </div>    <div className="flex items-center gap-4">
       <div className="flex-1">
         <div className="text-xs text-slate-500 mb-1">Old Value:</div>
         <div className="text-base font-medium text-slate-800 bg-red-50 px-3 py-2 rounded border border-red-200">
-          {oldValue || <span className="text-slate-400 italic">--</span>}
+          {formatValue(oldValue)}
         </div>
       </div>
       <div className="text-slate-400">→</div>
       <div className="flex-1">
         <div className="text-xs text-slate-500 mb-1">New Value:</div>
         <div className="text-base font-medium text-slate-800 bg-green-50 px-3 py-2 rounded border border-green-200">
-          {newValue || <span className="text-slate-400 italic">--</span>}
+          {formatValue(newValue)}
         </div>
       </div>
     </div>
