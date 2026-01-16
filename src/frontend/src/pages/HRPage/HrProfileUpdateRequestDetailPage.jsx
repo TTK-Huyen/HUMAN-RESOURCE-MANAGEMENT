@@ -4,6 +4,7 @@ import { ArrowLeft, AlertCircle, CheckCircle, XCircle, Clock, Check, X } from "l
 import { HRService } from "../../Services/employees.js";
 import Loading from "../../components/common/Loading";
 import Button from "../../components/common/Button";
+import Toast from "../../components/common/Toast";
 
 // --- SUB-COMPONENTS ---
 
@@ -61,13 +62,13 @@ const StatusBadgeDetail = ({ status, reviewedAt, reviewedBy }) => {  const getSt
 
 export default function HrProfileUpdateRequestDetailPage() {
   const { requestId } = useParams();
-  const navigate = useNavigate();
-  const [requestDetail, setRequestDetail] = useState(null);
+  const navigate = useNavigate();  const [requestDetail, setRequestDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [approvingId, setApprovingId] = useState(null);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [toast, setToast] = useState(null);
   useEffect(() => {
     const fetchRequestDetail = async () => {
       setLoading(true);
@@ -98,46 +99,64 @@ export default function HrProfileUpdateRequestDetailPage() {
       }
     };
 
-    fetchRequestDetail();
-  }, [requestId]);  // -- Handle Approve Request --
+    fetchRequestDetail();  }, [requestId]);  // -- Helper: Get current user info and GMT+0 time --
+  const getCurrentReviewerInfo = () => {
+    const reviewerName = localStorage.getItem('employeeName') || localStorage.getItem('employeeCode') || 'Unknown';
+    // Get current time in GMT+0 (UTC)
+    const now = new Date();
+    return {
+      reviewerName,
+      reviewedAt: now.toISOString()
+    };
+  };
+  // -- Handle Approve Request --
   const handleApproveRequest = async () => {
     setApprovingId(requestDetail?.request_id);
     try {
+      const { reviewerName, reviewedAt } = getCurrentReviewerInfo();
       const payload = {
         Status: 'Approved',
-        Employee_ID: requestDetail?.employee_id
+        Employee_ID: requestDetail?.employee_id,
+        ReviewedBy: reviewerName,
+        ReviewedAt: reviewedAt
       };
       await HRService.updateRequestStatus(requestDetail?.request_id, payload);
-      setRequestDetail(prev => prev ? { ...prev, request_status: 'APPROVED' } : null);
-      alert("Request approved successfully!");
+      setRequestDetail(prev => prev ? { ...prev, request_status: 'APPROVED', reviewed_by: reviewerName, reviewed_at: reviewedAt } : null);
+      setToast({ message: "Request approved successfully!", type: "success" });
     } catch (error) {
       console.error("Error approving request:", error);
-      alert("Failed to approve request: " + (error.response?.data?.message || error.message));
+      const errorMessage = error.response?.data?.message || error.message || "Failed to approve request";
+      setToast({ message: errorMessage, type: "error" });
     } finally {
       setApprovingId(null);
     }
-  };  // -- Handle Reject Request --
+  };
+  // -- Handle Reject Request --
   const handleRejectRequest = async () => {
     if (!rejectReason.trim()) {
-      alert("Please enter a rejection reason!");
+      setToast({ message: "Please enter a rejection reason!", type: "error" });
       return;
     }
     
     setApprovingId(requestDetail?.request_id);
     try {
+      const { reviewerName, reviewedAt } = getCurrentReviewerInfo();
       const payload = {
         Status: 'Rejected',
         RejectReason: rejectReason.trim(),
-        Employee_ID: requestDetail?.employee_id
+        Employee_ID: requestDetail?.employee_id,
+        ReviewedBy: reviewerName,
+        ReviewedAt: reviewedAt
       };
       await HRService.updateRequestStatus(requestDetail?.request_id, payload);
-      setRequestDetail(prev => prev ? { ...prev, request_status: 'REJECTED', reject_reason: rejectReason.trim() } : null);
+      setRequestDetail(prev => prev ? { ...prev, request_status: 'REJECTED', reject_reason: rejectReason.trim(), reviewed_by: reviewerName, reviewed_at: reviewedAt } : null);
       setShowRejectModal(false);
       setRejectReason("");
-      alert("Request rejected successfully!");
+      setToast({ message: "Request rejected successfully!", type: "success" });
     } catch (error) {
       console.error("Error rejecting request:", error);
-      alert("Failed to reject request: " + (error.response?.data?.message || error.message));
+      const errorMessage = error.response?.data?.message || error.message || "Failed to reject request";
+      setToast({ message: errorMessage, type: "error" });
     } finally {
       setApprovingId(null);
     }
@@ -396,12 +415,20 @@ export default function HrProfileUpdateRequestDetailPage() {
                 }}
                 onMouseEnter={(e) => !e.target.disabled && (e.target.style.background = '#b91c1c')}
                 onMouseLeave={(e) => !e.target.disabled && (e.target.style.background = '#dc2626')}
-              >
-                {approvingId === requestDetail?.request_id ? 'Processing...' : 'Confirm Rejection'}
+              >                {approvingId === requestDetail?.request_id ? 'Processing...' : 'Confirm Rejection'}
               </button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );

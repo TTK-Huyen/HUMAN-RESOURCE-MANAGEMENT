@@ -1,40 +1,59 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import { Eye, RefreshCw, Filter, Check, X } from "lucide-react";
+import { Eye, RefreshCw, Check, X, Search } from "lucide-react";
 import { HRService } from '../../Services/employees.js';
 
-// --- IMPORT CÁC COMPONENT DÙNG CHUNG (REUSABLE COMPONENTS) ---
-import Table from '../../components/common/Table';
+// --- IMPORT COMPONENTS ---
+import StatsGrid from '../../components/common/StatsGrid';
 import StatusBadge from '../../components/common/StatusBadge';
-import Loading from '../../components/common/Loading';
+import Pagination from '../../components/common/Pagination';
 import EmptyState from '../../components/common/EmptyState';
 import Button from '../../components/common/Button';
-import FilterBar from '../../components/common/FilterBar';
+
+const PAGE_SIZE = 10;
 
 const HrProfileUpdateRequestListPage = () => {
-    const navigate = useNavigate();    // -- State --
+    const navigate = useNavigate();
+    
+    // -- State --
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
-    
-    // Filter State
     const [keyword, setKeyword] = useState("");
-    const [statusFilter, setStatusFilter] = useState("ALL");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [stats, setStats] = useState({
+        totalRequests: 0,
+        pendingCount: 0,
+        approvedCount: 0,
+        rejectedCount: 0
+    });
 
     // -- Fetch Data --
     const fetchRequests = async () => {
         setLoading(true);
         try {
-            // Giả sử API lấy tất cả, ta sẽ lọc ở client để tối ưu trải nghiệm
             const res = await HRService.getUpdateRequests(); 
             if (res.data) {
-                setRequests(res.data);
+                const allRequests = res.data;
+                setRequests(allRequests);
+                
+                // Calculate stats
+                const newStats = {
+                    totalRequests: allRequests.length,
+                    pendingCount: allRequests.filter(r => r.request_status === 'PENDING').length,
+                    approvedCount: allRequests.filter(r => r.request_status === 'APPROVED').length,
+                    rejectedCount: allRequests.filter(r => r.request_status === 'REJECTED').length
+                };
+                setStats(newStats);
+                setCurrentPage(1);
             }
         } catch (error) {
-            console.error("Lỗi tải dữ liệu:", error);
+            console.error("Error loading data:", error);
         } finally {
             setLoading(false);
         }
-    };    useEffect(() => {
+    };
+
+    useEffect(() => {
         fetchRequests();
     }, []);
 
@@ -42,221 +61,205 @@ const HrProfileUpdateRequestListPage = () => {
     const filteredRequests = requests.filter(req => {
         const nameMatch = req.full_name?.toLowerCase().includes(keyword.toLowerCase());
         const codeMatch = req.employee_code?.toLowerCase().includes(keyword.toLowerCase());
-        const statusMatch = statusFilter === "ALL" || req.request_status === statusFilter;
+        return nameMatch || codeMatch;
+    });
 
-        return (nameMatch || codeMatch) && statusMatch;
-    });    // -- Cấu hình Cột cho Table --
-    const columns = [
-        {
-            title: "Employee ID",
-            dataIndex: "employee_code",
-            key: "employee_code",
-            width: "12%",
-            render: (row) => <span style={{ fontWeight: 600, color: '#475569' }}>{row.employee_code}</span>
-        },
-        {
-            title: "Full Name",
-            dataIndex: "full_name",
-            key: "full_name",
-            width: "28%",
-            render: (row) => (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#dbeafe', color: '#1d4ed8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold' }}>
-                        {row.full_name?.charAt(0)}
-                    </div>
-                    <span style={{ fontWeight: 500, color: '#1e293b' }}>{row.full_name}</span>
-                </div>
-            )
-        },
-        {
-            title: "Created Date",
-            dataIndex: "created_at",
-            key: "created_at",
-            width: "16%",
-            render: (row) => row.created_at ? new Date(row.created_at).toLocaleDateString('en-US') : ''
-        },
-        {
-            title: "Status",
-            dataIndex: "request_status", // Dùng dataIndex để sort/filter nếu cần
-            key: "request_status",
-            width: "14%",
-            // ✅ Tái sử dụng component StatusBadge
-            render: (row) => <StatusBadge status={row.request_status} />
-        },        {
-            title: "Actions",
-            key: "actions",
-            width: "30%",
-            // ✅ Luôn hiển thị nút Duyệt & Từ chối + Chi tiết
-            // Nút được disable nếu status !== PENDING
-            render: (row) => {
-                const isDisabled = row.request_status !== 'PENDING';
-                const disabledStyle = {
-                    opacity: isDisabled ? 0.5 : 1,
-                    cursor: isDisabled ? 'not-allowed' : 'pointer',
-                    pointerEvents: isDisabled ? 'none' : 'auto'
-                };
-                
-                return (
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-start', flexWrap: 'wrap', alignItems: 'center' }}>
-                        {/* Nút Từ chối */}
-                        <button
-                            onClick={() => navigate(`/hr/profile-requests/${row.request_id}`)}
-                            disabled={isDisabled}
-                            style={{
-                                padding: '6px 12px',
-                                borderRadius: '6px',
-                                border: isDisabled ? '1px solid #cbd5e1' : '1px solid #fca5a5',
-                                color: isDisabled ? '#94a3b8' : '#dc2626',
-                                background: 'transparent',
-                                fontWeight: 500,
-                                cursor: isDisabled ? 'not-allowed' : 'pointer',
-                                fontSize: '0.85rem',
-                                transition: 'all 0.2s',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                opacity: isDisabled ? 0.5 : 1
-                            }}                            onMouseEnter={(e) => !isDisabled && (e.target.style.background = '#fee2e2')}
-                            onMouseLeave={(e) => !isDisabled && (e.target.style.background = 'transparent')}
-                            title={isDisabled ? "Cannot perform action on processed request" : "Reject request"}
-                        >
-                            <X size={16} />
-                            Reject
-                        </button>
-
-                        {/* Nút Duyệt */}
-                        <button
-                            onClick={() => navigate(`/hr/profile-requests/${row.request_id}`)}
-                            disabled={isDisabled}
-                            style={{
-                                padding: '6px 12px',
-                                borderRadius: '6px',
-                                border: 'none',
-                                background: isDisabled ? '#cbd5e1' : '#16a34a',
-                                color: 'white',
-                                fontWeight: 500,
-                                cursor: isDisabled ? 'not-allowed' : 'pointer',
-                                fontSize: '0.85rem',
-                                transition: 'all 0.2s',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                opacity: isDisabled ? 0.5 : 1
-                            }}
-                            onMouseEnter={(e) => !isDisabled && (e.target.style.background = '#15803d')}
-                            onMouseLeave={(e) => !isDisabled && (e.target.style.background = '#16a34a')}
-                            title={isDisabled ? "Cannot perform action on processed request" : "Approve request"}
-                        >
-                            <Check size={16} />
-                            Approve
-                        </button>
-
-                        {/* Nút Chi tiết */}
-                        <Button 
-                            variant="ghost" 
-                            icon={Eye} 
-                            onClick={() => navigate(`/hr/profile-requests/${row.request_id}`)}
-                            style={{ fontSize: '0.85rem', padding: '6px 10px' }}
-                        >
-                            Details
-                        </Button>
-                    </div>
-                );
-            }
-        }
-    ];
+    // -- Pagination --
+    const indexOfLastRequest = currentPage * PAGE_SIZE;
+    const indexOfFirstRequest = indexOfLastRequest - PAGE_SIZE;
+    const currentRequests = filteredRequests.slice(indexOfFirstRequest, indexOfLastRequest);
+    const totalPages = Math.ceil(filteredRequests.length / PAGE_SIZE);
 
     // -- Render --
     return (
-        <div className="page-container fade-in-up">
-              {/* 1. Header Section */}
-            <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                <div>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
-                        Profile Update Requests
-                    </h2>
-                    <p style={{ color: '#64748b', margin: 0 }}>
-                        Manage profile change requests from employees.
-                    </p>
-                </div>
-                <div style={{ background: '#eff6ff', color: '#1d4ed8', padding: '6px 12px', borderRadius: 6, fontWeight: 600, fontSize: '0.9rem' }}>
-                    {requests.filter(r => r.request_status === 'PENDING').length} Pending
-                </div>
+        <div className="pa-container fade-in-up">
+            {/* Stats Grid */}
+            <div style={{ marginBottom: 24 }}>
+                <StatsGrid stats={stats} />
             </div>
 
-            {/* 2. Filter Bar & Actions */}
-            <div className="card-filter-wrapper">
-                {/* ✅ Tái sử dụng FilterBar cho ô tìm kiếm (Keyword) 
-                    Truyền mảng rỗng vào departments để ẩn dropdown department đi vì ta không dùng ở đây */}
-                <div style={{ flex: 1, minWidth: '250px' }}>                    <FilterBar 
-                        keyword={keyword} 
-                        setKeyword={setKeyword} 
-                        departments={[]} 
+            {/* Header & Search */}
+            <div style={{ marginBottom: 24 }}>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
+                    Profile Update Requests
+                </h1>
+                <p style={{ color: '#64748b', margin: 0 }}>
+                    Manage and review employee profile update requests.
+                </p>
+            </div>
+
+            {/* Search Bar */}
+            <div style={{ marginBottom: 24, display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <div style={{ flex: 1, position: 'relative' }}>
+                    <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                    <input 
+                        type="text"
                         placeholder="Search by name or employee code..."
+                        value={keyword}
+                        onChange={(e) => setKeyword(e.target.value)}
+                        style={{
+                            width: '100%',
+                            padding: '10px 12px 10px 40px',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '8px',
+                            fontSize: '0.9rem',
+                            outline: 'none'
+                        }}
+                        onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                        onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
                     />
                 </div>
-
-                {/* Custom Status Filter (Vì FilterBar không hỗ trợ status select nên ta thêm thủ công bên cạnh) */}
-                <div className="custom-select-wrapper">
-                    <Filter size={18} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />                    <select 
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="custom-select"
-                    >
-                        <option value="ALL">All Statuses</option>
-                        <option value="PENDING">Pending</option>
-                        <option value="APPROVED">Approved</option>
-                        <option value="REJECTED">Rejected</option>
-                    </select>
-                </div>                {/* ✅ Tái sử dụng Button cho nút Refresh */}
                 <Button variant="secondary" icon={RefreshCw} onClick={fetchRequests} isLoading={loading}>
                     Refresh
                 </Button>
             </div>
 
-            {/* 3. Table Section */}
-            <div className="card-table-wrapper">                {/* ✅ Tái sử dụng Loading Component khi đang tải toàn trang bảng */}
-                {loading && requests.length === 0 ? (
-                    <div style={{ padding: 60 }}>
-                        <Loading text="Loading request list..." />
-                    </div>
-                ) : (
-                    /* ✅ Tái sử dụng Table Component */                    <Table 
-                        columns={columns} 
-                        data={filteredRequests} 
-                        /* ✅ Tái sử dụng EmptyState Component đưa vào prop emptyText */
-                        emptyText={
-                            <EmptyState 
-                                message="No data found" 
-                                subMessage="Try changing the search keyword or status filter." 
-                            />
-                        }
-                    />
-                )}
+            {/* Table */}
+            <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', overflow: 'hidden' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                        <tr style={{ borderBottom: '2px solid #e2e8f0', background: '#f8fafc' }}>
+                            <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: '0.85rem' }}>Employee</th>
+                            <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: '0.85rem' }}>Request Date</th>
+                            <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, color: '#475569', fontSize: '0.85rem' }}>Status</th>
+                            <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 600, color: '#475569', fontSize: '0.85rem' }}>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loading ? (
+                            <tr>
+                                <td colSpan="4" style={{ textAlign: 'center', padding: '32px', color: '#94a3b8' }}>
+                                    Loading...
+                                </td>
+                            </tr>
+                        ) : filteredRequests.length === 0 ? (
+                            <tr>
+                                <td colSpan="4" style={{ padding: '32px' }}>
+                                    <EmptyState message="No requests found" subMessage="Try adjusting your search criteria." />
+                                </td>
+                            </tr>
+                        ) : (
+                            currentRequests.map((req) => (
+                                <tr key={req.request_id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                    <td style={{ padding: '12px 16px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#dbeafe', color: '#1d4ed8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold' }}>
+                                                {req.full_name?.charAt(0) || 'E'}
+                                            </div>
+                                            <div>
+                                                <div style={{ fontWeight: 600, color: '#0f172a' }}>{req.employee_code}</div>
+                                                <div style={{ color: '#64748b', fontSize: '0.85rem' }}>{req.full_name}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style={{ padding: '12px 16px', color: '#0f172a' }}>
+                                        {req.created_at ? new Date(req.created_at).toLocaleDateString('en-US') : '--'}
+                                    </td>
+                                    <td style={{ padding: '12px 16px' }}>
+                                        <StatusBadge status={req.request_status} />
+                                    </td>
+                                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
+                                            <button
+                                                onClick={() => navigate(`/hr/profile-requests/${req.request_id}`)}
+                                                disabled={req.request_status !== 'PENDING'}
+                                                style={{
+                                                    padding: '6px 12px',
+                                                    borderRadius: '6px',
+                                                    border: req.request_status === 'PENDING' ? '1px solid #fca5a5' : '1px solid #cbd5e1',
+                                                    color: req.request_status === 'PENDING' ? '#dc2626' : '#94a3b8',
+                                                    background: 'transparent',
+                                                    fontWeight: 500,
+                                                    cursor: req.request_status === 'PENDING' ? 'pointer' : 'not-allowed',
+                                                    fontSize: '0.8rem',
+                                                    transition: 'all 0.2s',
+                                                    opacity: req.request_status === 'PENDING' ? 1 : 0.5,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px'
+                                                }}
+                                                onMouseEnter={(e) => req.request_status === 'PENDING' && (e.target.style.background = '#fee2e2')}
+                                                onMouseLeave={(e) => req.request_status === 'PENDING' && (e.target.style.background = 'transparent')}
+                                                title={req.request_status === 'PENDING' ? 'Reject request' : 'Not available'}
+                                            >
+                                                <X size={14} />
+                                                Reject
+                                            </button>
+                                            <button
+                                                onClick={() => navigate(`/hr/profile-requests/${req.request_id}`)}
+                                                disabled={req.request_status !== 'PENDING'}
+                                                style={{
+                                                    padding: '6px 12px',
+                                                    borderRadius: '6px',
+                                                    border: 'none',
+                                                    background: req.request_status === 'PENDING' ? '#16a34a' : '#cbd5e1',
+                                                    color: 'white',
+                                                    fontWeight: 500,
+                                                    cursor: req.request_status === 'PENDING' ? 'pointer' : 'not-allowed',
+                                                    fontSize: '0.8rem',
+                                                    transition: 'all 0.2s',
+                                                    opacity: req.request_status === 'PENDING' ? 1 : 0.5,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px'
+                                                }}
+                                                onMouseEnter={(e) => req.request_status === 'PENDING' && (e.target.style.background = '#15803d')}
+                                                onMouseLeave={(e) => req.request_status === 'PENDING' && (e.target.style.background = '#16a34a')}
+                                                title={req.request_status === 'PENDING' ? 'Approve request' : 'Not available'}
+                                            >
+                                                <Check size={14} />
+                                                Approve
+                                            </button>
+                                            <button
+                                                onClick={() => navigate(`/hr/profile-requests/${req.request_id}`)}
+                                                style={{
+                                                    padding: '6px 10px',
+                                                    borderRadius: '6px',
+                                                    border: '1px solid #e2e8f0',
+                                                    color: '#0f172a',
+                                                    background: 'white',
+                                                    fontWeight: 500,
+                                                    cursor: 'pointer',
+                                                    fontSize: '0.8rem',
+                                                    transition: 'all 0.2s',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px'
+                                                }}
+                                                onMouseEnter={(e) => e.target.style.background = '#f1f5f9'}
+                                                onMouseLeave={(e) => e.target.style.background = 'white'}
+                                                title="View details"
+                                            >
+                                                <Eye size={14} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
             </div>
 
-            {/* CSS Cục bộ để hỗ trợ các Component (nếu project chưa có global css) */}
+            {/* Pagination */}
+            {filteredRequests.length > PAGE_SIZE && (
+                <div style={{ marginTop: 24, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Pagination 
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
+                </div>
+            )}
+
+            {/* CSS Support */}
             <style>{`
-                .page-container { padding: 24px; max-width: 1280px; margin: 0 auto; }
-                
-                /* Support style cho StatusBadge (vì component này dùng class) */
-                .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; text-transform: capitalize; }
-                .status-badge.pending { background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
-                .status-badge.approved { background: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
-                .status-badge.rejected { background: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; }
-
-                /* Support Layout cho FilterBar */
-                .card-filter-wrapper { background: white; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-                .filter-bar { width: 100%; display: flex; gap: 10px; } /* Override FilterBar style */
-                .filter-bar .input-group { flex: 1; display: flex; align-items: center; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0 12px; height: 40px; background: white; }
-                .filter-bar .input-group input { border: none; outline: none; width: 100%; padding-left: 8px; font-size: 0.9rem; color: #334155; }
-                
-                /* Custom Select Styles */
-                .custom-select-wrapper { position: relative; min-width: 180px; }
-                .custom-select { width: 100%; height: 40px; padding: 0 36px 0 36px; border: 1px solid #e2e8f0; border-radius: 6px; outline: none; appearance: none; background: white; cursor: pointer; color: #334155; font-size: 0.9rem; }
-                .custom-select:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1); }
-
-                .card-table-wrapper { background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden; }
+                .pa-container { padding: 24px; max-width: 1400px; margin: 0 auto; }
+                .fade-in-up { animation: fadeInUp 0.3s ease-out; }
+                @keyframes fadeInUp { 
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
             `}</style>
         </div>
     );
