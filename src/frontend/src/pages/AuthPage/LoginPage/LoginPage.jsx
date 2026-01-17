@@ -335,22 +335,7 @@ export default function LoginPage() {
             </form>
 
             {/* Danh sách tài khoản Demo */}
-            <div className="demo-accounts-section">
-              <div className="demo-accounts-title">Demo Accounts (4 accounts) - Pass: 123456</div>
-              {demoAccounts.map((account, idx) => (
-                <div key={idx} className="demo-account-item">
-                  <div className="demo-account-info">
-                    <div className="demo-account-role">{account.role}</div>
-                    <div style={{flex: 1, minWidth: '150px', fontSize: '0.8rem', color: '#64748b'}}>
-                      {account.name}
-                    </div>
-                    <div className="demo-account-creds">
-                      <span className="demo-cred-badge">{account.username}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            
         </div>
       </div>
     </>

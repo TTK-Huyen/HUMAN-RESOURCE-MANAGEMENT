@@ -1064,10 +1064,12 @@ export default function HRAddEmployeePage() {
         isOpen={!!successDialog}
         title="Employee Added Successfully!"
         message={
-          successDialog
-            ? `Employee Code / Username: ${successDialog.code}
-Initial Password: ${successDialog.password}`
-            : ""
+          successDialog ? (
+      <span style={{ whiteSpace: "pre-line", display: "block", textAlign: "left" }}>
+        {`Employee Code / Username: ${successDialog.code}
+        Initial Password: ${successDialog.password}`}
+      </span>
+    ) : ""
         }
         type="info"
         confirmLabel="Go to Directory"

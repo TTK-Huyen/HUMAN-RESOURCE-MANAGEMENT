@@ -232,7 +232,7 @@ namespace HrmApi.Services
             {
                 var cccdDigits = new string(rowData.CitizenIdNumber.Where(char.IsDigit).ToArray());
                 if (cccdDigits.Length != 12)
-                    throw new ArgumentException("CCCD phải đúng 13 chữ số");
+                    throw new ArgumentException("Citizen ID must be exactly 12 digits");
             }
 
             // Validate phone number format (10 số)
@@ -240,7 +240,7 @@ namespace HrmApi.Services
             {
                 var phoneDigits = new string(rowData.PhoneNumber1.Where(char.IsDigit).ToArray());
                 if (phoneDigits.Length != 10)
-                    throw new ArgumentException("Số điện thoại 1 phải đúng 10 chữ số");
+                    throw new ArgumentException("Phone number 1 must be exactly 10 digits");
             }
 
         
@@ -374,7 +374,7 @@ namespace HrmApi.Services
                     {
                         EmployeeId = employee.Id,
                         PhoneNumber = data.PhoneNumber1,
-                        Description = data.PhoneNumber1Description ?? "Cá nhân"
+                        Description = data.PhoneNumber1Description ?? "Personal"
                     };
                     await _employeeRepository.AddPhoneNumberAsync(phone1);
                 }
@@ -385,7 +385,7 @@ namespace HrmApi.Services
                     {
                         EmployeeId = employee.Id,
                         PhoneNumber = data.PhoneNumber2,
-                        Description = data.PhoneNumber2Description ?? "Khẩn cấp"
+                        Description = data.PhoneNumber2Description ?? "Emergency"
                     };
                     await _employeeRepository.AddPhoneNumberAsync(phone2);
                 }
@@ -465,15 +465,15 @@ namespace HrmApi.Services
                 BirthPlaceProvince = data.BirthPlaceProvince,
                 BirthPlaceDistrict = data.BirthPlaceDistrict,
                 EmploymentType = data.EmploymentType ?? "Full-time",
-                ContractType = data.ContractType ?? "Indefinite",
+                ContractType = data.ContractType ?? "Permanent",
                 ContractStartDate = data.ContractStartDate,
                 ContractEndDate = data.ContractEndDate,
-                MaritalStatus = data.MaritalStatus ?? "Độc thân",
+                MaritalStatus = data.MaritalStatus ?? "Single",
                 HasChildren = data.HasChildren ?? false,
                 PersonalTaxCode = data.PersonalTaxCode,
                 SocialInsuranceNumber = data.SocialInsuranceNumber,
-                Nationality = data.Nationality ?? "Việt Nam",
-                Status = "Đang làm việc",
+                Nationality = data.Nationality ?? "Vietnam",
+                Status = "Active",
                 DepartmentId = department?.Id,
                 JobTitleId = jobTitle?.Id,
                 DirectManagerId = directManager?.Id
