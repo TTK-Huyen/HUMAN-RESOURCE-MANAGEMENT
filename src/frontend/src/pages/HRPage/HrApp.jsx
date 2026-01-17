@@ -21,7 +21,7 @@ export default function HrApp() {
         Khi vào /hr -> Chuyển hướng ngay đến /hr/profile-requests
         Dùng đường dẫn tuyệt đối "/" ở đầu để tránh lỗi đệ quy.
       */}
-      <Route index element={<Navigate to="/hr/profile-requests" replace />} />
+      <Route index element={<Navigate to="/hr/directory" replace />} />
 
       {/*2. NHÓM QUẢN LÝ YÊU CẦU HỒ SƠ 
         Path: /hr/profile-requests

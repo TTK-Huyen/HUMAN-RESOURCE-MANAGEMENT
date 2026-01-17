@@ -1065,7 +1065,8 @@ export default function HRAddEmployeePage() {
         title="Employee Added Successfully!"
         message={
           successDialog
-            ? `Employee Code / Username: ${successDialog.code}\nInitial Password: ${successDialog.password}`
+            ? `Employee Code / Username: ${successDialog.code}
+Initial Password: ${successDialog.password}`
             : ""
         }
         type="info"

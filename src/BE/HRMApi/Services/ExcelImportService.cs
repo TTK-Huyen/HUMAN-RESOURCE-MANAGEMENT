@@ -670,7 +670,7 @@ namespace HrmApi.Services
             instructions.Cells[instructRow++, 1].Value = "   - Username is auto-generated = EmployeeCode";
             instructions.Cells[instructRow++, 1].Value = "   - Default password is auto-generated from ID number";
             instructions.Cells[instructRow++, 1].Value = "   - Company Email (CompanyEmail) is auto-generated from employee name";
-            instructions.Cells[instructRow++, 1].Value = "   - Citizen ID must be exactly 13 digits";
+            instructions.Cells[instructRow++, 1].Value = "   - Citizen ID must be exactly 12 digits";
             instructions.Cells[instructRow++, 1].Value = "   - Date of Birth must be in the past";
             instructions.Cells[instructRow++, 1].Value = "   - Personal Email (if provided) must be valid format";
             instructions.Cells[instructRow++, 1].Value = "   - EmploymentType and ContractType values must be exact (see list above)";
@@ -789,7 +789,7 @@ namespace HrmApi.Services
             // Lấy danh sách Managers (Employees có vai trò Manager/Quản lý)
             var managerRoleId = await _context.Roles
                 .AsNoTracking()
-                .Where(r => r.RoleCode == "MANAGER")
+                .Where(r => r.RoleName == "Manager")
                 .Select(r => r.RoleId)
                 .FirstOrDefaultAsync();
 
@@ -799,7 +799,7 @@ namespace HrmApi.Services
                     e => e.Id, 
                     ua => ua.EmployeeId, 
                     (e, ua) => new { Employee = e, UserAccount = ua })
-                .Where(x => x.UserAccount.RoleId == managerRoleId && x.Employee.Status == "Đang làm việc")
+                .Where(x => x.UserAccount.RoleId == managerRoleId && x.Employee.Status == "Active")
                 .OrderBy(x => x.Employee.EmployeeCode)
                 .Select(x => new { x.Employee.EmployeeCode, x.Employee.FullName })
                 .ToListAsync();
@@ -939,7 +939,7 @@ namespace HrmApi.Services
             row++;
 
             int maritalStartRow = row;
-            var maritalStatuses = new[] { "Single", "Married", "Divorced", "Widowed" };
+            var maritalStatuses = new[] { "Single", "Married", "Divorced"};
             foreach (var m in maritalStatuses)
             {
                 lookup.Cells[row, 1].Value = m;
@@ -1025,23 +1025,7 @@ namespace HrmApi.Services
             int statusEndRow = row - 1;
             row += 2;
 
-            // --- Leave Type ---
-            lookup.Cells[row, 1].Value = "LEAVE TYPE";
-            lookup.Cells[row, 1].Style.Font.Bold = true;
-            row++;
-
-            lookup.Cells[row, 1].Value = "Value";
-            lookup.Cells[row, 1].Style.Font.Bold = true;
-            row++;
-
-            int leaveTypeStartRow = row;
-            var leaveTypeValues = new[] { "Annual", "Sick", "Personal", "Unpaid", "Maternity" };
-            foreach (var l in leaveTypeValues)
-            {
-                lookup.Cells[row, 1].Value = l;
-                row++;
-            }
-            int leaveTypeEndRow = row - 1;
+           
 
             lookup.Cells[lookup.Dimension.Address].AutoFitColumns();
 

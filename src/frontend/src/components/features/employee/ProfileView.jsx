@@ -194,8 +194,7 @@ const phoneNumber = Array.isArray(profile.phoneNumbers) && profile.phoneNumbers.
           <SensitiveField label="Department" val={department} />
           <SensitiveField label="Job Title" val={jobTitle} />
           <SensitiveField label="Direct Manager" val={directManager || "—"} />
-          <SensitiveField label="Employment Type" val={employmentType} />
-          <FormRow label="Status">
+          <FormRow label="Account Status">
             <StatusBadge status={status} />
           </FormRow>
         </div>
